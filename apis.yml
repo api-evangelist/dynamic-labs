@@ -1,0 +1,225 @@
+aid: dynamic-labs
+url: https://raw.githubusercontent.com/api-evangelist/dynamic-labs/refs/heads/main/apis.yml
+name: Dynamic
+kind: company
+description: Dynamic is a web3 authentication and embedded wallet platform. It provides
+  multi-chain login, embedded and smart wallets secured with MPC-TSS, onramps, and
+  end-to-end user management through a developer dashboard, client SDKs, and an
+  environment-scoped REST API for programmatically managing users, wallets, projects,
+  webhooks, and token verification.
+image: https://kinlane-images.s3.amazonaws.com/shared/apis-json/apis-json-logo.jpg
+tags:
+- Web3
+- Authentication
+- Embedded Wallets
+- Wallets
+- MPC
+- Onboarding
+- Crypto
+created: '2026-07-01'
+modified: '2026-07-01'
+specificationVersion: '0.19'
+apis:
+- aid: dynamic-labs:dynamic-users-api
+  name: Dynamic Users API
+  tags:
+  - Users
+  - Management
+  - Identity
+  image: https://kinlane-images.s3.amazonaws.com/shared/apis-json/apis-json-logo.jpg
+  humanURL: https://www.dynamic.xyz/docs/api-reference/users
+  baseURL: https://app.dynamicauth.com/api/v0
+  properties:
+  - url: https://www.dynamic.xyz/docs/api-reference/users
+    type: Documentation
+  - url: https://www.dynamic.xyz/docs/api-reference/users
+    type: APIReference
+  - url: openapi/dynamic-labs-openapi.yml
+    type: OpenAPI
+  - url: collections/dynamic-labs.postman_collection.json
+    type: PostmanCollection
+  - url: collections/dynamic-labs.opencollection.json
+    type: OpenCollection
+  description: List, retrieve, update, export, and delete end users authenticated
+    into a Dynamic environment, along with their linked verified credentials and
+    OAuth accounts.
+- aid: dynamic-labs:dynamic-wallets-api
+  name: Dynamic Wallets API
+  tags:
+  - Wallets
+  - Multi-Chain
+  - Crypto
+  image: https://kinlane-images.s3.amazonaws.com/shared/apis-json/apis-json-logo.jpg
+  humanURL: https://www.dynamic.xyz/docs/api-reference/wallets
+  baseURL: https://app.dynamicauth.com/api/v0
+  properties:
+  - url: https://www.dynamic.xyz/docs/api-reference/wallets
+    type: Documentation
+  - url: https://www.dynamic.xyz/docs/api-reference/wallets/get-wallets-by-user
+    type: APIReference
+  - url: openapi/dynamic-labs-openapi.yml
+    type: OpenAPI
+  - url: collections/dynamic-labs.postman_collection.json
+    type: PostmanCollection
+  - url: collections/dynamic-labs.opencollection.json
+    type: OpenCollection
+  description: View and manage the wallets linked to users in an environment across
+    supported EVM, Solana, Bitcoin, and other chains.
+- aid: dynamic-labs:dynamic-embedded-wallets-api
+  name: Dynamic Embedded Wallets API
+  tags:
+  - Embedded Wallets
+  - MPC
+  - TSS
+  image: https://kinlane-images.s3.amazonaws.com/shared/apis-json/apis-json-logo.jpg
+  humanURL: https://www.dynamic.xyz/docs/api-reference/embedded-wallets
+  baseURL: https://app.dynamicauth.com/api/v0
+  properties:
+  - url: https://www.dynamic.xyz/docs/api-reference/embedded-wallets
+    type: Documentation
+  - url: openapi/dynamic-labs-openapi.yml
+    type: OpenAPI
+  - url: collections/dynamic-labs.postman_collection.json
+    type: PostmanCollection
+  - url: collections/dynamic-labs.opencollection.json
+    type: OpenCollection
+  description: Programmatically create MPC-TSS embedded wallets for users, generating
+    self-custodial keys split across parties without seed phrases.
+- aid: dynamic-labs:dynamic-environments-api
+  name: Dynamic Environments API
+  tags:
+  - Environments
+  - Projects
+  - Settings
+  image: https://kinlane-images.s3.amazonaws.com/shared/apis-json/apis-json-logo.jpg
+  humanURL: https://www.dynamic.xyz/docs/api-reference/environments
+  baseURL: https://app.dynamicauth.com/api/v0
+  properties:
+  - url: https://www.dynamic.xyz/docs/api-reference/environments
+    type: Documentation
+  - url: openapi/dynamic-labs-openapi.yml
+    type: OpenAPI
+  - url: collections/dynamic-labs.postman_collection.json
+    type: PostmanCollection
+  - url: collections/dynamic-labs.opencollection.json
+    type: OpenCollection
+  description: Retrieve and update environment (project) configuration and settings,
+    and programmatically provision isolated sandbox and live environments.
+- aid: dynamic-labs:dynamic-api-tokens-api
+  name: Dynamic API Tokens API
+  tags:
+  - API Tokens
+  - Access
+  - Security
+  image: https://kinlane-images.s3.amazonaws.com/shared/apis-json/apis-json-logo.jpg
+  humanURL: https://www.dynamic.xyz/docs/api-reference/tokens
+  baseURL: https://app.dynamicauth.com/api/v0
+  properties:
+  - url: https://www.dynamic.xyz/docs/api-reference/tokens/create-a-new-api-token
+    type: Documentation
+  - url: openapi/dynamic-labs-openapi.yml
+    type: OpenAPI
+  - url: collections/dynamic-labs.postman_collection.json
+    type: PostmanCollection
+  - url: collections/dynamic-labs.opencollection.json
+    type: OpenCollection
+  description: Create, list, and revoke environment-scoped API tokens (dyn_ prefixed
+    bearer tokens) used to authenticate admin API requests.
+- aid: dynamic-labs:dynamic-webhooks-api
+  name: Dynamic Webhooks API
+  tags:
+  - Webhooks
+  - Events
+  - Notifications
+  image: https://kinlane-images.s3.amazonaws.com/shared/apis-json/apis-json-logo.jpg
+  humanURL: https://www.dynamic.xyz/docs/api-reference/webhooks
+  baseURL: https://app.dynamicauth.com/api/v0
+  properties:
+  - url: https://www.dynamic.xyz/docs/api-reference/webhooks
+    type: Documentation
+  - url: openapi/dynamic-labs-openapi.yml
+    type: OpenAPI
+  - url: collections/dynamic-labs.postman_collection.json
+    type: PostmanCollection
+  - url: collections/dynamic-labs.opencollection.json
+    type: OpenCollection
+  description: Register, list, update, and delete webhook endpoints that receive
+    signed event notifications for user, wallet, and session lifecycle events.
+- aid: dynamic-labs:dynamic-token-verification-api
+  name: Dynamic Token Verification API
+  tags:
+  - JWKS
+  - Token Verification
+  - SDK
+  image: https://kinlane-images.s3.amazonaws.com/shared/apis-json/apis-json-logo.jpg
+  humanURL: https://www.dynamic.xyz/docs/api-reference/sdk/find-jwks-for-public-key-json-format
+  baseURL: https://app.dynamicauth.com/api/v0
+  properties:
+  - url: https://www.dynamic.xyz/docs/api-reference/sdk/find-jwks-for-public-key-json-format
+    type: Documentation
+  - url: openapi/dynamic-labs-openapi.yml
+    type: OpenAPI
+  - url: collections/dynamic-labs.postman_collection.json
+    type: PostmanCollection
+  - url: collections/dynamic-labs.opencollection.json
+    type: OpenCollection
+  description: Fetch the environment JSON Web Key Set (JWKS) used to verify Dynamic
+    JWT auth tokens server-side, plus SDK utility endpoints such as URL threat scanning.
+- aid: dynamic-labs:dynamic-allowlists-api
+  name: Dynamic Allowlists API
+  tags:
+  - Allowlists
+  - Access Control
+  - Gating
+  image: https://kinlane-images.s3.amazonaws.com/shared/apis-json/apis-json-logo.jpg
+  humanURL: https://www.dynamic.xyz/docs/api-reference/allowlists
+  baseURL: https://app.dynamicauth.com/api/v0
+  properties:
+  - url: https://www.dynamic.xyz/docs/api-reference/allowlists
+    type: Documentation
+  - url: openapi/dynamic-labs-openapi.yml
+    type: OpenAPI
+  - url: collections/dynamic-labs.postman_collection.json
+    type: PostmanCollection
+  - url: collections/dynamic-labs.opencollection.json
+    type: OpenCollection
+  description: Create and manage allowlists and allowlist entries to gate who can
+    authenticate into an environment by email, wallet address, or other criteria.
+- aid: dynamic-labs:dynamic-analytics-api
+  name: Dynamic Analytics API
+  tags:
+  - Analytics
+  - Metrics
+  - Reporting
+  image: https://kinlane-images.s3.amazonaws.com/shared/apis-json/apis-json-logo.jpg
+  humanURL: https://www.dynamic.xyz/docs/api-reference/analytics
+  baseURL: https://app.dynamicauth.com/api/v0
+  properties:
+  - url: https://www.dynamic.xyz/docs/api-reference/analytics/get-environments-analyticswallets
+    type: Documentation
+  - url: openapi/dynamic-labs-openapi.yml
+    type: OpenAPI
+  - url: collections/dynamic-labs.postman_collection.json
+    type: PostmanCollection
+  - url: collections/dynamic-labs.opencollection.json
+    type: OpenCollection
+  description: Retrieve aggregate analytics for an environment, including user, wallet,
+    and transaction metrics for reporting and dashboards.
+common:
+- type: GitHubOrganization
+  url: https://github.com/dynamic-labs
+- type: LinkedIn
+  url: https://www.linkedin.com/company/dynamic-labs-financial
+- type: Website
+  url: https://www.dynamic.xyz
+- type: Documentation
+  url: https://docs.dynamic.xyz
+- type: Plans
+  url: plans/dynamic-labs-plans-pricing.yml
+- type: RateLimits
+  url: rate-limits/dynamic-labs-rate-limits.yml
+- type: FinOps
+  url: finops/dynamic-labs-finops.yml
+maintainers:
+- FN: Kin Lane
+  email: kin@apievangelist.com

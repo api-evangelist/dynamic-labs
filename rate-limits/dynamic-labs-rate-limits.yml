@@ -1,0 +1,63 @@
+specification: API Commons Rate Limits
+specificationVersion: '0.1'
+schema: https://raw.githubusercontent.com/api-evangelist/interface-research/main/schema/api-commons.yml#/$defs/RateLimits
+provider: Dynamic
+providerId: dynamic-labs
+created: '2026-07-01'
+modified: '2026-07-01'
+reconciled: false
+tags:
+- Web3
+- Authentication
+- Embedded Wallets
+- Wallets
+- Rate Limiting
+- Quotas
+- Throttling
+description: >-
+  Dynamic enforces per-environment rate limits on its REST API, scoped to the
+  environment-issued bearer API token. Limits are applied per environment and
+  vary by plan tier, with higher ceilings available on Advanced and Enterprise
+  plans. Exceeding a limit returns HTTP 429. Specific per-endpoint request-per-minute
+  values are not reconciled in this artifact and should be confirmed with Dynamic.
+notes: >-
+  Verify current per-environment and per-endpoint limits in the Dynamic API
+  reference and developer best-practices documentation on reconciliation. Values
+  differ between Free, Advanced, and Enterprise tiers.
+sources:
+- https://docs.dynamic.xyz/api-reference/overview
+- https://docs.dynamic.xyz/developer-best-practices
+- https://www.dynamic.xyz/pricing
+responseCodes:
+  throttled: 429
+limits:
+- name: REST API Requests
+  scope: environment
+  metric: requests
+  limit: see provider documentation
+  notes: Per-environment request rate on admin REST endpoints, keyed to the bearer API token; varies by tier.
+- name: SDK Endpoint Requests
+  scope: environment
+  metric: requests
+  limit: see provider documentation
+  notes: Per-environment rate on SDK endpoints authenticated with user JWTs.
+- name: Webhook Deliveries
+  scope: environment
+  metric: events
+  limit: see provider documentation
+  notes: Outbound webhook delivery throughput with retry on failure.
+- name: Embedded Wallet Operations
+  scope: environment
+  metric: operations
+  limit: see provider documentation
+  notes: Signing and wallet-provisioning operations may be separately throttled.
+policies:
+- name: Tiered Limits
+  description: Rate ceilings increase from Free to Advanced to Enterprise plans.
+- name: Backoff Strategy
+  description: Clients should implement exponential backoff with jitter and honor Retry-After on 429 responses.
+- name: Per-Environment Scoping
+  description: Limits are counted per environment (project), isolating sandbox and live traffic.
+maintainers:
+- FN: Kin Lane
+  email: kin@apievangelist.com

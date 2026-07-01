@@ -1,0 +1,324 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "Dynamic API",
+    "version": "v0"
+  },
+  "request": {
+    "auth": {
+      "type": "bearer",
+      "token": "{{bearerToken}}"
+    }
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Users",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Get users for an environment.",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://app.dynamicauth.com/api/v0/environments/:environmentId/users",
+            "params": [
+              {
+                "name": "environmentId",
+                "value": "",
+                "type": "path",
+                "description": "The ID of the environment."
+              }
+            ]
+          },
+          "docs": "Returns a paginated list of users authenticated into the specified environment."
+        },
+        {
+          "info": {
+            "name": "Get a user by ID.",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://app.dynamicauth.com/api/v0/environments/:environmentId/users/:userId",
+            "params": [
+              { "name": "environmentId", "value": "", "type": "path" },
+              { "name": "userId", "value": "", "type": "path" }
+            ]
+          },
+          "docs": "Returns the specified user, including linked verified credentials."
+        },
+        {
+          "info": {
+            "name": "Delete a user.",
+            "type": "http"
+          },
+          "http": {
+            "method": "DELETE",
+            "url": "https://app.dynamicauth.com/api/v0/environments/:environmentId/users/:userId",
+            "params": [
+              { "name": "environmentId", "value": "", "type": "path" },
+              { "name": "userId", "value": "", "type": "path" }
+            ]
+          },
+          "docs": "Permanently deletes the specified user from the environment."
+        }
+      ]
+    },
+    {
+      "info": {
+        "name": "Wallets",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Get wallets by user.",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://app.dynamicauth.com/api/v0/environments/:environmentId/users/:userId/wallets",
+            "params": [
+              { "name": "environmentId", "value": "", "type": "path" },
+              { "name": "userId", "value": "", "type": "path" }
+            ]
+          },
+          "docs": "Returns the wallets linked to the specified user."
+        }
+      ]
+    },
+    {
+      "info": {
+        "name": "Embedded Wallets",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Create an embedded wallet for a user.",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://app.dynamicauth.com/api/v0/environments/:environmentId/users/:userId/wallets",
+            "params": [
+              { "name": "environmentId", "value": "", "type": "path" },
+              { "name": "userId", "value": "", "type": "path" }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{\n  \"chains\": [\"EVM\"]\n}"
+            }
+          },
+          "docs": "Creates a new MPC-TSS embedded wallet for the user. Fails if the user already has an embedded wallet of the requested chain."
+        }
+      ]
+    },
+    {
+      "info": {
+        "name": "Environments",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Get an environment by ID.",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://app.dynamicauth.com/api/v0/environments/:environmentId",
+            "params": [
+              { "name": "environmentId", "value": "", "type": "path" }
+            ]
+          },
+          "docs": "Returns the configuration and settings for the specified environment (project)."
+        },
+        {
+          "info": {
+            "name": "Update an environment.",
+            "type": "http"
+          },
+          "http": {
+            "method": "PATCH",
+            "url": "https://app.dynamicauth.com/api/v0/environments/:environmentId",
+            "params": [
+              { "name": "environmentId", "value": "", "type": "path" }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Updates settings for the specified environment."
+        }
+      ]
+    },
+    {
+      "info": {
+        "name": "API Tokens",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Get API tokens for an environment.",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://app.dynamicauth.com/api/v0/environments/:environmentId/tokens",
+            "params": [
+              { "name": "environmentId", "value": "", "type": "path" }
+            ]
+          },
+          "docs": "Returns the API tokens issued for the specified environment."
+        },
+        {
+          "info": {
+            "name": "Create a new API token.",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://app.dynamicauth.com/api/v0/environments/:environmentId/tokens",
+            "params": [
+              { "name": "environmentId", "value": "", "type": "path" }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{\n  \"name\": \"<string>\"\n}"
+            }
+          },
+          "docs": "Creates a new API token for the specified environment."
+        },
+        {
+          "info": {
+            "name": "Delete an API token.",
+            "type": "http"
+          },
+          "http": {
+            "method": "DELETE",
+            "url": "https://app.dynamicauth.com/api/v0/environments/:environmentId/tokens/:tokenId",
+            "params": [
+              { "name": "environmentId", "value": "", "type": "path" },
+              { "name": "tokenId", "value": "", "type": "path", "description": "The ID of the token to delete." }
+            ]
+          },
+          "docs": "Revokes and deletes the specified API token."
+        }
+      ]
+    },
+    {
+      "info": {
+        "name": "Webhooks",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Get webhooks for an environment.",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://app.dynamicauth.com/api/v0/environments/:environmentId/webhooks",
+            "params": [
+              { "name": "environmentId", "value": "", "type": "path" }
+            ]
+          },
+          "docs": "Returns the webhook endpoints registered for the environment."
+        },
+        {
+          "info": {
+            "name": "Create a webhook.",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://app.dynamicauth.com/api/v0/environments/:environmentId/webhooks",
+            "params": [
+              { "name": "environmentId", "value": "", "type": "path" }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{\n  \"url\": \"https://example.com/webhooks/dynamic\",\n  \"scopes\": [\"user.created\", \"wallet.linked\"]\n}"
+            }
+          },
+          "docs": "Registers a new webhook endpoint subscribed to the given event scopes."
+        }
+      ]
+    },
+    {
+      "info": {
+        "name": "Allowlists",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Get allowlists for an environment.",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://app.dynamicauth.com/api/v0/environments/:environmentId/allowlists",
+            "params": [
+              { "name": "environmentId", "value": "", "type": "path" }
+            ]
+          },
+          "docs": "Returns the allowlists configured for the environment."
+        }
+      ]
+    },
+    {
+      "info": {
+        "name": "Analytics",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Get wallet analytics for an environment.",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://app.dynamicauth.com/api/v0/environments/:environmentId/analytics/wallets",
+            "params": [
+              { "name": "environmentId", "value": "", "type": "path" }
+            ]
+          },
+          "docs": "Returns aggregate wallet analytics for the environment over an optional date range."
+        }
+      ]
+    },
+    {
+      "info": {
+        "name": "JWKS",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Find JWKS for public key (JSON format).",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://app.dynamicauth.com/api/v0/sdk/:environmentId/.well-known/jwks.json",
+            "params": [
+              { "name": "environmentId", "value": "", "type": "path" }
+            ]
+          },
+          "docs": "Returns the JSON Web Key Set (JWKS) used to verify Dynamic-issued JWT auth tokens server-side. No authentication required."
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

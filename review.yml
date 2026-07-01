@@ -1,0 +1,74 @@
+aid: dynamic-labs
+name: Dynamic
+review:
+  question: Does Dynamic expose a documented public WebSocket API?
+  answer: false
+  date: '2026-07-01'
+  reviewer: API Evangelist
+  asyncapiSpecCreated: false
+  asyncapiScopeNote: |
+    Per API Evangelist scope, HTTP Server-Sent Events (SSE) is in-scope for
+    AsyncAPI modeling and WebSocket surfaces would be modeled if documented.
+    Dynamic's documented developer surface is a REST API plus outbound webhooks;
+    no SSE stream and no WebSocket endpoint were found, so no AsyncAPI document
+    was authored. Webhooks are outbound HTTP POST callbacks (a fan-out event
+    delivery mechanism), not a WebSocket or SSE subscription the client holds open.
+findings:
+  summary: |
+    Dynamic does not publish a documented public WebSocket API. The Dynamic
+    platform exposes an environment-scoped REST API under
+    https://app.dynamicauth.com/api/v0 (also reachable at
+    https://app.dynamic.xyz/api/v0), client SDKs, and outbound webhooks. Event
+    notifications are delivered as signed outbound HTTP POST webhooks to
+    developer-registered URLs rather than over a persistent client-held
+    WebSocket (ws:// or wss://) or Server-Sent Events stream. No realtime
+    bidirectional WebSocket endpoint is documented for authentication, wallet,
+    or session events.
+  transports:
+    - protocol: REST
+      scheme: https
+      baseURL: https://app.dynamicauth.com/api/v0
+      documented: true
+    - protocol: Webhooks
+      scheme: https
+      note: Outbound HTTP POST event callbacks to developer-registered URLs with a signing secret. Not a client-held stream.
+      documented: true
+    - protocol: SSE
+      scheme: https
+      documented: false
+      note: No Server-Sent Events streaming endpoint is documented.
+    - protocol: WebSocket
+      scheme: wss
+      documented: false
+      note: No WebSocket endpoint is documented in Dynamic's API reference, SDK, or webhooks documentation as of the review date.
+  endpointsConfirmedRest:
+    - GET    https://app.dynamicauth.com/api/v0/environments/{environmentId}
+    - GET    https://app.dynamicauth.com/api/v0/environments/{environmentId}/users
+    - GET    https://app.dynamicauth.com/api/v0/environments/{environmentId}/users/{userId}/wallets
+    - POST   https://app.dynamicauth.com/api/v0/environments/{environmentId}/users/{userId}/wallets
+    - POST   https://app.dynamicauth.com/api/v0/environments/{environmentId}/tokens
+    - GET    https://app.dynamicauth.com/api/v0/environments/{environmentId}/tokens
+    - DELETE https://app.dynamicauth.com/api/v0/environments/{environmentId}/tokens/{tokenId}
+    - GET    https://app.dynamicauth.com/api/v0/environments/{environmentId}/webhooks
+    - POST   https://app.dynamicauth.com/api/v0/environments/{environmentId}/webhooks
+    - GET    https://app.dynamicauth.com/api/v0/environments/{environmentId}/allowlists
+    - GET    https://app.dynamicauth.com/api/v0/environments/{environmentId}/analytics/wallets
+    - GET    https://app.dynamicauth.com/api/v0/sdk/{environmentId}/.well-known/jwks.json
+sources:
+  - url: https://docs.dynamic.xyz/api-reference/overview
+    type: Documentation
+    note: Overview lists the REST base URL app.dynamicauth.com/api/v0 and bearer (dyn_) token auth; no WebSocket mentioned.
+  - url: https://www.dynamic.xyz/docs/api-reference/wallets/get-wallets-by-user
+    type: APIReference
+    note: Wallet endpoints are HTTPS REST under /environments/{environmentId}.
+  - url: https://docs.dynamic.xyz/api-reference/sdk/find-jwks-for-public-key-json-format
+    type: Documentation
+    note: JWKS served over REST at /sdk/{environmentId}/.well-known/jwks.json; used for JWT verification, not streaming.
+actions:
+  asyncapiPath: null
+  apisYmlUpdated: true
+  reason: |
+    No WebSocket or SSE protocol surface exists. Dynamic's realtime signaling is
+    outbound webhooks, which are modeled as a REST-adjacent event-delivery
+    capability (Webhooks API) in apis.yml. No AsyncAPI document was authored
+    because there is no client-held streaming transport to describe.

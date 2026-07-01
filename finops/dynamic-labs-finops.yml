@@ -1,0 +1,98 @@
+specification: FinOps Framework
+specificationVersion: '1.0'
+schema: https://www.finops.org/framework/
+provider: Dynamic
+providerId: dynamic-labs
+created: '2026-07-01'
+modified: '2026-07-01'
+reconciled: false
+tags:
+- Web3
+- Authentication
+- Embedded Wallets
+- Wallets
+- MPC
+- FinOps
+- Cost Management
+- FOCUS
+description: >-
+  FinOps view of Dynamic spend. Dynamic bills primarily on Monthly Active Users
+  (MAU) with a subscription plus per-additional-MAU overage on the Advanced plan,
+  and meters embedded wallets on Monthly Active Wallets (MAW). Webhooks, allowlists,
+  and analytics are included with paid tiers, while Enterprise pricing is
+  custom-negotiated. Cost drivers are dominated by active-user and active-wallet
+  counts rather than raw API call volume.
+notes: >-
+  MAU/MAW allowances and overage rates change; verify against the Dynamic pricing
+  page during reconciliation. Amounts are represented as meters and drivers rather
+  than fixed rates where not reliably confirmed.
+sources:
+- https://www.dynamic.xyz/pricing
+- https://docs.dynamic.xyz
+- https://focus.finops.org/focus-specification/v1-3/
+alignedWith:
+  framework: FinOps Foundation Framework
+  frameworkUrl: https://www.finops.org/framework/
+  dataSpec: FOCUS
+  dataSpecVersion: '1.3'
+  dataSpecUrl: https://focus.finops.org/focus-specification/v1-3/
+publisherName: Dynamic
+serviceCategory: Identity and Access Management
+billingModel:
+  pricingCategory: Subscription-and-Usage
+  billingFrequency: Monthly
+  billingCurrency: USD
+  chargeCategories:
+  - Usage
+  - Purchase
+  - Adjustment
+focusColumns:
+  ServiceName: Dynamic
+  ServiceCategory: Identity and Access Management
+  ProviderName: Dynamic
+  PublisherName: Dynamic
+  InvoiceIssuerName: Dynamic
+  BillingCurrency: USD
+  ChargeCategory: Usage
+  PricingCategory: Subscription-and-Usage
+meters:
+- name: monthly_active_users
+  description: Distinct users authenticated into an environment in the billing month; the primary cost driver.
+  unit: users
+  aggregation: distinct_count
+  dimensions:
+  - account
+  - environment
+- name: monthly_active_wallets
+  description: Distinct embedded wallets active in the billing month, metered on the Advanced plan.
+  unit: wallets
+  aggregation: distinct_count
+  dimensions:
+  - account
+  - environment
+  - chain
+- name: subscription_fee
+  description: Recurring monthly subscription fee for the Advanced plan.
+  unit: months
+  aggregation: sum
+  dimensions:
+  - account
+- name: embedded_wallet_operations
+  description: MPC-TSS signing and provisioning operations, where separately metered.
+  unit: operations
+  aggregation: sum
+  dimensions:
+  - account
+  - environment
+principles:
+- name: Visibility
+  description: Track MAU and MAW per environment; separate sandbox from live so test traffic is not mistaken for billable usage.
+- name: Allocation
+  description: Use distinct environments (projects) per app/team and tag API tokens to map spend to cost centers.
+- name: Optimization
+  description: Consolidate low-traffic apps, retire dormant environments, and right-size the plan tier against actual MAU/MAW.
+- name: Accountability
+  description: Assign an owner per environment and review MAU/MAW growth monthly against budget and overage thresholds.
+maintainers:
+- FN: Kin Lane
+  email: kin@apievangelist.com

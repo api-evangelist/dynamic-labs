@@ -1,0 +1,374 @@
+{
+  "info": {
+    "name": "Dynamic API",
+    "description": "Environment-scoped REST API for Dynamic web3 authentication and embedded wallets. Admin endpoints authenticate with an environment-scoped bearer API token (dyn_ prefixed); SDK endpoints use a user JWT from the client SDK.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{bearerToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://app.dynamicauth.com/api/v0"
+    },
+    {
+      "key": "environmentId",
+      "value": ""
+    },
+    {
+      "key": "userId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Get users for an environment.",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/environments/:environmentId/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["environments", ":environmentId", "users"],
+              "variable": [
+                { "key": "environmentId", "value": "{{environmentId}}", "description": "(Required) The ID of the environment." }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get a user by ID.",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/environments/:environmentId/users/:userId",
+              "host": ["{{baseUrl}}"],
+              "path": ["environments", ":environmentId", "users", ":userId"],
+              "variable": [
+                { "key": "environmentId", "value": "{{environmentId}}" },
+                { "key": "userId", "value": "{{userId}}" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete a user.",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/environments/:environmentId/users/:userId",
+              "host": ["{{baseUrl}}"],
+              "path": ["environments", ":environmentId", "users", ":userId"],
+              "variable": [
+                { "key": "environmentId", "value": "{{environmentId}}" },
+                { "key": "userId", "value": "{{userId}}" }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Wallets",
+      "item": [
+        {
+          "name": "Get wallets by user.",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/environments/:environmentId/users/:userId/wallets",
+              "host": ["{{baseUrl}}"],
+              "path": ["environments", ":environmentId", "users", ":userId", "wallets"],
+              "variable": [
+                { "key": "environmentId", "value": "{{environmentId}}" },
+                { "key": "userId", "value": "{{userId}}" }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Embedded Wallets",
+      "item": [
+        {
+          "name": "Create an embedded wallet for a user.",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"chains\": [\"EVM\"]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/environments/:environmentId/users/:userId/wallets",
+              "host": ["{{baseUrl}}"],
+              "path": ["environments", ":environmentId", "users", ":userId", "wallets"],
+              "variable": [
+                { "key": "environmentId", "value": "{{environmentId}}" },
+                { "key": "userId", "value": "{{userId}}" }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Environments",
+      "item": [
+        {
+          "name": "Get an environment by ID.",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/environments/:environmentId",
+              "host": ["{{baseUrl}}"],
+              "path": ["environments", ":environmentId"],
+              "variable": [
+                { "key": "environmentId", "value": "{{environmentId}}" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update an environment.",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"<string>\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/environments/:environmentId",
+              "host": ["{{baseUrl}}"],
+              "path": ["environments", ":environmentId"],
+              "variable": [
+                { "key": "environmentId", "value": "{{environmentId}}" }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "API Tokens",
+      "item": [
+        {
+          "name": "Get API tokens for an environment.",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/environments/:environmentId/tokens",
+              "host": ["{{baseUrl}}"],
+              "path": ["environments", ":environmentId", "tokens"],
+              "variable": [
+                { "key": "environmentId", "value": "{{environmentId}}" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create a new API token.",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"<string>\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/environments/:environmentId/tokens",
+              "host": ["{{baseUrl}}"],
+              "path": ["environments", ":environmentId", "tokens"],
+              "variable": [
+                { "key": "environmentId", "value": "{{environmentId}}" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete an API token.",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/environments/:environmentId/tokens/:tokenId",
+              "host": ["{{baseUrl}}"],
+              "path": ["environments", ":environmentId", "tokens", ":tokenId"],
+              "variable": [
+                { "key": "environmentId", "value": "{{environmentId}}" },
+                { "key": "tokenId", "value": "", "description": "(Required) The ID of the token to delete." }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Webhooks",
+      "item": [
+        {
+          "name": "Get webhooks for an environment.",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/environments/:environmentId/webhooks",
+              "host": ["{{baseUrl}}"],
+              "path": ["environments", ":environmentId", "webhooks"],
+              "variable": [
+                { "key": "environmentId", "value": "{{environmentId}}" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create a webhook.",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"https://example.com/webhooks/dynamic\",\n  \"isEnabled\": true,\n  \"scopes\": [\"user.created\", \"wallet.linked\"]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/environments/:environmentId/webhooks",
+              "host": ["{{baseUrl}}"],
+              "path": ["environments", ":environmentId", "webhooks"],
+              "variable": [
+                { "key": "environmentId", "value": "{{environmentId}}" }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Allowlists",
+      "item": [
+        {
+          "name": "Get allowlists for an environment.",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/environments/:environmentId/allowlists",
+              "host": ["{{baseUrl}}"],
+              "path": ["environments", ":environmentId", "allowlists"],
+              "variable": [
+                { "key": "environmentId", "value": "{{environmentId}}" }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Analytics",
+      "item": [
+        {
+          "name": "Get wallet analytics for an environment.",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/environments/:environmentId/analytics/wallets",
+              "host": ["{{baseUrl}}"],
+              "path": ["environments", ":environmentId", "analytics", "wallets"],
+              "variable": [
+                { "key": "environmentId", "value": "{{environmentId}}" }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "JWKS",
+      "item": [
+        {
+          "name": "Find JWKS for public key (JSON format).",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/sdk/:environmentId/.well-known/jwks.json",
+              "host": ["{{baseUrl}}"],
+              "path": ["sdk", ":environmentId", ".well-known", "jwks.json"],
+              "variable": [
+                { "key": "environmentId", "value": "{{environmentId}}" }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,133 @@
+specification: API Commons Plans
+specificationVersion: '0.1'
+schema: https://raw.githubusercontent.com/api-evangelist/interface-research/main/schema/api-commons.yml#/$defs/Plans
+provider: Dynamic
+providerId: dynamic-labs
+created: '2026-07-01'
+modified: '2026-07-01'
+reconciled: false
+tags:
+- Web3
+- Authentication
+- Embedded Wallets
+- Wallets
+- MPC
+- Plans
+description: >-
+  Dynamic prices its web3 authentication and embedded wallet platform primarily
+  on Monthly Active Users (MAU) and Monthly Active Wallets (MAW). The Free tier
+  covers early development up to a MAU allowance; the Advanced tier is a monthly
+  subscription with a higher MAU allowance plus per-additional-MAU overage and
+  metered embedded-wallet usage; and Enterprise is custom-priced with volume
+  commitments, SLAs, and advanced security. The environment-scoped REST API and
+  SDKs are available across tiers.
+notes: >-
+  Tier names and MAU allowances are subject to change; verify current allowances,
+  overage rates, and embedded-wallet pricing on the Dynamic pricing page during
+  reconciliation. Monetary values are intentionally left as pointers rather than
+  hard-coded figures where not reliably confirmed.
+sources:
+- https://www.dynamic.xyz/pricing
+- https://docs.dynamic.xyz
+plans:
+- id: dynamic-free
+  name: Free
+  type: free
+  description: >-
+    Free tier for development and small projects, including web3 login, external
+    wallet connectors, and a Monthly Active User allowance at no cost.
+  entries:
+  - label: Monthly Active Users (included)
+    name: mau_included
+    type: quota
+    metric: monthly_active_users
+    limit: see provider documentation
+    timeFrame: month
+    geo: global
+    unit: 1
+    price: $0
+    userMultiplied: false
+  elements:
+  - name: Web3 and Social Login
+  - name: External Wallet Connectors
+  - name: REST API and SDK Access
+  - name: JWKS Token Verification
+- id: dynamic-advanced
+  name: Advanced
+  type: subscription
+  description: >-
+    Monthly subscription with a higher MAU allowance, per-additional-MAU overage,
+    metered embedded wallets, webhooks, allowlists, and analytics.
+  entries:
+  - label: Monthly Subscription
+    name: subscription
+    type: flat
+    metric: subscription
+    limit: -1
+    timeFrame: month
+    geo: global
+    unit: 1
+    price: see Dynamic pricing page
+    userMultiplied: false
+  - label: Included Monthly Active Users
+    name: mau_included
+    type: quota
+    metric: monthly_active_users
+    limit: see provider documentation
+    timeFrame: month
+    geo: global
+    unit: 1
+    price: included in subscription
+    userMultiplied: false
+  - label: Additional Monthly Active Users
+    name: mau_overage
+    type: usage
+    metric: monthly_active_users
+    limit: -1
+    timeFrame: month
+    geo: global
+    unit: 1
+    price: per-MAU overage above allowance (see pricing page)
+    userMultiplied: true
+  - label: Embedded Wallets (Monthly Active Wallets)
+    name: embedded_wallets
+    type: usage
+    metric: monthly_active_wallets
+    limit: -1
+    timeFrame: month
+    geo: global
+    unit: 1
+    price: metered per active embedded wallet (see pricing page)
+    userMultiplied: true
+  elements:
+  - name: Embedded MPC-TSS Wallets
+  - name: Webhooks
+  - name: Allowlists
+  - name: Analytics
+  - name: Onramps
+- id: dynamic-enterprise
+  name: Enterprise
+  type: enterprise
+  description: >-
+    Custom-priced plan with volume commitments, SLAs, advanced security and
+    compliance (SOC 2), dedicated support, and negotiated terms. Contact Dynamic
+    sales.
+  entries:
+  - label: Enterprise Agreement
+    name: enterprise
+    type: flat
+    metric: contract
+    limit: -1
+    timeFrame: year
+    geo: global
+    unit: 1
+    price: contact sales
+    userMultiplied: false
+  elements:
+  - name: Custom Volume Pricing
+  - name: SLAs and Priority Support
+  - name: Advanced Security and Compliance
+  - name: Dedicated Infrastructure Options
+maintainers:
+- FN: Kin Lane
+  email: kin@apievangelist.com
