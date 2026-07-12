@@ -1,0 +1,12 @@
+generated: '2026-07-11'
+method: searched
+probe: true
+source: https://www.dynamic.xyz/security
+url: https://www.dynamic.xyz/security
+certifications:
+- SOC 2
+evidence:
+- source: https://www.dynamic.xyz/security
+  keywords:
+  - soc 2
+  - soc2

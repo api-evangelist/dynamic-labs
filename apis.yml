@@ -206,6 +206,14 @@ apis:
   description: Retrieve aggregate analytics for an environment, including user, wallet,
     and transaction metrics for reporting and dashboards.
 common:
+- type: TrustCenter
+  url: security/dynamic-labs-trust-center.yml
+- type: VulnerabilityDisclosure
+  url: security/dynamic-labs-vulnerability-disclosure.yml
+- type: DomainSecurity
+  url: security/dynamic-labs-domain-security.yml
+- type: Authentication
+  url: authentication/dynamic-labs-authentication.yml
 - type: GitHubOrganization
   url: https://github.com/dynamic-labs
 - type: LinkedIn
