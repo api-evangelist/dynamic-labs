@@ -206,6 +206,8 @@ apis:
   description: Retrieve aggregate analytics for an environment, including user, wallet,
     and transaction metrics for reporting and dashboards.
 common:
+- type: AgenticAccess
+  url: agentic-access/dynamic-labs-agentic-access.yml
 - type: TrustCenter
   url: security/dynamic-labs-trust-center.yml
 - type: VulnerabilityDisclosure
