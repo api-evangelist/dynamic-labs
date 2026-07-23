@@ -1,0 +1,240 @@
+openapi: 3.0.3
+info:
+  title: Dynamic Allowlists Users API
+  description: Representative OpenAPI description of the Dynamic environment-scoped REST API for web3 authentication and embedded wallets. Admin endpoints authenticate with an environment-scoped bearer API token (dyn_ prefixed); SDK endpoints authenticate with a user JWT obtained via the client SDK. This document is a faithful, non-exhaustive representation of publicly documented surfaces at https://docs.dynamic.xyz/api-reference. Consult the live API reference for the complete schema catalog.
+  termsOfService: https://www.dynamic.xyz/terms
+  contact:
+    name: Dynamic Support
+    url: https://www.dynamic.xyz/contact
+  version: v0
+servers:
+- url: https://app.dynamicauth.com/api/v0
+  description: Production
+- url: https://app.dynamic.xyz/api/v0
+  description: Production (alternate host)
+security:
+- bearerAuth: []
+tags:
+- name: Users
+  description: List and manage end users authenticated into an environment.
+paths:
+  /environments/{environmentId}/users:
+    get:
+      operationId: getUsers
+      tags:
+      - Users
+      summary: Get users for an environment.
+      description: Returns a paginated list of users authenticated into the specified environment.
+      parameters:
+      - $ref: '#/components/parameters/EnvironmentId'
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      - name: filterValue
+        in: query
+        required: false
+        description: Optional filter (for example an email or alias) to search users by.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /environments/{environmentId}/users/{userId}:
+    get:
+      operationId: getUserById
+      tags:
+      - Users
+      summary: Get a user by ID.
+      description: Returns the specified user, including linked verified credentials.
+      parameters:
+      - $ref: '#/components/parameters/EnvironmentId'
+      - $ref: '#/components/parameters/UserId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      operationId: updateUser
+      tags:
+      - Users
+      summary: Update a user.
+      description: Updates metadata and fields for the specified user.
+      parameters:
+      - $ref: '#/components/parameters/EnvironmentId'
+      - $ref: '#/components/parameters/UserId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdate'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    delete:
+      operationId: deleteUser
+      tags:
+      - Users
+      summary: Delete a user.
+      description: Permanently deletes the specified user from the environment.
+      parameters:
+      - $ref: '#/components/parameters/EnvironmentId'
+      - $ref: '#/components/parameters/UserId'
+      responses:
+        '204':
+          description: User deleted.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+components:
+  parameters:
+    Limit:
+      name: limit
+      in: query
+      required: false
+      description: Maximum number of items to return.
+      schema:
+        type: integer
+        default: 100
+        maximum: 1000
+    EnvironmentId:
+      name: environmentId
+      in: path
+      required: true
+      description: The ID of the Dynamic environment (project).
+      schema:
+        type: string
+        format: uuid
+    Offset:
+      name: offset
+      in: query
+      required: false
+      description: Number of items to skip for pagination.
+      schema:
+        type: integer
+        default: 0
+    UserId:
+      name: userId
+      in: path
+      required: true
+      description: The ID of the user.
+      schema:
+        type: string
+        format: uuid
+  responses:
+    Unauthorized:
+      description: The bearer token is missing or invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: The requested resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  schemas:
+    VerifiedCredential:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        format:
+          type: string
+          enum:
+          - blockchain
+          - email
+          - oauth
+        address:
+          type: string
+          nullable: true
+        chain:
+          type: string
+          nullable: true
+        walletName:
+          type: string
+          nullable: true
+    UserList:
+      type: object
+      properties:
+        users:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+        count:
+          type: integer
+    UserUpdate:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        alias:
+          type: string
+        metadata:
+          type: object
+          additionalProperties: true
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+          nullable: true
+        alias:
+          type: string
+          nullable: true
+        firstVisit:
+          type: string
+          format: date-time
+        lastVisit:
+          type: string
+          format: date-time
+        verifiedCredentials:
+          type: array
+          items:
+            $ref: '#/components/schemas/VerifiedCredential'
+      required:
+      - id
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+          required:
+          - message
+      required:
+      - error
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: dyn_token
+      description: 'Environment-scoped API token with a dyn_ prefix for admin endpoints, or a user JWT from the client SDK for SDK endpoints. Sent as Authorization: Bearer <token>.'

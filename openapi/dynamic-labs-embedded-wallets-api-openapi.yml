@@ -1,0 +1,132 @@
+openapi: 3.0.3
+info:
+  title: Dynamic Allowlists Embedded Wallets API
+  description: Representative OpenAPI description of the Dynamic environment-scoped REST API for web3 authentication and embedded wallets. Admin endpoints authenticate with an environment-scoped bearer API token (dyn_ prefixed); SDK endpoints authenticate with a user JWT obtained via the client SDK. This document is a faithful, non-exhaustive representation of publicly documented surfaces at https://docs.dynamic.xyz/api-reference. Consult the live API reference for the complete schema catalog.
+  termsOfService: https://www.dynamic.xyz/terms
+  contact:
+    name: Dynamic Support
+    url: https://www.dynamic.xyz/contact
+  version: v0
+servers:
+- url: https://app.dynamicauth.com/api/v0
+  description: Production
+- url: https://app.dynamic.xyz/api/v0
+  description: Production (alternate host)
+security:
+- bearerAuth: []
+tags:
+- name: Embedded Wallets
+  description: Provision MPC-TSS embedded wallets for users.
+paths:
+  /environments/{environmentId}/users/{userId}/wallets:
+    post:
+      operationId: createEmbeddedWallet
+      tags:
+      - Embedded Wallets
+      summary: Create an embedded wallet for a user.
+      description: Creates a new MPC-TSS embedded wallet for the specified user. Fails if the user already has an embedded wallet of the requested chain linked.
+      parameters:
+      - $ref: '#/components/parameters/EnvironmentId'
+      - $ref: '#/components/parameters/UserId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEmbeddedWalletRequest'
+      responses:
+        '201':
+          description: Wallet created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Wallet'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+components:
+  parameters:
+    EnvironmentId:
+      name: environmentId
+      in: path
+      required: true
+      description: The ID of the Dynamic environment (project).
+      schema:
+        type: string
+        format: uuid
+    UserId:
+      name: userId
+      in: path
+      required: true
+      description: The ID of the user.
+      schema:
+        type: string
+        format: uuid
+  responses:
+    Unauthorized:
+      description: The bearer token is missing or invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    BadRequest:
+      description: The request was malformed or a precondition failed.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  schemas:
+    Wallet:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        address:
+          type: string
+        chain:
+          type: string
+          description: The blockchain family, for example EVM, SOL, or BTC.
+        walletProvider:
+          type: string
+          description: How the wallet is provisioned, for example embeddedWallet or browserExtension.
+        name:
+          type: string
+        publicKey:
+          type: string
+          nullable: true
+    CreateEmbeddedWalletRequest:
+      type: object
+      properties:
+        chains:
+          type: array
+          description: The chains to provision embedded wallets for.
+          items:
+            type: string
+            enum:
+            - EVM
+            - SOL
+            - BTC
+      required:
+      - chains
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+          required:
+          - message
+      required:
+      - error
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: dyn_token
+      description: 'Environment-scoped API token with a dyn_ prefix for admin endpoints, or a user JWT from the client SDK for SDK endpoints. Sent as Authorization: Bearer <token>.'

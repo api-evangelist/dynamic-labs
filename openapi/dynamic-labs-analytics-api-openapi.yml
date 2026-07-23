@@ -1,0 +1,101 @@
+openapi: 3.0.3
+info:
+  title: Dynamic Allowlists Analytics API
+  description: Representative OpenAPI description of the Dynamic environment-scoped REST API for web3 authentication and embedded wallets. Admin endpoints authenticate with an environment-scoped bearer API token (dyn_ prefixed); SDK endpoints authenticate with a user JWT obtained via the client SDK. This document is a faithful, non-exhaustive representation of publicly documented surfaces at https://docs.dynamic.xyz/api-reference. Consult the live API reference for the complete schema catalog.
+  termsOfService: https://www.dynamic.xyz/terms
+  contact:
+    name: Dynamic Support
+    url: https://www.dynamic.xyz/contact
+  version: v0
+servers:
+- url: https://app.dynamicauth.com/api/v0
+  description: Production
+- url: https://app.dynamic.xyz/api/v0
+  description: Production (alternate host)
+security:
+- bearerAuth: []
+tags:
+- name: Analytics
+  description: Retrieve aggregate environment analytics.
+paths:
+  /environments/{environmentId}/analytics/wallets:
+    get:
+      operationId: getAnalyticsWallets
+      tags:
+      - Analytics
+      summary: Get wallet analytics for an environment.
+      description: Returns aggregate wallet analytics for the environment over an optional date range.
+      parameters:
+      - $ref: '#/components/parameters/EnvironmentId'
+      - name: startDate
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+      - name: endDate
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletAnalytics'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+components:
+  parameters:
+    EnvironmentId:
+      name: environmentId
+      in: path
+      required: true
+      description: The ID of the Dynamic environment (project).
+      schema:
+        type: string
+        format: uuid
+  responses:
+    Unauthorized:
+      description: The bearer token is missing or invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  schemas:
+    WalletAnalytics:
+      type: object
+      properties:
+        totalWallets:
+          type: integer
+        embeddedWallets:
+          type: integer
+        externalWallets:
+          type: integer
+        byChain:
+          type: object
+          additionalProperties:
+            type: integer
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+          required:
+          - message
+      required:
+      - error
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: dyn_token
+      description: 'Environment-scoped API token with a dyn_ prefix for admin endpoints, or a user JWT from the client SDK for SDK endpoints. Sent as Authorization: Bearer <token>.'

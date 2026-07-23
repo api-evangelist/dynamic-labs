@@ -1,0 +1,156 @@
+openapi: 3.0.3
+info:
+  title: Dynamic Allowlists API Tokens API
+  description: Representative OpenAPI description of the Dynamic environment-scoped REST API for web3 authentication and embedded wallets. Admin endpoints authenticate with an environment-scoped bearer API token (dyn_ prefixed); SDK endpoints authenticate with a user JWT obtained via the client SDK. This document is a faithful, non-exhaustive representation of publicly documented surfaces at https://docs.dynamic.xyz/api-reference. Consult the live API reference for the complete schema catalog.
+  termsOfService: https://www.dynamic.xyz/terms
+  contact:
+    name: Dynamic Support
+    url: https://www.dynamic.xyz/contact
+  version: v0
+servers:
+- url: https://app.dynamicauth.com/api/v0
+  description: Production
+- url: https://app.dynamic.xyz/api/v0
+  description: Production (alternate host)
+security:
+- bearerAuth: []
+tags:
+- name: API Tokens
+  description: Create and revoke environment-scoped API tokens.
+paths:
+  /environments/{environmentId}/tokens:
+    get:
+      operationId: getApiTokens
+      tags:
+      - API Tokens
+      summary: Get API tokens for an environment.
+      description: Returns the API tokens issued for the specified environment.
+      parameters:
+      - $ref: '#/components/parameters/EnvironmentId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiTokenList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: createApiToken
+      tags:
+      - API Tokens
+      summary: Create a new API token.
+      description: Creates a new API token for the specified environment.
+      parameters:
+      - $ref: '#/components/parameters/EnvironmentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateApiTokenRequest'
+      responses:
+        '201':
+          description: Token created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiToken'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /environments/{environmentId}/tokens/{tokenId}:
+    delete:
+      operationId: deleteApiToken
+      tags:
+      - API Tokens
+      summary: Delete an API token.
+      description: Revokes and deletes the specified API token.
+      parameters:
+      - $ref: '#/components/parameters/EnvironmentId'
+      - name: tokenId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '204':
+          description: Token deleted.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+components:
+  schemas:
+    ApiToken:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        token:
+          type: string
+          description: The dyn_ prefixed secret, returned only on creation.
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+          nullable: true
+    ApiTokenList:
+      type: object
+      properties:
+        tokens:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApiToken'
+    CreateApiTokenRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - name
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+          required:
+          - message
+      required:
+      - error
+  parameters:
+    EnvironmentId:
+      name: environmentId
+      in: path
+      required: true
+      description: The ID of the Dynamic environment (project).
+      schema:
+        type: string
+        format: uuid
+  responses:
+    Unauthorized:
+      description: The bearer token is missing or invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: dyn_token
+      description: 'Environment-scoped API token with a dyn_ prefix for admin endpoints, or a user JWT from the client SDK for SDK endpoints. Sent as Authorization: Bearer <token>.'
