@@ -1,0 +1,32 @@
+{
+  "provider": "dynamic-labs",
+  "sources": [
+    "dynamic-labs-allowlists-api-openapi.yml",
+    "dynamic-labs-analytics-api-openapi.yml",
+    "dynamic-labs-api-tokens-api-openapi.yml",
+    "dynamic-labs-embedded-wallets-api-openapi.yml",
+    "dynamic-labs-environments-api-openapi.yml",
+    "dynamic-labs-exports-api-openapi.yml",
+    "dynamic-labs-jwks-api-openapi.yml",
+    "dynamic-labs-users-api-openapi.yml",
+    "dynamic-labs-wallets-api-openapi.yml",
+    "dynamic-labs-webhooks-api-openapi.yml"
+  ],
+  "outputs": [
+    "dynamic-labs-allowlists-api-openapi.yml",
+    "dynamic-labs-analytics-api-openapi.yml",
+    "dynamic-labs-api-tokens-api-openapi.yml",
+    "dynamic-labs-embedded-wallets-api-openapi.yml",
+    "dynamic-labs-environments-api-openapi.yml",
+    "dynamic-labs-exports-api-openapi.yml",
+    "dynamic-labs-jwks-api-openapi.yml",
+    "dynamic-labs-users-api-openapi.yml",
+    "dynamic-labs-wallets-api-openapi.yml",
+    "dynamic-labs-webhooks-api-openapi.yml"
+  ],
+  "archived": [],
+  "errors": [],
+  "warnings": [],
+  "notes": [],
+  "skipped": []
+}
