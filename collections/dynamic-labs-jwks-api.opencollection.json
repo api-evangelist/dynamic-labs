@@ -1,0 +1,43 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "Dynamic Allowlists JWKS API",
+    "version": "v0"
+  },
+  "request": {
+    "auth": {
+      "type": "bearer",
+      "token": "{{bearerToken}}"
+    }
+  },
+  "items": [
+    {
+      "info": {
+        "name": "JWKS",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Find JWKS for public key (JSON format).",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://app.dynamicauth.com/api/v0/sdk/:environmentId/.well-known/jwks.json",
+            "params": [
+              {
+                "name": "environmentId",
+                "value": "",
+                "type": "path",
+                "description": "The ID of the Dynamic environment (project)."
+              }
+            ]
+          },
+          "docs": "Returns the JSON Web Key Set (JWKS) for the environment, used to verify the signature of Dynamic-issued JWT auth tokens server-side. This endpoint does not require authentication."
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

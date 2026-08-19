@@ -1,0 +1,94 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "Dynamic Allowlists API",
+    "version": "v0"
+  },
+  "request": {
+    "auth": {
+      "type": "bearer",
+      "token": "{{bearerToken}}"
+    }
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Allowlists",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Get allowlists for an environment.",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://app.dynamicauth.com/api/v0/environments/:environmentId/allowlists",
+            "params": [
+              {
+                "name": "environmentId",
+                "value": "",
+                "type": "path",
+                "description": "The ID of the Dynamic environment (project)."
+              }
+            ]
+          },
+          "docs": "Get allowlists for an environment."
+        },
+        {
+          "info": {
+            "name": "Create an allowlist.",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://app.dynamicauth.com/api/v0/environments/:environmentId/allowlists",
+            "params": [
+              {
+                "name": "environmentId",
+                "value": "",
+                "type": "path",
+                "description": "The ID of the Dynamic environment (project)."
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Create an allowlist."
+        },
+        {
+          "info": {
+            "name": "Add an entry to an allowlist.",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://app.dynamicauth.com/api/v0/environments/:environmentId/allowlists/:allowlistId/entries",
+            "params": [
+              {
+                "name": "environmentId",
+                "value": "",
+                "type": "path",
+                "description": "The ID of the Dynamic environment (project)."
+              },
+              {
+                "name": "allowlistId",
+                "value": "",
+                "type": "path"
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Add an entry to an allowlist."
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}
