@@ -219,6 +219,8 @@ apis:
   humanURL: https://www.dynamic.xyz/docs/api-reference/users
   baseURL: https://app.dynamicauth.com/api/v0
   tags:
+  - Export
+  tags_raw:
   - Exports
   properties:
   - type: OpenAPI
@@ -291,6 +293,8 @@ apis:
   humanURL: https://www.dynamic.xyz/docs/api-reference/users
   baseURL: https://app.dynamicauth.com/api/v0
   tags:
+  - User
+  tags_raw:
   - Users
   properties:
   - type: OpenAPI
@@ -363,6 +367,8 @@ apis:
   humanURL: https://www.dynamic.xyz/docs/api-reference/users
   baseURL: https://app.dynamicauth.com/api/v0
   tags:
+  - Webhook
+  tags_raw:
   - Webhooks
   properties:
   - type: OpenAPI
