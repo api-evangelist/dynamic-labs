@@ -409,7 +409,9 @@ apis:
     url: https://www.dynamic.xyz/docs/api-reference/analytics/get-environments-analyticswallets
 - aid: dynamic:backend-api
   name: Dynamic Backend API
-  description: 'REST API for backend integrations: list users and wallets, manage policies, validate JWTs, fetch auth events, manage environments.'
+  description: >-
+    REST API for backend integrations: list users and wallets, manage policies, validate JWTs, fetch auth
+    events, manage environments.
   humanURL: https://docs.dynamic.xyz/api-reference/overview
   baseURL: https://app.dynamicauth.com/api/v0
   tags:
@@ -420,7 +422,9 @@ apis:
     url: https://docs.dynamic.xyz/api-reference/overview
 - aid: dynamic:webhooks
   name: Dynamic Webhooks
-  description: Webhook delivery of auth, user, wallet, and session events. Subscriptions managed through dashboard and Backend API.
+  description: >-
+    Webhook delivery of auth, user, wallet, and session events. Subscriptions managed through dashboard
+    and Backend API.
   humanURL: https://docs.dynamic.xyz/developer-dashboard/webhooks
   baseURL: https://app.dynamicauth.com/api/v0
   tags:
@@ -430,320 +434,298 @@ apis:
   properties:
   - type: Documentation
     url: https://docs.dynamic.xyz/developer-dashboard/webhooks
-- aid: dynamic-labs:dynamic-xyz-chainalysis-api
+- aid: dynamic-labs:dynamic-labs-chainalysis-api
   name: Dynamic Chainalysis API
   description: The Chainalysis API from Dynamic — 3 operation(s) for chainalysis.
-  humanURL: https://docs.dynamic.xyz/api-reference/overview
+  humanURL: https://www.dynamic.xyz/docs/api-reference/users
   baseURL: https://app.dynamicauth.com/api/v0
   tags:
   - Chainalysis
   properties:
   - type: OpenAPI
-    url: openapi/dynamic-xyz-chainalysis-api-openapi.yml
-- aid: dynamic-labs:dynamic-xyz-chains-api
+    url: openapi/dynamic-labs-chainalysis-api-openapi.yml
+- aid: dynamic-labs:dynamic-labs-chains-api
   name: Dynamic Chains API
   description: The Chains API from Dynamic — 1 operation(s) for chains.
-  humanURL: https://docs.dynamic.xyz/api-reference/overview
+  humanURL: https://www.dynamic.xyz/docs/api-reference/users
   baseURL: https://app.dynamicauth.com/api/v0
   tags:
   - Chains
   properties:
   - type: OpenAPI
-    url: openapi/dynamic-xyz-chains-api-openapi.yml
-- aid: dynamic-labs:dynamic-xyz-custom-fields-api
+    url: openapi/dynamic-labs-chains-api-openapi.yml
+- aid: dynamic-labs:dynamic-labs-custom-fields-api
   name: Dynamic Custom Fields API
   description: The Custom Fields API from Dynamic — 2 operation(s) for custom fields.
-  humanURL: https://docs.dynamic.xyz/api-reference/overview
+  humanURL: https://www.dynamic.xyz/docs/api-reference/users
   baseURL: https://app.dynamicauth.com/api/v0
   tags:
   - Custom Fields
   properties:
   - type: OpenAPI
-    url: openapi/dynamic-xyz-custom-fields-api-openapi.yml
-- aid: dynamic-labs:dynamic-xyz-custom-networks-api
+    url: openapi/dynamic-labs-custom-fields-api-openapi.yml
+- aid: dynamic-labs:dynamic-labs-custom-networks-api
   name: Dynamic Custom Networks API
   description: The Custom Networks API from Dynamic — 2 operation(s) for custom networks.
-  humanURL: https://docs.dynamic.xyz/api-reference/overview
+  humanURL: https://www.dynamic.xyz/docs/api-reference/users
   baseURL: https://app.dynamicauth.com/api/v0
   tags:
   - Custom Networks
   properties:
   - type: OpenAPI
-    url: openapi/dynamic-xyz-custom-networks-api-openapi.yml
-- aid: dynamic-labs:dynamic-xyz-customhostnames-api
-  name: Dynamic CustomHostnames API
+    url: openapi/dynamic-labs-custom-networks-api-openapi.yml
+- aid: dynamic-labs:dynamic-labs-customhostnames-api
+  name: Dynamic Custom Hostnames API
   description: The CustomHostnames API from Dynamic — 2 operation(s) for customhostnames.
-  humanURL: https://docs.dynamic.xyz/api-reference/overview
+  humanURL: https://www.dynamic.xyz/docs/api-reference/users
   baseURL: https://app.dynamicauth.com/api/v0
   tags:
-  - Custom Hostnames
-  tags_raw:
   - CustomHostnames
   properties:
   - type: OpenAPI
-    url: openapi/dynamic-xyz-customhostnames-api-openapi.yml
-- aid: dynamic-labs:dynamic-xyz-deeplinkurls-api
-  name: Dynamic DeeplinkUrls API
+    url: openapi/dynamic-labs-customhostnames-api-openapi.yml
+- aid: dynamic-labs:dynamic-labs-deeplinkurls-api
+  name: Dynamic Deeplink URLS API
   description: The DeeplinkUrls API from Dynamic — 2 operation(s) for deeplinkurls.
-  humanURL: https://docs.dynamic.xyz/api-reference/overview
+  humanURL: https://www.dynamic.xyz/docs/api-reference/users
   baseURL: https://app.dynamicauth.com/api/v0
   tags:
   - DeeplinkUrls
   properties:
   - type: OpenAPI
-    url: openapi/dynamic-xyz-deeplinkurls-api-openapi.yml
-- aid: dynamic-labs:dynamic-xyz-events-api
+    url: openapi/dynamic-labs-deeplinkurls-api-openapi.yml
+- aid: dynamic-labs:dynamic-labs-events-api
   name: Dynamic Events API
   description: The Events API from Dynamic — 3 operation(s) for events.
-  humanURL: https://docs.dynamic.xyz/api-reference/overview
+  humanURL: https://www.dynamic.xyz/docs/api-reference/users
   baseURL: https://app.dynamicauth.com/api/v0
   tags:
-  - Event
-  tags_raw:
   - Events
   properties:
   - type: OpenAPI
-    url: openapi/dynamic-xyz-events-api-openapi.yml
-- aid: dynamic-labs:dynamic-xyz-externaljwt-api
-  name: Dynamic ExternalJwt API
+    url: openapi/dynamic-labs-events-api-openapi.yml
+- aid: dynamic-labs:dynamic-labs-externaljwt-api
+  name: Dynamic External JWT API
   description: The ExternalJwt API from Dynamic — 1 operation(s) for externaljwt.
-  humanURL: https://docs.dynamic.xyz/api-reference/overview
+  humanURL: https://www.dynamic.xyz/docs/api-reference/users
   baseURL: https://app.dynamicauth.com/api/v0
   tags:
   - ExternalJwt
   properties:
   - type: OpenAPI
-    url: openapi/dynamic-xyz-externaljwt-api-openapi.yml
-- aid: dynamic-labs:dynamic-xyz-gates-api
+    url: openapi/dynamic-labs-externaljwt-api-openapi.yml
+- aid: dynamic-labs:dynamic-labs-gates-api
   name: Dynamic Gates API
   description: The Gates API from Dynamic — 4 operation(s) for gates.
-  humanURL: https://docs.dynamic.xyz/api-reference/overview
+  humanURL: https://www.dynamic.xyz/docs/api-reference/users
   baseURL: https://app.dynamicauth.com/api/v0
   tags:
   - Gates
   properties:
   - type: OpenAPI
-    url: openapi/dynamic-xyz-gates-api-openapi.yml
-- aid: dynamic-labs:dynamic-xyz-globalwalletaccesscontrol-api
-  name: Dynamic GlobalWalletAccessControl API
-  description: The GlobalWalletAccessControl API from Dynamic — 5 operation(s) for globalwalletaccesscontrol.
-  humanURL: https://docs.dynamic.xyz/api-reference/overview
+    url: openapi/dynamic-labs-gates-api-openapi.yml
+- aid: dynamic-labs:dynamic-labs-globalwalletaccesscontrol-api
+  name: Dynamic Global Wallet Access Control API
+  description: >-
+    The GlobalWalletAccessControl API from Dynamic — 5 operation(s) for globalwalletaccesscontrol.
+  humanURL: https://www.dynamic.xyz/docs/api-reference/users
   baseURL: https://app.dynamicauth.com/api/v0
   tags:
   - GlobalWalletAccessControl
   properties:
   - type: OpenAPI
-    url: openapi/dynamic-xyz-globalwalletaccesscontrol-api-openapi.yml
-- aid: dynamic-labs:dynamic-xyz-globalwalletconnections-api
-  name: Dynamic GlobalWalletConnections API
-  description: The GlobalWalletConnections API from Dynamic — 1 operation(s) for globalwalletconnections.
-  humanURL: https://docs.dynamic.xyz/api-reference/overview
+    url: openapi/dynamic-labs-globalwalletaccesscontrol-api-openapi.yml
+- aid: dynamic-labs:dynamic-labs-globalwalletconnections-api
+  name: Dynamic Global Wallet Connections API
+  description: >-
+    The GlobalWalletConnections API from Dynamic — 1 operation(s) for globalwalletconnections.
+  humanURL: https://www.dynamic.xyz/docs/api-reference/users
   baseURL: https://app.dynamicauth.com/api/v0
   tags:
   - GlobalWalletConnections
   properties:
   - type: OpenAPI
-    url: openapi/dynamic-xyz-globalwalletconnections-api-openapi.yml
-- aid: dynamic-labs:dynamic-xyz-globalwallets-api
-  name: Dynamic GlobalWallets API
+    url: openapi/dynamic-labs-globalwalletconnections-api-openapi.yml
+- aid: dynamic-labs:dynamic-labs-globalwallets-api
+  name: Dynamic Global Wallets API
   description: The GlobalWallets API from Dynamic — 3 operation(s) for globalwallets.
-  humanURL: https://docs.dynamic.xyz/api-reference/overview
+  humanURL: https://www.dynamic.xyz/docs/api-reference/users
   baseURL: https://app.dynamicauth.com/api/v0
   tags:
   - GlobalWallets
   properties:
   - type: OpenAPI
-    url: openapi/dynamic-xyz-globalwallets-api-openapi.yml
-- aid: dynamic-labs:dynamic-xyz-invites-api
+    url: openapi/dynamic-labs-globalwallets-api-openapi.yml
+- aid: dynamic-labs:dynamic-labs-invites-api
   name: Dynamic Invites API
   description: The Invites API from Dynamic — 3 operation(s) for invites.
-  humanURL: https://docs.dynamic.xyz/api-reference/overview
+  humanURL: https://www.dynamic.xyz/docs/api-reference/users
   baseURL: https://app.dynamicauth.com/api/v0
   tags:
   - Invites
   properties:
   - type: OpenAPI
-    url: openapi/dynamic-xyz-invites-api-openapi.yml
-- aid: dynamic-labs:dynamic-xyz-members-api
+    url: openapi/dynamic-labs-invites-api-openapi.yml
+- aid: dynamic-labs:dynamic-labs-members-api
   name: Dynamic Members API
   description: The Members API from Dynamic — 4 operation(s) for members.
-  humanURL: https://docs.dynamic.xyz/api-reference/overview
+  humanURL: https://www.dynamic.xyz/docs/api-reference/users
   baseURL: https://app.dynamicauth.com/api/v0
   tags:
   - Members
   properties:
   - type: OpenAPI
-    url: openapi/dynamic-xyz-members-api-openapi.yml
-- aid: dynamic-labs:dynamic-xyz-mfa-api
+    url: openapi/dynamic-labs-members-api-openapi.yml
+- aid: dynamic-labs:dynamic-labs-mfa-api
   name: Dynamic Mfa API
   description: The Mfa API from Dynamic — 2 operation(s) for mfa.
-  humanURL: https://docs.dynamic.xyz/api-reference/overview
+  humanURL: https://www.dynamic.xyz/docs/api-reference/users
   baseURL: https://app.dynamicauth.com/api/v0
   tags:
-  - MFA
-  tags_raw:
   - Mfa
   properties:
   - type: OpenAPI
-    url: openapi/dynamic-xyz-mfa-api-openapi.yml
-- aid: dynamic-labs:dynamic-xyz-mfasettings-api
-  name: Dynamic MfaSettings API
+    url: openapi/dynamic-labs-mfa-api-openapi.yml
+- aid: dynamic-labs:dynamic-labs-mfasettings-api
+  name: Dynamic Mfa Settings API
   description: The MfaSettings API from Dynamic — 3 operation(s) for mfasettings.
-  humanURL: https://docs.dynamic.xyz/api-reference/overview
+  humanURL: https://www.dynamic.xyz/docs/api-reference/users
   baseURL: https://app.dynamicauth.com/api/v0
   tags:
-  - MFA Settings
-  tags_raw:
   - MfaSettings
   properties:
   - type: OpenAPI
-    url: openapi/dynamic-xyz-mfasettings-api-openapi.yml
-- aid: dynamic-labs:dynamic-xyz-nameservices-api
-  name: Dynamic NameServices API
+    url: openapi/dynamic-labs-mfasettings-api-openapi.yml
+- aid: dynamic-labs:dynamic-labs-nameservices-api
+  name: Dynamic Name Services API
   description: The NameServices API from Dynamic — 4 operation(s) for nameservices.
-  humanURL: https://docs.dynamic.xyz/api-reference/overview
+  humanURL: https://www.dynamic.xyz/docs/api-reference/users
   baseURL: https://app.dynamicauth.com/api/v0
   tags:
   - NameServices
   properties:
   - type: OpenAPI
-    url: openapi/dynamic-xyz-nameservices-api-openapi.yml
-- aid: dynamic-labs:dynamic-xyz-organizations-api
+    url: openapi/dynamic-labs-nameservices-api-openapi.yml
+- aid: dynamic-labs:dynamic-labs-organizations-api
   name: Dynamic Organizations API
   description: The Organizations API from Dynamic — 8 operation(s) for organizations.
-  humanURL: https://docs.dynamic.xyz/api-reference/overview
+  humanURL: https://www.dynamic.xyz/docs/api-reference/users
   baseURL: https://app.dynamicauth.com/api/v0
   tags:
-  - Organization
-  tags_raw:
   - Organizations
   properties:
   - type: OpenAPI
-    url: openapi/dynamic-xyz-organizations-api-openapi.yml
-- aid: dynamic-labs:dynamic-xyz-origins-api
+    url: openapi/dynamic-labs-organizations-api-openapi.yml
+- aid: dynamic-labs:dynamic-labs-origins-api
   name: Dynamic Origins API
   description: The Origins API from Dynamic — 2 operation(s) for origins.
-  humanURL: https://docs.dynamic.xyz/api-reference/overview
+  humanURL: https://www.dynamic.xyz/docs/api-reference/users
   baseURL: https://app.dynamicauth.com/api/v0
   tags:
   - Origins
   properties:
   - type: OpenAPI
-    url: openapi/dynamic-xyz-origins-api-openapi.yml
-- aid: dynamic-labs:dynamic-xyz-projects-api
+    url: openapi/dynamic-labs-origins-api-openapi.yml
+- aid: dynamic-labs:dynamic-labs-projects-api
   name: Dynamic Projects API
   description: The Projects API from Dynamic — 2 operation(s) for projects.
-  humanURL: https://docs.dynamic.xyz/api-reference/overview
+  humanURL: https://www.dynamic.xyz/docs/api-reference/users
   baseURL: https://app.dynamicauth.com/api/v0
   tags:
-  - Project
-  tags_raw:
   - Projects
   properties:
   - type: OpenAPI
-    url: openapi/dynamic-xyz-projects-api-openapi.yml
-- aid: dynamic-labs:dynamic-xyz-sdk-api
+    url: openapi/dynamic-labs-projects-api-openapi.yml
+- aid: dynamic-labs:dynamic-labs-sdk-api
   name: Dynamic SDK API
   description: The SDK API from Dynamic — 124 operation(s) for sdk.
-  humanURL: https://docs.dynamic.xyz/api-reference/overview
+  humanURL: https://www.dynamic.xyz/docs/api-reference/users
   baseURL: https://app.dynamicauth.com/api/v0
   tags:
   - SDK
   properties:
   - type: OpenAPI
-    url: openapi/dynamic-xyz-sdk-api-openapi.yml
-- aid: dynamic-labs:dynamic-xyz-sdk-views-api
+    url: openapi/dynamic-labs-sdk-api-openapi.yml
+- aid: dynamic-labs:dynamic-labs-sdk-views-api
   name: Dynamic SDK Views API
   description: The SDK Views API from Dynamic — 2 operation(s) for sdk views.
-  humanURL: https://docs.dynamic.xyz/api-reference/overview
+  humanURL: https://www.dynamic.xyz/docs/api-reference/users
   baseURL: https://app.dynamicauth.com/api/v0
   tags:
   - SDK Views
   properties:
   - type: OpenAPI
-    url: openapi/dynamic-xyz-sdk-views-api-openapi.yml
-- aid: dynamic-labs:dynamic-xyz-sessions-api
+    url: openapi/dynamic-labs-sdk-views-api-openapi.yml
+- aid: dynamic-labs:dynamic-labs-sessions-api
   name: Dynamic Sessions API
   description: The Sessions API from Dynamic — 3 operation(s) for sessions.
-  humanURL: https://docs.dynamic.xyz/api-reference/overview
+  humanURL: https://www.dynamic.xyz/docs/api-reference/users
   baseURL: https://app.dynamicauth.com/api/v0
   tags:
   - Sessions
   properties:
   - type: OpenAPI
-    url: openapi/dynamic-xyz-sessions-api-openapi.yml
-- aid: dynamic-labs:dynamic-xyz-settings-api
+    url: openapi/dynamic-labs-sessions-api-openapi.yml
+- aid: dynamic-labs:dynamic-labs-settings-api
   name: Dynamic Settings API
   description: The Settings API from Dynamic — 9 operation(s) for settings.
-  humanURL: https://docs.dynamic.xyz/api-reference/overview
+  humanURL: https://www.dynamic.xyz/docs/api-reference/users
   baseURL: https://app.dynamicauth.com/api/v0
   tags:
   - Settings
   properties:
   - type: OpenAPI
-    url: openapi/dynamic-xyz-settings-api-openapi.yml
-- aid: dynamic-labs:dynamic-xyz-testaccount-api
-  name: Dynamic TestAccount API
+    url: openapi/dynamic-labs-settings-api-openapi.yml
+- aid: dynamic-labs:dynamic-labs-testaccount-api
+  name: Dynamic Test Account API
   description: The TestAccount API from Dynamic — 1 operation(s) for testaccount.
-  humanURL: https://docs.dynamic.xyz/api-reference/overview
+  humanURL: https://www.dynamic.xyz/docs/api-reference/users
   baseURL: https://app.dynamicauth.com/api/v0
   tags:
   - TestAccount
   properties:
   - type: OpenAPI
-    url: openapi/dynamic-xyz-testaccount-api-openapi.yml
-- aid: dynamic-labs:dynamic-xyz-tokens-api
-  name: Dynamic Tokens API
-  description: The Tokens API from Dynamic — 2 operation(s) for tokens.
-  humanURL: https://docs.dynamic.xyz/api-reference/overview
-  baseURL: https://app.dynamicauth.com/api/v0
-  tags:
-  - Tokens
-  properties:
-  - type: OpenAPI
-    url: openapi/dynamic-xyz-tokens-api-openapi.yml
-- aid: dynamic-labs:dynamic-xyz-userapitokens-api
-  name: Dynamic UserApiTokens API
+    url: openapi/dynamic-labs-testaccount-api-openapi.yml
+- aid: dynamic-labs:dynamic-labs-userapitokens-api
+  name: Dynamic User API Tokens API
   description: The UserApiTokens API from Dynamic — 2 operation(s) for userapitokens.
-  humanURL: https://docs.dynamic.xyz/api-reference/overview
+  humanURL: https://www.dynamic.xyz/docs/api-reference/users
   baseURL: https://app.dynamicauth.com/api/v0
   tags:
-  - User API Tokens
-  tags_raw:
   - UserApiTokens
   properties:
   - type: OpenAPI
-    url: openapi/dynamic-xyz-userapitokens-api-openapi.yml
-- aid: dynamic-labs:dynamic-xyz-visits-api
+    url: openapi/dynamic-labs-userapitokens-api-openapi.yml
+- aid: dynamic-labs:dynamic-labs-visits-api
   name: Dynamic Visits API
   description: The Visits API from Dynamic — 1 operation(s) for visits.
-  humanURL: https://docs.dynamic.xyz/api-reference/overview
+  humanURL: https://www.dynamic.xyz/docs/api-reference/users
   baseURL: https://app.dynamicauth.com/api/v0
   tags:
   - Visits
   properties:
   - type: OpenAPI
-    url: openapi/dynamic-xyz-visits-api-openapi.yml
-- aid: dynamic-labs:dynamic-xyz-waas-api
+    url: openapi/dynamic-labs-visits-api-openapi.yml
+- aid: dynamic-labs:dynamic-labs-waas-api
   name: Dynamic Waas API
   description: The Waas API from Dynamic — 14 operation(s) for waas.
-  humanURL: https://docs.dynamic.xyz/api-reference/overview
+  humanURL: https://www.dynamic.xyz/docs/api-reference/users
   baseURL: https://app.dynamicauth.com/api/v0
   tags:
   - Waas
   properties:
   - type: OpenAPI
-    url: openapi/dynamic-xyz-waas-api-openapi.yml
-- aid: dynamic-labs:dynamic-xyz-walletconnect-api
-  name: Dynamic WalletConnect API
+    url: openapi/dynamic-labs-waas-api-openapi.yml
+- aid: dynamic-labs:dynamic-labs-walletconnect-api
+  name: Dynamic Wallet Connect API
   description: The WalletConnect API from Dynamic — 1 operation(s) for walletconnect.
-  humanURL: https://docs.dynamic.xyz/api-reference/overview
+  humanURL: https://www.dynamic.xyz/docs/api-reference/users
   baseURL: https://app.dynamicauth.com/api/v0
   tags:
   - WalletConnect
   properties:
   - type: OpenAPI
-    url: openapi/dynamic-xyz-walletconnect-api-openapi.yml
+    url: openapi/dynamic-labs-walletconnect-api-openapi.yml
 common:
 - type: AgenticAccess
   url: agentic-access/dynamic-labs-agentic-access.yml
