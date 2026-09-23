@@ -1,0 +1,253 @@
+# x-archived-from: dynamic-xyz-sessions-api-openapi.yml
+# x-archived-on: 2026-09-16
+openapi: 3.2.0
+info:
+  title: Dashboard Allowlists Sessions API
+  description: Dashboard API documentation
+  version: 1.0.0
+servers:
+- url: https://app.dynamicauth.com/api/v0
+- url: https://app.dynamic.xyz/api/v0
+- url: http://localhost:3333/api/v0
+tags:
+- name: Sessions
+paths:
+  /sessions/{sessionId}/revoke:
+    put:
+      summary: Revoke a session
+      operationId: revokeSessionById
+      tags:
+      - Sessions
+      security:
+      - bearerAuth: []
+      parameters:
+      - $ref: '#/components/parameters/sessionId'
+      responses:
+        '200':
+          description: Successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /users/{userId}/sessions/{sessionId}:
+    get:
+      operationId: getSessionById
+      summary: Get a session by ID
+      tags:
+      - Sessions
+      parameters:
+      - $ref: '#/components/parameters/userId'
+      - $ref: '#/components/parameters/sessionId'
+      responses:
+        '200':
+          description: Successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - bearerAuth: []
+  /environments/{environmentId}/users/sessions/revoke:
+    post:
+      operationId: revokeAllEnvironmentSessions
+      summary: Revoke all sessions for an environment
+      description: Queues the revocation of all user sessions in the specified environment. This is an asynchronous operation - the job runs in the background.
+      tags:
+      - Sessions
+      parameters:
+      - $ref: '#/components/parameters/environmentId'
+      responses:
+        '202':
+          description: Session revocation has been queued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RevokeAllSessionsResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/ForbiddenWithErrorAndPayload'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - bearerAuth: []
+components:
+  responses:
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BadRequest'
+    ForbiddenWithErrorAndPayload:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ForbiddenWithErrorAndPayload'
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Forbidden'
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/InternalServerError'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Unauthorized'
+    NotFound:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/NotFound'
+  schemas:
+    Session:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/uuid'
+        createdAt:
+          type: string
+          format: date-time
+        ipAddress:
+          type:
+          - string
+          - 'null'
+        userAgent:
+          type:
+          - string
+          - 'null'
+        revokedAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+    WalletPublicKey:
+      type: string
+      pattern: ^[A-Za-z0-9]{18,100}$
+      description: Valid blockchain wallet address, must be an alphanumeric string without any special characters
+      example: '0xbF394748301603f18d953C90F0b087CBEC0E1834'
+      maxLength: 255
+    Forbidden:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Access Forbidden
+    Unauthorized:
+      type: object
+      properties:
+        error:
+          type: string
+          example: No jwt provided!
+    InternalServerError:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Internal Server Error
+    uuid:
+      type: string
+      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+      minLength: 36
+      maxLength: 36
+      example: 95b11417-f18f-457f-8804-68e361f9164f
+    BadRequest:
+      type: object
+      properties:
+        error:
+          type: string
+    NotFound:
+      type: object
+      required:
+      - error
+      - code
+      properties:
+        error:
+          type: string
+          example: Not Found
+        code:
+          type: string
+          example: not_found
+    ForbiddenErrorPayload:
+      type: object
+      properties:
+        walletPublicKey:
+          $ref: '#/components/schemas/WalletPublicKey'
+        email:
+          type: string
+          format: email
+    ForbiddenWithErrorAndPayload:
+      type: object
+      properties:
+        error:
+          $ref: '#/components/schemas/ErrorMessageWithCode'
+        payload:
+          $ref: '#/components/schemas/ForbiddenErrorPayload'
+    ErrorMessageWithCode:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+    RevokeAllSessionsResponse:
+      type: object
+      required:
+      - message
+      properties:
+        message:
+          type: string
+          description: Status message indicating the revocation has been queued
+  parameters:
+    sessionId:
+      name: sessionId
+      in: path
+      description: ID of the session
+      required: true
+      schema:
+        $ref: '#/components/schemas/uuid'
+    environmentId:
+      in: path
+      name: environmentId
+      required: true
+      description: ID of the environment
+      schema:
+        $ref: '#/components/schemas/uuid'
+    userId:
+      in: path
+      name: userId
+      schema:
+        $ref: '#/components/schemas/uuid'
+      required: true
+      description: UUID of the user
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

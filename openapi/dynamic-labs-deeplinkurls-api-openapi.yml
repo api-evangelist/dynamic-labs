@@ -1,0 +1,954 @@
+openapi: 3.2.0
+info:
+  title: Dashboard Allowlists Deeplink URLS API
+  description: Dashboard API documentation
+  version: 1.0.0
+servers:
+- url: https://app.dynamicauth.com/api/v0
+- url: https://app.dynamic.xyz/api/v0
+- url: http://localhost:3333/api/v0
+tags:
+- name: DeeplinkUrls
+paths:
+  /environments/{environmentId}/deeplinkUrls:
+    get:
+      operationId: getDeeplinkUrls
+      tags:
+      - DeeplinkUrls
+      summary: Get all the whitelisted mobile deeplink URLs for a project environment
+      parameters:
+      - $ref: '#/components/parameters/environmentId'
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: List of whitelisted mobile deeplink URLs for this project environment
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeeplinkUrlsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      operationId: addDeeplinkUrl
+      tags:
+      - DeeplinkUrls
+      summary: Whitelists a mobile deeplink URL for this project environment
+      parameters:
+      - $ref: '#/components/parameters/environmentId'
+      security:
+      - bearerAuth: []
+      requestBody:
+        description: Fields necessary to add the deeplink url
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddDeeplinkUrlRequest'
+      responses:
+        '201':
+          description: Mobile deeplink URL was whitelisted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeeplinkUrlResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /deeplinkUrls/{deeplinkUrlId}:
+    delete:
+      operationId: deleteDeeplinkUrlById
+      tags:
+      - DeeplinkUrls
+      summary: Delete a mobile deeplink URL by id
+      parameters:
+      - $ref: '#/components/parameters/deeplinkUrlId'
+      responses:
+        '204':
+          description: successful operation
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - bearerAuth: []
+components:
+  schemas:
+    InternalServerError:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Internal Server Error
+    ProviderKernelVersionEnum:
+      type: string
+      enum:
+      - v2_4
+      - v3_0
+      - v3_1
+      - v3_2
+      - v3_3
+    CustomFieldType:
+      type: string
+      enum:
+      - text
+      - checkbox
+      - select
+    WaasWalletProperties:
+      type: object
+      properties:
+        keyShares:
+          type: array
+          items:
+            $ref: '#/components/schemas/WalletKeyShareInfo'
+        thresholdSignatureScheme:
+          $ref: '#/components/schemas/ThresholdSignatureScheme'
+        derivationPath:
+          type: string
+          description: The derivation path for the wallet
+        settings:
+          $ref: '#/components/schemas/WaasWalletSettings'
+        version:
+          $ref: '#/components/schemas/EmbeddedWalletVersionEnum'
+    DeeplinkUrlResponse:
+      type: object
+      required:
+      - id
+      - url
+      - createdAt
+      - projectEnvironmentId
+      properties:
+        id:
+          $ref: '#/components/schemas/uuid'
+        url:
+          $ref: '#/components/schemas/deeplinkUrl'
+        createdAt:
+          type: string
+          format: date-time
+    HardwareWalletProperties:
+      type: object
+      properties:
+        hardwareWallet:
+          $ref: '#/components/schemas/HardwareWalletEnum'
+    deeplinkUrl:
+      type: string
+      pattern: ^([a-zA-Z+-]{2,20}):\/\/(?!.*\*.*\*.*)[-*a-zA-Z0-9.-\/]{0,255}(:[*0-9]{1,5})?((\/|\?).*)?$
+      description: A valid deeplink url. Accepts custom schemes. Must not include any paths. A single wildcard (*) can be used as the first subdomain.
+      example: mydemoapp://*.redirect
+    ThresholdSignatureScheme:
+      type: string
+      enum:
+      - TWO_OF_TWO
+      - TWO_OF_THREE
+      - THREE_OF_FIVE
+    ProviderEnum:
+      type: string
+      description: The 'turnkey' value is deprecated and will be removed in a future version.
+      enum:
+      - emailOnly
+      - magicLink
+      - apple
+      - bitbucket
+      - coinbasesocial
+      - discord
+      - epicgames
+      - facebook
+      - farcaster
+      - github
+      - gitlab
+      - google
+      - instagram
+      - linkedin
+      - microsoft
+      - twitch
+      - twitter
+      - blocto
+      - banxa
+      - coinbaseOnramp
+      - cryptoDotCom
+      - dynamic
+      - alchemy
+      - zerodev
+      - telegram
+      - turnkey
+      - coinbaseWaas
+      - sms
+      - spotify
+      - tiktok
+      - line
+      - steam
+      - shopify
+      - zksync
+      - kraken
+      - blockaid
+      - passkey
+      - okta
+      - sendgrid
+      - resend
+    MergeUserConflict:
+      type: object
+      description: Contains a merge conflict between two users with different values for the same user field data
+      required:
+      - field
+      - fromUser
+      - currentUser
+      properties:
+        field:
+          $ref: '#/components/schemas/ProjectSettingsKyc'
+        fromUser:
+          $ref: '#/components/schemas/MergeUser'
+        currentUser:
+          $ref: '#/components/schemas/MergeUser'
+    Unauthorized:
+      type: object
+      properties:
+        error:
+          type: string
+          example: No jwt provided!
+    NonEmptyStringWith255MaxLength:
+      type: string
+      pattern: ^(?=\S)[\p{L}\p{N}a-zA-Z _.,:!?&%@\/+\-'|]+(?<=\S)$
+      maxLength: 255
+      example: An example name
+    WalletAddressType:
+      type: string
+      enum:
+      - ordinals
+      - payment
+      - cosmos
+      - evm
+      - ton
+    MfaBackupCodeAcknowledgement:
+      type:
+      - string
+      - 'null'
+      enum:
+      - pending
+      - complete
+    KycFieldType:
+      type: string
+      enum:
+      - standard
+      - custom
+    AddDeeplinkUrlRequest:
+      type: object
+      required:
+      - url
+      properties:
+        url:
+          $ref: '#/components/schemas/deeplinkUrl'
+    JwtVerifiedCredentialFormatEnum:
+      type: string
+      enum:
+      - blockchain
+      - email
+      - oauth
+      - passkey
+      - phoneNumber
+      - externalUser
+    CoinbaseMpcWalletProperties:
+      type: object
+      properties:
+        claimed:
+          type: boolean
+          description: Dynamic pregenerated this wallet and stored the passcode
+        source:
+          $ref: '#/components/schemas/PasswordSourceTypeEnum'
+    UnprocessableEntity:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Resources already exists for this Object
+        code:
+          $ref: '#/components/schemas/UnprocessableEntityErrorCode'
+        payload:
+          $ref: '#/components/schemas/UnprocessableEntityErrorPayload'
+      required:
+      - error
+    BaseUser:
+      type: object
+      required:
+      - id
+      - projectEnvironmentId
+      properties:
+        id:
+          $ref: '#/components/schemas/uuid'
+        projectEnvironmentId:
+          $ref: '#/components/schemas/uuid'
+        verifiedCredentials:
+          type: array
+          items:
+            $ref: '#/components/schemas/JwtVerifiedCredential'
+        lastVerifiedCredentialId:
+          $ref: '#/components/schemas/uuid'
+        sessionId:
+          $ref: '#/components/schemas/uuid'
+        alias:
+          $ref: '#/components/schemas/OptionalNullableNonEmptyStringWith255MaxLength'
+        country:
+          $ref: '#/components/schemas/CountryCode'
+        email:
+          type:
+          - string
+          - 'null'
+          format: email
+          maxLength: 255
+        firstName:
+          $ref: '#/components/schemas/OptionalNullableNonEmptyStringWith255MaxLength'
+        jobTitle:
+          $ref: '#/components/schemas/OptionalNullableNonEmptyStringWith255MaxLength'
+        lastName:
+          $ref: '#/components/schemas/OptionalNullableNonEmptyStringWith255MaxLength'
+        phoneNumber:
+          type:
+          - string
+          - 'null'
+          maxLength: 255
+        policiesConsent:
+          type:
+          - boolean
+          - 'null'
+        tShirtSize:
+          $ref: '#/components/schemas/OptionalNullableNonEmptyStringWith255MaxLength'
+        team:
+          $ref: '#/components/schemas/OptionalNullableNonEmptyStringWith255MaxLength'
+        username:
+          $ref: '#/components/schemas/OptionalNullableNonEmptyStringWith255MaxLength'
+        firstVisit:
+          type: string
+          format: date-time
+        lastVisit:
+          type: string
+          format: date-time
+        newUser:
+          type: boolean
+        metadata:
+          type: object
+        mfaBackupCodeAcknowledgement:
+          $ref: '#/components/schemas/MfaBackupCodeAcknowledgement'
+        btcWallet:
+          type:
+          - string
+          - 'null'
+        kdaWallet:
+          type:
+          - string
+          - 'null'
+        ltcWallet:
+          type:
+          - string
+          - 'null'
+        ckbWallet:
+          type:
+          - string
+          - 'null'
+        kasWallet:
+          type:
+          - string
+          - 'null'
+        dogeWallet:
+          type:
+          - string
+          - 'null'
+        emailNotification:
+          type:
+          - boolean
+          - 'null'
+        discordNotification:
+          type:
+          - boolean
+          - 'null'
+        newsletterNotification:
+          type:
+          - boolean
+          - 'null'
+        lists:
+          type: array
+          description: Access lists evaluated by Dynamic when considering access for the user.
+          items:
+            type: string
+        scope:
+          type: string
+          description: 'A whitespace-separate list of permissions associated with the JWT token issued. This conforms to the JWT standard for scope claims: https://datatracker.ietf.org/doc/html/rfc8693#section-4.2'
+          example: superuser marketing operations
+        missingFields:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProjectSettingsKyc'
+    WalletAdditionalAddress:
+      type: object
+      description: An additional address associated with a wallet.
+      required:
+      - address
+      - type
+      properties:
+        address:
+          type: string
+          description: An address associated with a wallet.
+        publicKey:
+          type: string
+          description: The public key associated with the address.
+        type:
+          $ref: '#/components/schemas/WalletAddressType'
+    ecdsaValidatorOptions:
+      type: string
+      enum:
+      - zerodev_signer_to_ecdsa
+      - zerodev_multi_chain
+    OptionalNullableNonEmptyStringWith255MaxLength:
+      type:
+      - string
+      - 'null'
+      pattern: ^$|^(?=\S)[\p{L}\p{N} _.,:!?&%@\/+-]+(?<=\S)$
+      example: An example name
+      maxLength: 255
+    DeeplinkUrlsResponse:
+      type: object
+      required:
+      - deeplinkUrls
+      properties:
+        deeplinkUrls:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeeplinkUrlResponse'
+    CustomFieldValidationRules:
+      type: object
+      properties:
+        unique:
+          type: boolean
+          description: If this field must be unique for every user in the environment
+        regex:
+          type: string
+          maxLength: 255
+          description: The regex pattern that the text field must match
+          example: ^0x
+        validOptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/CustomFieldValidValue'
+          description: The dropdown options for the select field
+          example:
+          - label: small
+          - label: medium
+          - label: large
+        checkboxText:
+          type: string
+          maxLength: 255
+          description: The text that will be displayed for the checkbox field
+          example: Agree to the terms and conditions
+      description: Optional validation rules for the custom field
+    HardwareWalletEnum:
+      type: string
+      enum:
+      - ledger
+    ProjectSettingsKyc:
+      type: object
+      properties:
+        name:
+          type: string
+        required:
+          type: boolean
+        enabled:
+          type: boolean
+        unique:
+          type: boolean
+        verify:
+          type: boolean
+        type:
+          $ref: '#/components/schemas/KycFieldType'
+        validationRules:
+          $ref: '#/components/schemas/CustomFieldValidationRules'
+        validationType:
+          $ref: '#/components/schemas/CustomFieldType'
+        label:
+          type: string
+        position:
+          type: number
+      required:
+      - name
+      - required
+      - enabled
+      - unique
+      - verify
+    MergeConflicts:
+      type: object
+      description: Contains information needed for the SDK to surface merge conflicts when attempting to merge information from one user to another
+      required:
+      - fromUser
+      - conflicts
+      properties:
+        fromUser:
+          $ref: '#/components/schemas/SdkUser'
+        conflicts:
+          type: array
+          items:
+            $ref: '#/components/schemas/MergeUserConflict'
+    CustomFieldValidValue:
+      type: object
+      required:
+      - label
+      properties:
+        label:
+          $ref: '#/components/schemas/NonEmptyStringWith255MaxLengthAndSpecialChars'
+        key:
+          $ref: '#/components/schemas/NonEmptyStringWith255MaxLengthAndSpecialChars'
+    NameServiceData:
+      type: object
+      properties:
+        avatar:
+          type: string
+        name:
+          type: string
+    UnprocessableEntityErrorPayload:
+      type: object
+      description: Contains information which the integrating client of this API can use to tailor an experience to a customer to fix the underlying issue that triggered this error.
+      properties:
+        email:
+          type: string
+          format: email
+          example: joe@email.com
+        loginProvider:
+          $ref: '#/components/schemas/ProviderEnum'
+        embeddedWalletName:
+          type: string
+        embeddedSocialSigninProvider:
+          $ref: '#/components/schemas/ProviderEnum'
+        mergeConflicts:
+          $ref: '#/components/schemas/MergeConflicts'
+        additionalMessages:
+          type: array
+          items:
+            type: string
+    SdkUser:
+      allOf:
+      - $ref: '#/components/schemas/BaseUser'
+      - type: object
+        required:
+        - verifiedCredentials
+    WalletProperties:
+      anyOf:
+      - $ref: '#/components/schemas/TurnkeyWalletProperties'
+      - $ref: '#/components/schemas/HardwareWalletProperties'
+      - $ref: '#/components/schemas/CoinbaseMpcWalletProperties'
+      - $ref: '#/components/schemas/SmartWalletProperties'
+      - $ref: '#/components/schemas/WaasWalletProperties'
+    UnprocessableEntityErrorCode:
+      type: string
+      enum:
+      - email_cannot_be_null
+      - exchange_cannot_be_enabled
+      - transfer_amount_too_small
+      - transfer_address_not_whitelisted
+      - invalid_scopes
+      - unknown_transfer_error
+      - transfer_mfa_required
+      - transfer_mfa_failed
+      - invalid_transfer_funds
+      - invalid_transfer_currency
+      - invalid_exchange_provider
+      - invalid_transfer_network
+      - invalid_email
+      - email_already_exists
+      - allowlist_already_exists
+      - allowlist_entry_already_exists
+      - reassign_wallet_error
+      - reassign_wallet_confirm
+      - members_cannot_delete_themself
+      - username_already_exists
+      - wrong_email_verification_token
+      - wrong_sms_verification_token
+      - invalid_email_verification
+      - invalid_sms_verification
+      - invalid_verification
+      - invalid_position
+      - too_many_sms_verification_attempts
+      - too_many_email_verification_attempts
+      - too_many_verification_attempts
+      - organization_name_already_exists
+      - project_name_already_exists
+      - wallet_not_deployed
+      - email_verification_required
+      - phone_verification_required
+      - invite_address_required
+      - provider_not_available
+      - forbidden_unlink_request
+      - invalid_unlink_request
+      - too_many_api_tokens
+      - lock_timeout
+      - lock_too_many_attempts
+      - nft_token_gating_not_supported_for_chain
+      - empty_chain_name
+      - no_enabled_email_provider
+      - no_enabled_sms_provider
+      - invalid_key_export_url
+      - invalid_dynamic_props
+      - too_many_requests
+      - too_many_organizations_for_user
+      - too_many_projects_for_organization
+      - email_associated_with_different_provider
+      - user_has_already_account_with_email
+      - user_has_already_account_with_phone_number
+      - other_verify_failure
+      - email_tied_to_embedded_wallet
+      - invalid_invite
+      - social_account_already_exists
+      - invalid_email_address
+      - invalid_gate
+      - conflicting_embedded_wallet_providers
+      - invalid_user
+      - invalid_cors_origins
+      - invalid_mobile_deeplink_urls
+      - unauthorized_mobile_deeplink_url
+      - invalid_private_key_format
+      - invalid_embedded_wallet_settings
+      - wallet_not_support_passkey
+      - recovery_email_unavailable_or_invalid
+      - connect_error
+      - invalid_wallet_name
+      - invalid_wallet_address
+      - email_recovery_disabled
+      - no_compatible_wallet_service_enabled
+      - missing_aa_project_id
+      - linked_embedded_wallet
+      - invalid_mpc_environment
+      - invalid_regex
+      - repeated_options
+      - missing_phone_number_or_email
+      - duplicate_exists
+      - mfa_device_not_found
+      - mfa_invalid_code
+      - mfa_invalid_request
+      - invalid_phone
+      - gate_exists
+      - invalid_embedded_wallet_chains_configuration
+      - merge_accounts_confirmation
+      - merge_accounts_invalid
+      - invalid_wallet_id
+      - unable_to_fetch_balances
+      - cannot_switch_to_unique
+      - custom_field_data_not_unique
+      - metadata_size_exceeded
+      - invalid_custom_hostname
+      - blocked_user_cannot_transfer_wallet
+      - feature_not_enabled_in_suborg
+      - invalid_username
+      - invalid_external_auth
+      - invalid_chain_address_match
+      - invalid_update
+      - cannot_delete_last_project
+      - no_hd_wallet_found
+      - wallet_account_exists_for_chain
+      - too_many_embedded_wallets_for_user
+      - too_many_embedded_wallets_per_chain_for_user
+      - invalid_session_public_key
+      - custom_field_not_unique
+      - invalid_aa_project_configuration
+      - no_v1_embedded_wallet_found
+      - embedded_wallet_address_already_linked
+      - key_share_already_backed_up
+      - invalid_key_shares_length
+      - wallet_service_connection_error
+      - no_global_wallet_found
+      - invalid_metadata_value
+      - max_passkeys_per_user
+      - passkey_not_found
+      - cannot_delete_passkey_linked_to_embedded_wallet
+      - cannot_delete_last_sign_in_verified_credential
+    WaasWalletSettings:
+      type: object
+      properties:
+        hasDeniedDelegatedAccess:
+          type: boolean
+        shouldRefreshOnNextSignOn:
+          type: boolean
+        reshareOnNextSignOn:
+          $ref: '#/components/schemas/ThresholdSignatureScheme'
+        revokeOnNextSignOn:
+          type: boolean
+    TurnkeyWalletProperties:
+      deprecated: true
+      type: object
+      properties:
+        turnkeySubOrganizationId:
+          allOf:
+          - $ref: '#/components/schemas/uuid'
+          deprecated: true
+        turnkeyPrivateKeyId:
+          allOf:
+          - $ref: '#/components/schemas/uuid'
+          deprecated: true
+        turnkeyHDWalletId:
+          allOf:
+          - $ref: '#/components/schemas/uuid'
+          deprecated: true
+        isAuthenticatorAttached:
+          type: boolean
+          description: Whether or not the wallet has an authenticator (passkey, api key, etc) attached to it.
+        turnkeyUserId:
+          allOf:
+          - $ref: '#/components/schemas/uuid'
+          deprecated: true
+        isSessionKeyCompatible:
+          type: boolean
+        version:
+          $ref: '#/components/schemas/EmbeddedWalletVersionEnum'
+        ecdsaProviderType:
+          $ref: '#/components/schemas/ecdsaValidatorOptions'
+        entryPointVersion:
+          $ref: '#/components/schemas/ProviderEntryPointVersionEnum'
+        kernelVersion:
+          $ref: '#/components/schemas/ProviderKernelVersionEnum'
+    CountryCode:
+      type:
+      - string
+      - 'null'
+      description: Standard ISO 3166-1 alpha-2 two-letter country code
+      pattern: ^[A-Z]{2}$
+      example: US
+      maxLength: 255
+    EmbeddedWalletVersionEnum:
+      type: string
+      enum:
+      - V1
+      - V2
+      - V3
+    WalletProviderEnum:
+      type: string
+      enum:
+      - browserExtension
+      - custodialService
+      - walletConnect
+      - qrCode
+      - deepLink
+      - embeddedWallet
+      - smartContractWallet
+    BadRequest:
+      type: object
+      properties:
+        error:
+          type: string
+    MergeUser:
+      type: object
+      description: Contains the current field value for the user.
+      required:
+      - userId
+      - value
+      properties:
+        userId:
+          $ref: '#/components/schemas/uuid'
+        value:
+          $ref: '#/components/schemas/NonEmptyStringWith255MaxLength'
+    ProviderEntryPointVersionEnum:
+      type: string
+      enum:
+      - v6
+      - v7
+    WalletKeyShareInfo:
+      type: object
+      required:
+      - id
+      - backupLocation
+      - passwordEncrypted
+      properties:
+        id:
+          $ref: '#/components/schemas/uuid'
+        backupLocation:
+          type: string
+        passwordEncrypted:
+          type: boolean
+        externalKeyShareId:
+          $ref: '#/components/schemas/uuid'
+    uuid:
+      type: string
+      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+      minLength: 36
+      maxLength: 36
+      example: 95b11417-f18f-457f-8804-68e361f9164f
+    SmartWalletProperties:
+      type: object
+      properties:
+        entryPointVersion:
+          $ref: '#/components/schemas/ProviderEntryPointVersionEnum'
+        kernelVersion:
+          $ref: '#/components/schemas/ProviderKernelVersionEnum'
+        ecdsaProviderType:
+          $ref: '#/components/schemas/ecdsaValidatorOptions'
+    WalletPublicKey:
+      type: string
+      pattern: ^[A-Za-z0-9]{18,100}$
+      description: Valid blockchain wallet address, must be an alphanumeric string without any special characters
+      example: '0xbF394748301603f18d953C90F0b087CBEC0E1834'
+      maxLength: 255
+    PasswordSourceTypeEnum:
+      type: string
+      enum:
+      - dynamic
+      - user
+    Forbidden:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Access Forbidden
+    JwtVerifiedCredential:
+      type: object
+      required:
+      - id
+      - format
+      - signInEnabled
+      properties:
+        address:
+          $ref: '#/components/schemas/WalletPublicKey'
+        chain:
+          type: string
+        refId:
+          $ref: '#/components/schemas/uuid'
+        signerRefId:
+          $ref: '#/components/schemas/uuid'
+        email:
+          type: string
+          format: email
+        id:
+          $ref: '#/components/schemas/uuid'
+        name_service:
+          $ref: '#/components/schemas/NameServiceData'
+        public_identifier:
+          description: This is used to publicly identify a verified credential in a human-friendly way. For example, this will be the email address if credential format=email.
+          type: string
+        wallet_name:
+          type: string
+        wallet_provider:
+          $ref: '#/components/schemas/WalletProviderEnum'
+        wallet_properties:
+          $ref: '#/components/schemas/WalletProperties'
+        format:
+          $ref: '#/components/schemas/JwtVerifiedCredentialFormatEnum'
+        oauth_provider:
+          $ref: '#/components/schemas/ProviderEnum'
+        oauth_username:
+          type: string
+        oauth_display_name:
+          type:
+          - string
+          - 'null'
+        oauth_account_id:
+          type:
+          - string
+          - 'null'
+        phoneNumber:
+          description: This field contains the phone number in the country. This could also contain the area code within a country.
+          example: '9171113333'
+          type: string
+        phoneCountryCode:
+          description: This field contains the phone international country code. See https://countrycode.org/
+          example: '1'
+          type: string
+        isoCountryCode:
+          description: ISO-3166 two-character country code. See https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes
+          example: US
+          type: string
+        oauth_account_photos:
+          type: array
+          items:
+            type: string
+        oauth_emails:
+          type: array
+          items:
+            type: string
+        oauth_metadata:
+          type: object
+          description: This object contains JSON metadata for a social-based verified credential. It may contain data about the user that does not fit into the other structured fields, and could include arbitrary fields about the user from the oauth provider's API.
+        previous_users:
+          description: This will only be provided in the responses for GET /users/{userId}.Previous user IDs that owned this verified credential and was tranfered to the current user ID.
+          type: array
+          items:
+            $ref: '#/components/schemas/uuid'
+        embedded_wallet_id:
+          type:
+          - string
+          - 'null'
+        wallet_additional_addresses:
+          type: array
+          items:
+            $ref: '#/components/schemas/WalletAdditionalAddress'
+        lastSelectedAt:
+          description: This timestamp indicates the last time this verified wallet was either connected to the user account or selected to become the primary wallet on the account.
+          type: string
+          format: date-time
+        signInEnabled:
+          type: boolean
+          description: This indicates if the user can sign in with this credential
+        verifiedAt:
+          type: string
+          format: date-time
+          description: This timestamp indicates the last time this verified credential was verified.
+    NonEmptyStringWith255MaxLengthAndSpecialChars:
+      type: string
+      pattern: ^(?=\S)[\p{L}\p{N}a-zA-Z _.,:!?&%@\/+\-'()\[\]*]+(?<=\S)$
+      maxLength: 255
+      example: An example name
+  parameters:
+    environmentId:
+      in: path
+      name: environmentId
+      required: true
+      description: ID of the environment
+      schema:
+        $ref: '#/components/schemas/uuid'
+    deeplinkUrlId:
+      name: deeplinkUrlId
+      in: path
+      description: ID of the mobile deeplink URL
+      required: true
+      schema:
+        $ref: '#/components/schemas/uuid'
+  responses:
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Forbidden'
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BadRequest'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Unauthorized'
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/InternalServerError'
+    UnprocessableEntity:
+      description: Unprocessable Entity
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UnprocessableEntity'
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

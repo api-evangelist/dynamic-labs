@@ -1,0 +1,173 @@
+openapi: 3.2.0
+info:
+  title: Dashboard Allowlists Mfa Settings API
+  description: Dashboard API documentation
+  version: 1.0.0
+servers:
+- url: https://app.dynamicauth.com/api/v0
+- url: https://app.dynamic.xyz/api/v0
+- url: http://localhost:3333/api/v0
+tags:
+- name: MFA Settings
+paths:
+  /organizations/{organizationId}/mfaSettings:
+    get:
+      operationId: getOrganizationMfaSettings
+      tags:
+      - MFA Settings
+      summary: Get all mfa settings for an organization
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      responses:
+        '200':
+          description: List of mfa settings for the organization
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationMfaSettingsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - bearerAuth: []
+  /organizations/{organizationId}/mfaSettings/{mfaDeviceType}/enable:
+    put:
+      operationId: enableMfaDeviceForOrganization
+      summary: Enable the given mfa device for the organization
+      tags:
+      - MFA Settings
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/mfaDeviceType'
+      responses:
+        '200':
+          description: Successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationMfaSettings'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - bearerAuth: []
+  /organizations/{organizationId}/mfaSettings/{mfaDeviceType}/disable:
+    put:
+      operationId: disableMfaDeviceForOrganization
+      summary: Disable the given mfa device for the organization
+      tags:
+      - MFA Settings
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/mfaDeviceType'
+      responses:
+        '200':
+          description: Successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationMfaSettings'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - bearerAuth: []
+components:
+  schemas:
+    InternalServerError:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Internal Server Error
+    Unauthorized:
+      type: object
+      properties:
+        error:
+          type: string
+          example: No jwt provided!
+    uuid:
+      type: string
+      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+      minLength: 36
+      maxLength: 36
+      example: 95b11417-f18f-457f-8804-68e361f9164f
+    OrganizationMfaSettings:
+      type: object
+      required:
+      - mfaDeviceType
+      properties:
+        enabledAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        mfaDeviceType:
+          $ref: '#/components/schemas/MFADeviceType'
+    OrganizationMfaSettingsResponse:
+      type: object
+      properties:
+        mfaSettings:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrganizationMfaSettings'
+    Forbidden:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Access Forbidden
+    MFADeviceType:
+      type: string
+      enum:
+      - totp
+      - passkey
+      - email
+  parameters:
+    organizationId:
+      in: path
+      name: organizationId
+      required: true
+      description: ID of organization
+      schema:
+        $ref: '#/components/schemas/uuid'
+    mfaDeviceType:
+      in: path
+      name: mfaDeviceType
+      required: true
+      description: MFA device type
+      schema:
+        $ref: '#/components/schemas/MFADeviceType'
+  responses:
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Forbidden'
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/InternalServerError'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Unauthorized'
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

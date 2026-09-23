@@ -1,6 +1,6 @@
-openapi: 3.0.3
+openapi: 3.2.0
 info:
-  title: Dynamic Allowlists API Tokens API
+  title: Dynamic API Tokens API
   description: Representative OpenAPI description of the Dynamic environment-scoped REST API for web3 authentication and embedded wallets. Admin endpoints authenticate with an environment-scoped bearer API token (dyn_ prefixed); SDK endpoints authenticate with a user JWT obtained via the client SDK. This document is a faithful, non-exhaustive representation of publicly documented surfaces at https://docs.dynamic.xyz/api-reference. Consult the live API reference for the complete schema catalog.
   termsOfService: https://www.dynamic.xyz/terms
   contact:
@@ -23,7 +23,7 @@ paths:
       operationId: getApiTokens
       tags:
       - API Tokens
-      summary: Get API tokens for an environment.
+      summary: Get API tokens for an environment
       description: Returns the API tokens issued for the specified environment.
       parameters:
       - $ref: '#/components/parameters/EnvironmentId'
@@ -40,7 +40,7 @@ paths:
       operationId: createApiToken
       tags:
       - API Tokens
-      summary: Create a new API token.
+      summary: Create a new API token
       description: Creates a new API token for the specified environment.
       parameters:
       - $ref: '#/components/parameters/EnvironmentId'
@@ -64,7 +64,7 @@ paths:
       operationId: deleteApiToken
       tags:
       - API Tokens
-      summary: Delete an API token.
+      summary: Delete an API token
       description: Revokes and deletes the specified API token.
       parameters:
       - $ref: '#/components/parameters/EnvironmentId'
@@ -81,6 +81,25 @@ paths:
           $ref: '#/components/responses/Unauthorized'
 components:
   schemas:
+    CreateApiTokenRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        expiresAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+      required:
+      - name
+    ApiTokenList:
+      type: object
+      properties:
+        tokens:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApiToken'
     ApiToken:
       type: object
       properties:
@@ -90,34 +109,18 @@ components:
         name:
           type: string
         token:
-          type: string
+          type:
+          - string
+          - 'null'
           description: The dyn_ prefixed secret, returned only on creation.
-          nullable: true
         createdAt:
           type: string
           format: date-time
         expiresAt:
-          type: string
+          type:
+          - string
+          - 'null'
           format: date-time
-          nullable: true
-    ApiTokenList:
-      type: object
-      properties:
-        tokens:
-          type: array
-          items:
-            $ref: '#/components/schemas/ApiToken'
-    CreateApiTokenRequest:
-      type: object
-      properties:
-        name:
-          type: string
-        expiresAt:
-          type: string
-          format: date-time
-          nullable: true
-      required:
-      - name
     Error:
       type: object
       properties:
@@ -132,6 +135,13 @@ components:
           - message
       required:
       - error
+  responses:
+    Unauthorized:
+      description: The bearer token is missing or invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
   parameters:
     EnvironmentId:
       name: environmentId
@@ -141,13 +151,6 @@ components:
       schema:
         type: string
         format: uuid
-  responses:
-    Unauthorized:
-      description: The bearer token is missing or invalid.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
   securitySchemes:
     bearerAuth:
       type: http

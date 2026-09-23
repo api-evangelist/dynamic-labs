@@ -1,6 +1,6 @@
-openapi: 3.0.3
+openapi: 3.2.0
 info:
-  title: Dynamic Allowlists Environments API
+  title: Dynamic Environments API
   description: Representative OpenAPI description of the Dynamic environment-scoped REST API for web3 authentication and embedded wallets. Admin endpoints authenticate with an environment-scoped bearer API token (dyn_ prefixed); SDK endpoints authenticate with a user JWT obtained via the client SDK. This document is a faithful, non-exhaustive representation of publicly documented surfaces at https://docs.dynamic.xyz/api-reference. Consult the live API reference for the complete schema catalog.
   termsOfService: https://www.dynamic.xyz/terms
   contact:
@@ -23,7 +23,7 @@ paths:
       operationId: getEnvironment
       tags:
       - Environments
-      summary: Get an environment by ID.
+      summary: Get an environment by ID
       description: Returns the configuration and settings for the specified environment (project).
       parameters:
       - $ref: '#/components/parameters/EnvironmentId'
@@ -40,7 +40,7 @@ paths:
       operationId: updateEnvironment
       tags:
       - Environments
-      summary: Update an environment.
+      summary: Update an environment
       description: Updates settings for the specified environment.
       parameters:
       - $ref: '#/components/parameters/EnvironmentId'
@@ -60,23 +60,15 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 components:
-  parameters:
-    EnvironmentId:
-      name: environmentId
-      in: path
-      required: true
-      description: The ID of the Dynamic environment (project).
-      schema:
-        type: string
-        format: uuid
-  responses:
-    Unauthorized:
-      description: The bearer token is missing or invalid.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
   schemas:
+    EnvironmentUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        projectSettings:
+          type: object
+          additionalProperties: true
     Environment:
       type: object
       properties:
@@ -88,14 +80,6 @@ components:
         live:
           type: boolean
           description: Whether this is a live (true) or sandbox (false) environment.
-        projectSettings:
-          type: object
-          additionalProperties: true
-    EnvironmentUpdate:
-      type: object
-      properties:
-        name:
-          type: string
         projectSettings:
           type: object
           additionalProperties: true
@@ -113,6 +97,22 @@ components:
           - message
       required:
       - error
+  responses:
+    Unauthorized:
+      description: The bearer token is missing or invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  parameters:
+    EnvironmentId:
+      name: environmentId
+      in: path
+      required: true
+      description: The ID of the Dynamic environment (project).
+      schema:
+        type: string
+        format: uuid
   securitySchemes:
     bearerAuth:
       type: http

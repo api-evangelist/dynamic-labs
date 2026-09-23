@@ -1,0 +1,167 @@
+# x-archived-from: dynamic-xyz-chainalysis-api-openapi.yml
+# x-archived-on: 2026-09-16
+openapi: 3.2.0
+info:
+  title: Dashboard Allowlists Chainalysis API
+  description: Dashboard API documentation
+  version: 1.0.0
+servers:
+- url: https://app.dynamicauth.com/api/v0
+- url: https://app.dynamic.xyz/api/v0
+- url: http://localhost:3333/api/v0
+tags:
+- name: Chainalysis
+paths:
+  /environments/{environmentId}/integrations/chainalysis:
+    get:
+      summary: Find the Chainalysis configuration for an environment.
+      operationId: getChainalysisByEnvironmentId
+      tags:
+      - Chainalysis
+      parameters:
+      - $ref: '#/components/parameters/environmentId'
+      responses:
+        '200':
+          description: Chainalysis Configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChainalysisConfiguration'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: Not Found
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - bearerAuth: []
+  /environments/{environmentId}/integrations/chainalysis/sanctions/enable:
+    put:
+      summary: Enable the Sanctions API
+      operationId: enableSanctionsApiByEnvironmentId
+      tags:
+      - Chainalysis
+      security:
+      - bearerAuth: []
+      parameters:
+      - $ref: '#/components/parameters/environmentId'
+      responses:
+        '200':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChainalysisConfiguration'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /environments/{environmentId}/integrations/chainalysis/sanctions/disable:
+    put:
+      summary: Disables the Sanctions API
+      operationId: disableSanctionsApiByEnvironmentId
+      tags:
+      - Chainalysis
+      security:
+      - bearerAuth: []
+      parameters:
+      - $ref: '#/components/parameters/environmentId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChainalysisConfiguration'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+components:
+  schemas:
+    uuid:
+      type: string
+      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+      minLength: 36
+      maxLength: 36
+      example: 95b11417-f18f-457f-8804-68e361f9164f
+    Forbidden:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Access Forbidden
+    ChainalysisConfiguration:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/uuid'
+        sanctionsApiEnabled:
+          type: boolean
+        kytApiEnabled:
+          type: boolean
+        projectEnvironmentId:
+          $ref: '#/components/schemas/uuid'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+      - id
+      - projectEnvironmentId
+      - sanctionsApiEnabled
+      - kytApiEnabled
+      - createdAt
+      - updatedAt
+    Unauthorized:
+      type: object
+      properties:
+        error:
+          type: string
+          example: No jwt provided!
+    InternalServerError:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Internal Server Error
+  responses:
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Forbidden'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Unauthorized'
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/InternalServerError'
+  parameters:
+    environmentId:
+      in: path
+      name: environmentId
+      required: true
+      description: ID of the environment
+      schema:
+        $ref: '#/components/schemas/uuid'
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

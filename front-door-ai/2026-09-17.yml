@@ -1,0 +1,31 @@
+# Front Door AI Index — dynamic-labs — 2026-09-17
+# AI vocabulary counted on the provider's root page. Generated; do not edit.
+# `score` is null unless ownership is `own` — see front_door_ai.py.
+front_door_ai:
+  slug: dynamic-labs
+  lexicon_version: '1.0'
+  probed_at: '2026-09-17'
+  host: www.dynamic.xyz
+  final_host: www.dynamic.xyz
+  ownership: shared
+  owner: dynamic
+  shares_host_with:
+  - dynamic
+  inherited_from: null
+  verdict: scored
+  score: null
+  host_score: 6
+  density: null
+  words: 835
+  tiers:
+    agentic: 4
+    core: 1
+    model: 1
+  ambiguous: 5
+  top_terms:
+    MCP: 3
+    smart: 3
+    agent: 2
+    AI agent: 1
+    AI: 1
+    Claude: 1

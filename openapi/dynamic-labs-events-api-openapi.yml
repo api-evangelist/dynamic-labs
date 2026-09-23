@@ -1,0 +1,236 @@
+openapi: 3.2.0
+info:
+  title: Dashboard Allowlists Events API
+  description: Dashboard API documentation
+  version: 1.0.0
+servers:
+- url: https://app.dynamicauth.com/api/v0
+- url: https://app.dynamic.xyz/api/v0
+- url: http://localhost:3333/api/v0
+tags:
+- name: Events
+paths:
+  /eventTypes:
+    get:
+      operationId: getEventTypes
+      tags:
+      - Events
+      summary: Get event types
+      responses:
+        '200':
+          description: List of event types
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventTypesResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /environments/{environmentId}/events:
+    get:
+      operationId: getEvents
+      tags:
+      - Events
+      summary: Get environment events
+      parameters:
+      - $ref: '#/components/parameters/environmentId'
+      - $ref: '#/components/parameters/cursor'
+      - $ref: '#/components/parameters/resourceType'
+      - $ref: '#/components/parameters/startDate'
+      - $ref: '#/components/parameters/endDate'
+      responses:
+        '200':
+          description: List of envrionment events
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /environments/{environmentId}/events/{eventId}:
+    get:
+      operationId: getEventById
+      tags:
+      - Events
+      summary: Get environment event by id
+      parameters:
+      - $ref: '#/components/parameters/environmentId'
+      - $ref: '#/components/parameters/eventId'
+      responses:
+        '200':
+          description: Event for this project environment
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+components:
+  schemas:
+    InternalServerError:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Internal Server Error
+    EnvironmentEnum:
+      type: string
+      enum:
+      - sandbox
+      - live
+    EventsResponse:
+      type: object
+      properties:
+        cursor:
+          type: string
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Event'
+    EventContext:
+      type: object
+      properties:
+        userId:
+          type: string
+        version:
+          type: string
+    EventTypesResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/EventType'
+    Unauthorized:
+      type: object
+      properties:
+        error:
+          type: string
+          example: No jwt provided!
+    EventType:
+      type: object
+      required:
+      - name
+      - description
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+    uuid:
+      type: string
+      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+      minLength: 36
+      maxLength: 36
+      example: 95b11417-f18f-457f-8804-68e361f9164f
+    Forbidden:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Access Forbidden
+    Event:
+      type: object
+      required:
+      - eventId
+      - environmentId
+      - environmentName
+      - eventName
+      - timestamp
+      - data
+      - context
+      properties:
+        eventId:
+          $ref: '#/components/schemas/uuid'
+        environmentId:
+          $ref: '#/components/schemas/uuid'
+        environmentName:
+          $ref: '#/components/schemas/EnvironmentEnum'
+        eventAction:
+          type: string
+        eventName:
+          type: string
+        resourceType:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        data:
+          type: object
+        context:
+          $ref: '#/components/schemas/EventContext'
+  parameters:
+    environmentId:
+      in: path
+      name: environmentId
+      required: true
+      description: ID of the environment
+      schema:
+        $ref: '#/components/schemas/uuid'
+    endDate:
+      in: query
+      name: endDate
+      required: false
+      schema:
+        type: string
+      description: End date of the event query
+    eventId:
+      in: path
+      name: eventId
+      required: true
+      description: ID of the event
+      schema:
+        $ref: '#/components/schemas/uuid'
+    resourceType:
+      in: query
+      name: resourceType
+      schema:
+        type: string
+      required: false
+      description: Resource type of event
+    startDate:
+      in: query
+      name: startDate
+      required: false
+      schema:
+        type: string
+      description: Start date of the event query
+    cursor:
+      in: query
+      name: cursor
+      schema:
+        type: string
+      required: false
+      description: Cursor for pagination
+  responses:
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Forbidden'
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/InternalServerError'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Unauthorized'
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

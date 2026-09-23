@@ -1,6 +1,6 @@
-openapi: 3.0.3
+openapi: 3.2.0
 info:
-  title: Dynamic Allowlists JWKS API
+  title: Dynamic JWKS API
   description: Representative OpenAPI description of the Dynamic environment-scoped REST API for web3 authentication and embedded wallets. Admin endpoints authenticate with an environment-scoped bearer API token (dyn_ prefixed); SDK endpoints authenticate with a user JWT obtained via the client SDK. This document is a faithful, non-exhaustive representation of publicly documented surfaces at https://docs.dynamic.xyz/api-reference. Consult the live API reference for the complete schema catalog.
   termsOfService: https://www.dynamic.xyz/terms
   contact:
@@ -23,7 +23,7 @@ paths:
       operationId: getJwks
       tags:
       - JWKS
-      summary: Find JWKS for public key (JSON format).
+      summary: Find JWKS for public key (JSON format)
       description: Returns the JSON Web Key Set (JWKS) for the environment, used to verify the signature of Dynamic-issued JWT auth tokens server-side. This endpoint does not require authentication.
       security: []
       parameters:
@@ -36,15 +36,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/Jwks'
 components:
-  parameters:
-    EnvironmentId:
-      name: environmentId
-      in: path
-      required: true
-      description: The ID of the Dynamic environment (project).
-      schema:
-        type: string
-        format: uuid
   schemas:
     Jwks:
       type: object
@@ -66,6 +57,15 @@ components:
                 type: string
               e:
                 type: string
+  parameters:
+    EnvironmentId:
+      name: environmentId
+      in: path
+      required: true
+      description: The ID of the Dynamic environment (project).
+      schema:
+        type: string
+        format: uuid
   securitySchemes:
     bearerAuth:
       type: http

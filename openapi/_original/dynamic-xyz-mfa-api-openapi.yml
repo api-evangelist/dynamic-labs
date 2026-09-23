@@ -1,0 +1,110 @@
+# x-archived-from: dynamic-xyz-mfa-api-openapi.yml
+# x-archived-on: 2026-09-16
+openapi: 3.2.0
+info:
+  title: Dashboard Allowlists Mfa API
+  description: Dashboard API documentation
+  version: 1.0.0
+servers:
+- url: https://app.dynamicauth.com/api/v0
+- url: https://app.dynamic.xyz/api/v0
+- url: http://localhost:3333/api/v0
+tags:
+- name: Mfa
+paths:
+  /users/{userId}/mfa:
+    delete:
+      operationId: resetAllMfaDevices
+      tags:
+      - Mfa
+      summary: Delete all MFA Devices for the user
+      parameters:
+      - $ref: '#/components/parameters/userId'
+      responses:
+        '204':
+          description: successful operation
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - bearerAuth: []
+  /users/{userId}/mfa/reset:
+    post:
+      operationId: resetUserMfa
+      tags:
+      - Mfa
+      summary: Reset the user's MFA methods
+      parameters:
+      - $ref: '#/components/parameters/userId'
+      responses:
+        '204':
+          description: successful operation
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - bearerAuth: []
+components:
+  schemas:
+    uuid:
+      type: string
+      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+      minLength: 36
+      maxLength: 36
+      example: 95b11417-f18f-457f-8804-68e361f9164f
+    Forbidden:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Access Forbidden
+    Unauthorized:
+      type: object
+      properties:
+        error:
+          type: string
+          example: No jwt provided!
+    InternalServerError:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Internal Server Error
+  responses:
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Forbidden'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Unauthorized'
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/InternalServerError'
+  parameters:
+    userId:
+      in: path
+      name: userId
+      schema:
+        $ref: '#/components/schemas/uuid'
+      required: true
+      description: UUID of the user
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

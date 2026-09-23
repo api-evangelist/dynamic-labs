@@ -1,0 +1,156 @@
+# x-archived-from: dynamic-xyz-chains-api-openapi.yml
+# x-archived-on: 2026-09-16
+openapi: 3.2.0
+info:
+  title: Dashboard Allowlists Chains API
+  description: Dashboard API documentation
+  version: 1.0.0
+servers:
+- url: https://app.dynamicauth.com/api/v0
+- url: https://app.dynamic.xyz/api/v0
+- url: http://localhost:3333/api/v0
+tags:
+- name: Chains
+paths:
+  /chains/{chainName}/tokens:
+    get:
+      summary: Get tokens for passed chainName.
+      operationId: getAllTokensByChain
+      tags:
+      - Chains
+      security:
+      - bearerAuth: []
+      parameters:
+      - $ref: '#/components/parameters/chainName'
+      - in: query
+        name: networkId
+        required: false
+        schema:
+          type: number
+      responses:
+        '200':
+          description: Get all tokens for chain
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChainTokensResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+components:
+  schemas:
+    BadRequest:
+      type: object
+      properties:
+        error:
+          type: string
+    TokenAddress:
+      description: Defines one token address connected with network Id on which it's working
+      type: object
+      required:
+      - networkId
+      - contractAddress
+      properties:
+        networkId:
+          description: Id of the network
+          type: number
+          example: 1
+        contractAddress:
+          $ref: '#/components/schemas/WalletPublicKey'
+    ChainTokensResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/ChainToken'
+    WalletPublicKey:
+      type: string
+      pattern: ^[A-Za-z0-9]{18,100}$
+      description: Valid blockchain wallet address, must be an alphanumeric string without any special characters
+      example: '0xbF394748301603f18d953C90F0b087CBEC0E1834'
+      maxLength: 255
+    Unauthorized:
+      type: object
+      properties:
+        error:
+          type: string
+          example: No jwt provided!
+    InternalServerError:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Internal Server Error
+    ChainEnum:
+      type: string
+      enum:
+      - ETH
+      - EVM
+      - FLOW
+      - SOL
+      - ALGO
+      - STARK
+      - COSMOS
+      - BTC
+      - ECLIPSE
+      - SUI
+      - SPARK
+      - TRON
+      - APTOS
+      - TON
+      - STELLAR
+    ChainToken:
+      description: Defined an one token which can have multiple contract addresses dependent to networkId
+      type: object
+      required:
+      - name
+      - symbol
+      - tokenAddresses
+      properties:
+        name:
+          description: Name of the token
+          type: string
+          example: Shiba Inu
+        symbol:
+          description: Symbol of the token
+          type: string
+          example: SHIB
+        tokenAddresses:
+          description: Array of different contract addresses dependent to networkId
+          type: array
+          items:
+            $ref: '#/components/schemas/TokenAddress'
+  responses:
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BadRequest'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Unauthorized'
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/InternalServerError'
+  parameters:
+    chainName:
+      name: chainName
+      in: path
+      description: Shortened chain name
+      example: EVM
+      required: true
+      schema:
+        $ref: '#/components/schemas/ChainEnum'
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

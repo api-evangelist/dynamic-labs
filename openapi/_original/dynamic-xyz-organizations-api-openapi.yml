@@ -1,0 +1,1530 @@
+# x-archived-from: dynamic-xyz-organizations-api-openapi.yml
+# x-archived-on: 2026-09-16
+openapi: 3.2.0
+info:
+  title: Dashboard Allowlists Organizations API
+  description: Dashboard API documentation
+  version: 1.0.0
+servers:
+- url: https://app.dynamicauth.com/api/v0
+- url: https://app.dynamic.xyz/api/v0
+- url: http://localhost:3333/api/v0
+tags:
+- name: Organizations
+paths:
+  /organizations:
+    post:
+      operationId: createOrganization
+      tags:
+      - Organizations
+      summary: Creates organization
+      requestBody:
+        description: Organization data
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrganizationRequest'
+        required: true
+      responses:
+        '200':
+          description: Organization response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - bearerAuth: []
+    get:
+      operationId: getOrganizationsForMember
+      tags:
+      - Organizations
+      summary: Fetches all the active organizations that the user has access to
+      responses:
+        '200':
+          description: successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - bearerAuth: []
+  /organizations/{organizationId}/billing/subscription:
+    get:
+      summary: Find the subscription of an organization using its ID
+      operationId: getBillingSubscriptionByOrganization
+      tags:
+      - Organizations
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      responses:
+        '200':
+          description: Details of the organziation's current subscription
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillingSubscription'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: Not found
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - bearerAuth: []
+  /organizations/{organizationId}/billing/upgrade:
+    put:
+      summary: Upgrade organziation to advanced plan
+      operationId: upgradeSubscriptionForOrganization
+      tags:
+      - Organizations
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      responses:
+        '201':
+          description: Details of the organziation's current subscription
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillingSubscription'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: Not found
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - bearerAuth: []
+  /organizations/{organizationId}/billing/subscription/coupon:
+    put:
+      summary: Add coupon to subscription
+      operationId: applyCouponForSubscription
+      tags:
+      - Organizations
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      requestBody:
+        description: User new fields data
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BillingSubscriptionCoupon'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillingSubscription'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: Not found
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - bearerAuth: []
+  /organizations/{organizationId}:
+    get:
+      summary: Find an organization by ID
+      operationId: getOrganizationById
+      tags:
+      - Organizations
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      responses:
+        '200':
+          description: Organization response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: Not found
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - bearerAuth: []
+    put:
+      summary: Update an organization by ID
+      operationId: updateOrganizationById
+      tags:
+      - Organizations
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      requestBody:
+        description: User new fields data
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrganizationFields'
+        required: true
+      responses:
+        '200':
+          description: successful operation - organization fields updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - bearerAuth: []
+  /organizations/{organizationId}/address:
+    put:
+      summary: Update an organization address by ID
+      operationId: updateOrganizationAddressById
+      tags:
+      - Organizations
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      requestBody:
+        description: User new fields data
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrganizationAddressFields'
+        required: true
+      responses:
+        '200':
+          description: successful operation - organization fields updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - bearerAuth: []
+  /organizations/{organizationId}/ssoProvider:
+    get:
+      operationId: getSsoProviderForOrganization
+      tags:
+      - Organizations
+      summary: Get SSO provider configuration for organization
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      responses:
+        '200':
+          description: Successfully retrieved SSO provider configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SsoProvider'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: SSO provider not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - bearerAuth: []
+    post:
+      operationId: createSsoProvider
+      tags:
+      - Organizations
+      summary: Create SSO provider configuration for organization
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SsoProviderCreateRequest'
+      responses:
+        '201':
+          description: Successfully created SSO provider configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SsoProvider'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - bearerAuth: []
+  /organizations/{organizationId}/ssoProvider/{ssoProviderId}:
+    put:
+      operationId: updateSsoProvider
+      tags:
+      - Organizations
+      summary: Update SSO provider configuration
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - name: ssoProviderId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: The SSO provider ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SsoProviderUpdateRequest'
+      responses:
+        '200':
+          description: Successfully updated SSO provider configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SsoProvider'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: SSO provider not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - bearerAuth: []
+    delete:
+      operationId: deleteSsoProvider
+      tags:
+      - Organizations
+      summary: Delete SSO provider configuration
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - name: ssoProviderId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: The SSO provider ID
+      responses:
+        '204':
+          description: Successfully deleted SSO provider configuration
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: SSO provider not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - bearerAuth: []
+components:
+  schemas:
+    JwtVerifiedCredentialFormatEnum:
+      type: string
+      enum:
+      - blockchain
+      - email
+      - oauth
+      - passkey
+      - phoneNumber
+      - externalUser
+    TurnkeyWalletProperties:
+      deprecated: true
+      type: object
+      properties:
+        turnkeySubOrganizationId:
+          allOf:
+          - $ref: '#/components/schemas/uuid'
+          deprecated: true
+        turnkeyPrivateKeyId:
+          allOf:
+          - $ref: '#/components/schemas/uuid'
+          deprecated: true
+        turnkeyHDWalletId:
+          allOf:
+          - $ref: '#/components/schemas/uuid'
+          deprecated: true
+        isAuthenticatorAttached:
+          type: boolean
+          description: Whether or not the wallet has an authenticator (passkey, api key, etc) attached to it.
+        turnkeyUserId:
+          allOf:
+          - $ref: '#/components/schemas/uuid'
+          deprecated: true
+        isSessionKeyCompatible:
+          type: boolean
+        version:
+          $ref: '#/components/schemas/EmbeddedWalletVersionEnum'
+        ecdsaProviderType:
+          $ref: '#/components/schemas/ecdsaValidatorOptions'
+        entryPointVersion:
+          $ref: '#/components/schemas/ProviderEntryPointVersionEnum'
+        kernelVersion:
+          $ref: '#/components/schemas/ProviderKernelVersionEnum'
+    SsoProviderUpdateRequest:
+      type: object
+      properties:
+        clientId:
+          type: string
+          maxLength: 255
+          description: Client ID for the SSO provider
+        clientSecret:
+          type: string
+          maxLength: 255
+          description: Client secret for the SSO provider
+        ssoDomain:
+          type: string
+          maxLength: 255
+          description: SSO domain for the provider
+        emailDomain:
+          type: string
+          maxLength: 255
+          description: Email domain for the company emails to be used for SSO
+        provider:
+          $ref: '#/components/schemas/SsoProviderEnum'
+        enforceOnlySSO:
+          type: boolean
+          description: when set to true it would enforce sso auth to the domain
+    NonEmptyStringWith255MaxLengthAndSpecialChars:
+      type: string
+      pattern: ^(?=\S)[\p{L}\p{N}a-zA-Z _.,:!?&%@\/+\-'()\[\]*]+(?<=\S)$
+      maxLength: 255
+      example: An example name
+    CustomFieldValidationRules:
+      type: object
+      properties:
+        unique:
+          type: boolean
+          description: If this field must be unique for every user in the environment
+        regex:
+          type: string
+          maxLength: 255
+          description: The regex pattern that the text field must match
+          example: ^0x
+        validOptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/CustomFieldValidValue'
+          description: The dropdown options for the select field
+          example:
+          - label: small
+          - label: medium
+          - label: large
+        checkboxText:
+          type: string
+          maxLength: 255
+          description: The text that will be displayed for the checkbox field
+          example: Agree to the terms and conditions
+      description: Optional validation rules for the custom field
+    Unauthorized:
+      type: object
+      properties:
+        error:
+          type: string
+          example: No jwt provided!
+    InternalServerError:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Internal Server Error
+    JwtVerifiedCredential:
+      type: object
+      required:
+      - id
+      - format
+      - signInEnabled
+      properties:
+        address:
+          $ref: '#/components/schemas/WalletPublicKey'
+        chain:
+          type: string
+        refId:
+          $ref: '#/components/schemas/uuid'
+        signerRefId:
+          $ref: '#/components/schemas/uuid'
+        email:
+          type: string
+          format: email
+        id:
+          $ref: '#/components/schemas/uuid'
+        name_service:
+          $ref: '#/components/schemas/NameServiceData'
+        public_identifier:
+          description: This is used to publicly identify a verified credential in a human-friendly way. For example, this will be the email address if credential format=email.
+          type: string
+        wallet_name:
+          type: string
+        wallet_provider:
+          $ref: '#/components/schemas/WalletProviderEnum'
+        wallet_properties:
+          $ref: '#/components/schemas/WalletProperties'
+        format:
+          $ref: '#/components/schemas/JwtVerifiedCredentialFormatEnum'
+        oauth_provider:
+          $ref: '#/components/schemas/ProviderEnum'
+        oauth_username:
+          type: string
+        oauth_display_name:
+          type:
+          - string
+          - 'null'
+        oauth_account_id:
+          type:
+          - string
+          - 'null'
+        phoneNumber:
+          description: This field contains the phone number in the country. This could also contain the area code within a country.
+          example: '9171113333'
+          type: string
+        phoneCountryCode:
+          description: This field contains the phone international country code. See https://countrycode.org/
+          example: '1'
+          type: string
+        isoCountryCode:
+          description: ISO-3166 two-character country code. See https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes
+          example: US
+          type: string
+        oauth_account_photos:
+          type: array
+          items:
+            type: string
+        oauth_emails:
+          type: array
+          items:
+            type: string
+        oauth_metadata:
+          type: object
+          description: This object contains JSON metadata for a social-based verified credential. It may contain data about the user that does not fit into the other structured fields, and could include arbitrary fields about the user from the oauth provider's API.
+        previous_users:
+          description: This will only be provided in the responses for GET /users/{userId}.Previous user IDs that owned this verified credential and was tranfered to the current user ID.
+          type: array
+          items:
+            $ref: '#/components/schemas/uuid'
+        embedded_wallet_id:
+          type:
+          - string
+          - 'null'
+        wallet_additional_addresses:
+          type: array
+          items:
+            $ref: '#/components/schemas/WalletAdditionalAddress'
+        lastSelectedAt:
+          description: This timestamp indicates the last time this verified wallet was either connected to the user account or selected to become the primary wallet on the account.
+          type: string
+          format: date-time
+        signInEnabled:
+          type: boolean
+          description: This indicates if the user can sign in with this credential
+        verifiedAt:
+          type: string
+          format: date-time
+          description: This timestamp indicates the last time this verified credential was verified.
+    Organization:
+      type: object
+      required:
+      - id
+      - name
+      properties:
+        id:
+          $ref: '#/components/schemas/uuid'
+        name:
+          type: string
+          example: Acme Corp
+        description:
+          $ref: '#/components/schemas/OptionalNonEmptyString'
+        websiteUrl:
+          $ref: '#/components/schemas/OptionalNonEmptyUrl'
+        address:
+          $ref: '#/components/schemas/OrganizationAddressFields'
+        role:
+          $ref: '#/components/schemas/RoleEnum'
+    ProjectSettingsKyc:
+      type: object
+      properties:
+        name:
+          type: string
+        required:
+          type: boolean
+        enabled:
+          type: boolean
+        unique:
+          type: boolean
+        verify:
+          type: boolean
+        type:
+          $ref: '#/components/schemas/KycFieldType'
+        validationRules:
+          $ref: '#/components/schemas/CustomFieldValidationRules'
+        validationType:
+          $ref: '#/components/schemas/CustomFieldType'
+        label:
+          type: string
+        position:
+          type: number
+      required:
+      - name
+      - required
+      - enabled
+      - unique
+      - verify
+    NotFound:
+      type: object
+      required:
+      - error
+      - code
+      properties:
+        error:
+          type: string
+          example: Not Found
+        code:
+          type: string
+          example: not_found
+    RoleEnum:
+      type: string
+      enum:
+      - owner
+      - admin
+      - developer
+      - viewer
+    WalletAdditionalAddress:
+      type: object
+      description: An additional address associated with a wallet.
+      required:
+      - address
+      - type
+      properties:
+        address:
+          type: string
+          description: An address associated with a wallet.
+        publicKey:
+          type: string
+          description: The public key associated with the address.
+        type:
+          $ref: '#/components/schemas/WalletAddressType'
+    BillingSubscriptionPeriod:
+      type: object
+      required:
+      - startDate
+      - endDate
+      properties:
+        startDate:
+          type: string
+          format: date-time
+        endDate:
+          type: string
+          format: date-time
+        usagesCount:
+          type: number
+    OptionalNonEmptyUrlWith255MaxLength:
+      type: string
+      pattern: ^$|^(https?:\/\/)?[a-z0-9]+([-.]+[a-z0-9]+)*\.[a-z]{2,10}([0-9]{1,5})?(\/.*)?$
+      example: https://website-sample.com
+      maxLength: 255
+    OrganizationFields:
+      type: object
+      properties:
+        name:
+          $ref: '#/components/schemas/NonEmptyStringWith255MaxLength'
+        description:
+          $ref: '#/components/schemas/OptionalNonEmptyStringWith255MaxLength'
+        websiteUrl:
+          $ref: '#/components/schemas/OptionalNonEmptyUrlWith255MaxLength'
+      required:
+      - name
+    SsoProviderEnum:
+      type: string
+      enum:
+      - okta
+    CoinbaseMpcWalletProperties:
+      type: object
+      properties:
+        claimed:
+          type: boolean
+          description: Dynamic pregenerated this wallet and stored the passcode
+        source:
+          $ref: '#/components/schemas/PasswordSourceTypeEnum'
+    MergeUser:
+      type: object
+      description: Contains the current field value for the user.
+      required:
+      - userId
+      - value
+      properties:
+        userId:
+          $ref: '#/components/schemas/uuid'
+        value:
+          $ref: '#/components/schemas/NonEmptyStringWith255MaxLength'
+    WalletProviderEnum:
+      type: string
+      enum:
+      - browserExtension
+      - custodialService
+      - walletConnect
+      - qrCode
+      - deepLink
+      - embeddedWallet
+      - smartContractWallet
+    HardwareWalletEnum:
+      type: string
+      enum:
+      - ledger
+    WalletPublicKey:
+      type: string
+      pattern: ^[A-Za-z0-9]{18,100}$
+      description: Valid blockchain wallet address, must be an alphanumeric string without any special characters
+      example: '0xbF394748301603f18d953C90F0b087CBEC0E1834'
+      maxLength: 255
+    BillingSubscription:
+      type: object
+      required:
+      - hasPaymentMethod
+      - planType
+      - inTrial
+      - scope
+      - version
+      properties:
+        billingPortalUrl:
+          type: string
+        billingPortalAddPaymentMethodUrl:
+          type: string
+        hasPaymentMethod:
+          type: boolean
+        planType:
+          $ref: '#/components/schemas/BillingSubscriptionPlanTypeEnum'
+        inTrial:
+          type: boolean
+        scope:
+          type: array
+          items:
+            type: string
+        trialStart:
+          type: string
+          format: date-time
+        trialEnd:
+          type: string
+          format: date-time
+        trialDaysLeft:
+          type: number
+        currentBillingPeriod:
+          $ref: '#/components/schemas/BillingSubscriptionPeriod'
+        version:
+          type: string
+        shouldLockEnvironmentSwitch:
+          type: boolean
+        coupons:
+          type: array
+          items:
+            $ref: '#/components/schemas/BillingSubscriptionCoupon'
+    Forbidden:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Access Forbidden
+    NonEmptyStringWith255MaxLength:
+      type: string
+      pattern: ^(?=\S)[\p{L}\p{N}a-zA-Z _.,:!?&%@\/+\-'|]+(?<=\S)$
+      maxLength: 255
+      example: An example name
+    OptionalNonEmptyStringWith255MaxLength:
+      type: string
+      pattern: ^$|^(?=\S)[\p{L}\p{N}a-zA-Z _.,:!?&%@\/+\-'|]+(?<=\S)$
+      example: An example name
+      maxLength: 255
+    KycFieldType:
+      type: string
+      enum:
+      - standard
+      - custom
+    NameServiceData:
+      type: object
+      properties:
+        avatar:
+          type: string
+        name:
+          type: string
+    OptionalNullableNonEmptyStringWith255MaxLength:
+      type:
+      - string
+      - 'null'
+      pattern: ^$|^(?=\S)[\p{L}\p{N} _.,:!?&%@\/+-]+(?<=\S)$
+      example: An example name
+      maxLength: 255
+    OptionalNonEmptyString:
+      type: string
+      pattern: ^$|^(?=\S)[\p{L}\p{N}a-zA-Z _.,:!?&%@\/+\-'|]+(?<=\S)$
+      example: An example name
+    BadRequest:
+      type: object
+      properties:
+        error:
+          type: string
+    CountryCode:
+      type:
+      - string
+      - 'null'
+      description: Standard ISO 3166-1 alpha-2 two-letter country code
+      pattern: ^[A-Z]{2}$
+      example: US
+      maxLength: 255
+    WhenToImplementEnum:
+      type: string
+      enum:
+      - yesterday
+      - nextTwoWeeks
+      - nextTwoMonths
+      - justBrowsing
+    PasswordSourceTypeEnum:
+      type: string
+      enum:
+      - dynamic
+      - user
+    NonEmptyUrlWith255MaxLength:
+      type: string
+      pattern: ^(https?:\/\/)?[a-z0-9]+([-.]+[a-z0-9]+)*\.[a-z]{2,10}([0-9]{1,5})?(\/.*)?$
+      maxLength: 255
+      example: https://website-sample.com
+    SmartWalletProperties:
+      type: object
+      properties:
+        entryPointVersion:
+          $ref: '#/components/schemas/ProviderEntryPointVersionEnum'
+        kernelVersion:
+          $ref: '#/components/schemas/ProviderKernelVersionEnum'
+        ecdsaProviderType:
+          $ref: '#/components/schemas/ecdsaValidatorOptions'
+    UnprocessableEntity:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Resources already exists for this Object
+        code:
+          $ref: '#/components/schemas/UnprocessableEntityErrorCode'
+        payload:
+          $ref: '#/components/schemas/UnprocessableEntityErrorPayload'
+      required:
+      - error
+    ProviderEntryPointVersionEnum:
+      type: string
+      enum:
+      - v6
+      - v7
+    WalletKeyShareInfo:
+      type: object
+      required:
+      - id
+      - backupLocation
+      - passwordEncrypted
+      properties:
+        id:
+          $ref: '#/components/schemas/uuid'
+        backupLocation:
+          type: string
+        passwordEncrypted:
+          type: boolean
+        externalKeyShareId:
+          $ref: '#/components/schemas/uuid'
+    MergeUserConflict:
+      type: object
+      description: Contains a merge conflict between two users with different values for the same user field data
+      required:
+      - field
+      - fromUser
+      - currentUser
+      properties:
+        field:
+          $ref: '#/components/schemas/ProjectSettingsKyc'
+        fromUser:
+          $ref: '#/components/schemas/MergeUser'
+        currentUser:
+          $ref: '#/components/schemas/MergeUser'
+    BaseUser:
+      type: object
+      required:
+      - id
+      - projectEnvironmentId
+      properties:
+        id:
+          $ref: '#/components/schemas/uuid'
+        projectEnvironmentId:
+          $ref: '#/components/schemas/uuid'
+        verifiedCredentials:
+          type: array
+          items:
+            $ref: '#/components/schemas/JwtVerifiedCredential'
+        lastVerifiedCredentialId:
+          $ref: '#/components/schemas/uuid'
+        sessionId:
+          $ref: '#/components/schemas/uuid'
+        alias:
+          $ref: '#/components/schemas/OptionalNullableNonEmptyStringWith255MaxLength'
+        country:
+          $ref: '#/components/schemas/CountryCode'
+        email:
+          type:
+          - string
+          - 'null'
+          format: email
+          maxLength: 255
+        firstName:
+          $ref: '#/components/schemas/OptionalNullableNonEmptyStringWith255MaxLength'
+        jobTitle:
+          $ref: '#/components/schemas/OptionalNullableNonEmptyStringWith255MaxLength'
+        lastName:
+          $ref: '#/components/schemas/OptionalNullableNonEmptyStringWith255MaxLength'
+        phoneNumber:
+          type:
+          - string
+          - 'null'
+          maxLength: 255
+        policiesConsent:
+          type:
+          - boolean
+          - 'null'
+        tShirtSize:
+          $ref: '#/components/schemas/OptionalNullableNonEmptyStringWith255MaxLength'
+        team:
+          $ref: '#/components/schemas/OptionalNullableNonEmptyStringWith255MaxLength'
+        username:
+          $ref: '#/components/schemas/OptionalNullableNonEmptyStringWith255MaxLength'
+        firstVisit:
+          type: string
+          format: date-time
+        lastVisit:
+          type: string
+          format: date-time
+        newUser:
+          type: boolean
+        metadata:
+          type: object
+        mfaBackupCodeAcknowledgement:
+          $ref: '#/components/schemas/MfaBackupCodeAcknowledgement'
+        btcWallet:
+          type:
+          - string
+          - 'null'
+        kdaWallet:
+          type:
+          - string
+          - 'null'
+        ltcWallet:
+          type:
+          - string
+          - 'null'
+        ckbWallet:
+          type:
+          - string
+          - 'null'
+        kasWallet:
+          type:
+          - string
+          - 'null'
+        dogeWallet:
+          type:
+          - string
+          - 'null'
+        emailNotification:
+          type:
+          - boolean
+          - 'null'
+        discordNotification:
+          type:
+          - boolean
+          - 'null'
+        newsletterNotification:
+          type:
+          - boolean
+          - 'null'
+        lists:
+          type: array
+          description: Access lists evaluated by Dynamic when considering access for the user.
+          items:
+            type: string
+        scope:
+          type: string
+          description: 'A whitespace-separate list of permissions associated with the JWT token issued. This conforms to the JWT standard for scope claims: https://datatracker.ietf.org/doc/html/rfc8693#section-4.2'
+          example: superuser marketing operations
+        missingFields:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProjectSettingsKyc'
+    WaasWalletProperties:
+      type: object
+      properties:
+        keyShares:
+          type: array
+          items:
+            $ref: '#/components/schemas/WalletKeyShareInfo'
+        thresholdSignatureScheme:
+          $ref: '#/components/schemas/ThresholdSignatureScheme'
+        derivationPath:
+          type: string
+          description: The derivation path for the wallet
+        settings:
+          $ref: '#/components/schemas/WaasWalletSettings'
+        version:
+          $ref: '#/components/schemas/EmbeddedWalletVersionEnum'
+    ProviderEnum:
+      type: string
+      description: The 'turnkey' value is deprecated and will be removed in a future version.
+      enum:
+      - emailOnly
+      - magicLink
+      - apple
+      - bitbucket
+      - coinbasesocial
+      - discord
+      - epicgames
+      - facebook
+      - farcaster
+      - github
+      - gitlab
+      - google
+      - instagram
+      - linkedin
+      - microsoft
+      - twitch
+      - twitter
+      - blocto
+      - banxa
+      - coinbaseOnramp
+      - cryptoDotCom
+      - dynamic
+      - alchemy
+      - zerodev
+      - telegram
+      - turnkey
+      - coinbaseWaas
+      - sms
+      - spotify
+      - tiktok
+      - line
+      - steam
+      - shopify
+      - zksync
+      - kraken
+      - blockaid
+      - passkey
+      - okta
+      - sendgrid
+      - resend
+    UnprocessableEntityErrorCode:
+      type: string
+      enum:
+      - email_cannot_be_null
+      - exchange_cannot_be_enabled
+      - transfer_amount_too_small
+      - transfer_address_not_whitelisted
+      - invalid_scopes
+      - unknown_transfer_error
+      - transfer_mfa_required
+      - transfer_mfa_failed
+      - invalid_transfer_funds
+      - invalid_transfer_currency
+      - invalid_exchange_provider
+      - invalid_transfer_network
+      - invalid_email
+      - email_already_exists
+      - allowlist_already_exists
+      - allowlist_entry_already_exists
+      - reassign_wallet_error
+      - reassign_wallet_confirm
+      - members_cannot_delete_themself
+      - username_already_exists
+      - wrong_email_verification_token
+      - wrong_sms_verification_token
+      - invalid_email_verification
+      - invalid_sms_verification
+      - invalid_verification
+      - invalid_position
+      - too_many_sms_verification_attempts
+      - too_many_email_verification_attempts
+      - too_many_verification_attempts
+      - organization_name_already_exists
+      - project_name_already_exists
+      - wallet_not_deployed
+      - email_verification_required
+      - phone_verification_required
+      - invite_address_required
+      - provider_not_available
+      - forbidden_unlink_request
+      - invalid_unlink_request
+      - too_many_api_tokens
+      - lock_timeout
+      - lock_too_many_attempts
+      - nft_token_gating_not_supported_for_chain
+      - empty_chain_name
+      - no_enabled_email_provider
+      - no_enabled_sms_provider
+      - invalid_key_export_url
+      - invalid_dynamic_props
+      - too_many_requests
+      - too_many_organizations_for_user
+      - too_many_projects_for_organization
+      - email_associated_with_different_provider
+      - user_has_already_account_with_email
+      - user_has_already_account_with_phone_number
+      - other_verify_failure
+      - email_tied_to_embedded_wallet
+      - invalid_invite
+      - social_account_already_exists
+      - invalid_email_address
+      - invalid_gate
+      - conflicting_embedded_wallet_providers
+      - invalid_user
+      - invalid_cors_origins
+      - invalid_mobile_deeplink_urls
+      - unauthorized_mobile_deeplink_url
+      - invalid_private_key_format
+      - invalid_embedded_wallet_settings
+      - wallet_not_support_passkey
+      - recovery_email_unavailable_or_invalid
+      - connect_error
+      - invalid_wallet_name
+      - invalid_wallet_address
+      - email_recovery_disabled
+      - no_compatible_wallet_service_enabled
+      - missing_aa_project_id
+      - linked_embedded_wallet
+      - invalid_mpc_environment
+      - invalid_regex
+      - repeated_options
+      - missing_phone_number_or_email
+      - duplicate_exists
+      - mfa_device_not_found
+      - mfa_invalid_code
+      - mfa_invalid_request
+      - invalid_phone
+      - gate_exists
+      - invalid_embedded_wallet_chains_configuration
+      - merge_accounts_confirmation
+      - merge_accounts_invalid
+      - invalid_wallet_id
+      - unable_to_fetch_balances
+      - cannot_switch_to_unique
+      - custom_field_data_not_unique
+      - metadata_size_exceeded
+      - invalid_custom_hostname
+      - blocked_user_cannot_transfer_wallet
+      - feature_not_enabled_in_suborg
+      - invalid_username
+      - invalid_external_auth
+      - invalid_chain_address_match
+      - invalid_update
+      - cannot_delete_last_project
+      - no_hd_wallet_found
+      - wallet_account_exists_for_chain
+      - too_many_embedded_wallets_for_user
+      - too_many_embedded_wallets_per_chain_for_user
+      - invalid_session_public_key
+      - custom_field_not_unique
+      - invalid_aa_project_configuration
+      - no_v1_embedded_wallet_found
+      - embedded_wallet_address_already_linked
+      - key_share_already_backed_up
+      - invalid_key_shares_length
+      - wallet_service_connection_error
+      - no_global_wallet_found
+      - invalid_metadata_value
+      - max_passkeys_per_user
+      - passkey_not_found
+      - cannot_delete_passkey_linked_to_embedded_wallet
+      - cannot_delete_last_sign_in_verified_credential
+    WaasWalletSettings:
+      type: object
+      properties:
+        hasDeniedDelegatedAccess:
+          type: boolean
+        shouldRefreshOnNextSignOn:
+          type: boolean
+        reshareOnNextSignOn:
+          $ref: '#/components/schemas/ThresholdSignatureScheme'
+        revokeOnNextSignOn:
+          type: boolean
+    BillingSubscriptionCoupon:
+      type: object
+      required:
+      - coupon
+      properties:
+        coupon:
+          $ref: '#/components/schemas/NonEmptyStringWith255MaxLength'
+    CustomFieldType:
+      type: string
+      enum:
+      - text
+      - checkbox
+      - select
+    ecdsaValidatorOptions:
+      type: string
+      enum:
+      - zerodev_signer_to_ecdsa
+      - zerodev_multi_chain
+    OptionalNonEmptyUrl:
+      type: string
+      pattern: ^$|^(https?:\/\/)?[a-z0-9]+([-.]+[a-z0-9]+)*\.[a-z]{2,10}([0-9]{1,5})?(\/.*)?$
+      example: https://website-sample.com
+    IsoCountryCode:
+      type: string
+      description: ISO 3166-1 alpha-2 country code
+      pattern: ^[a-zA-Z]{2}$
+      maxLength: 2
+      example: US
+    HardwareWalletProperties:
+      type: object
+      properties:
+        hardwareWallet:
+          $ref: '#/components/schemas/HardwareWalletEnum'
+    WalletAddressType:
+      type: string
+      enum:
+      - ordinals
+      - payment
+      - cosmos
+      - evm
+      - ton
+    SsoProvider:
+      type: object
+      required:
+      - id
+      - clientId
+      - organizationId
+      - ssoDomain
+      - emailDomain
+      - provider
+      - createdAt
+      - updatedAt
+      - maskedClientSecret
+      - enforceOnlySSO
+      properties:
+        id:
+          $ref: '#/components/schemas/uuid'
+        clientId:
+          type: string
+          description: Client ID for the SSO provider
+        maskedClientSecret:
+          type: string
+          description: Masked client secret for the SSO provider
+        organizationId:
+          $ref: '#/components/schemas/uuid'
+        ssoDomain:
+          type: string
+          description: SSO domain for the provider
+        emailDomain:
+          type: string
+          description: Email domain for the company emails to be used for SSO
+        provider:
+          $ref: '#/components/schemas/SsoProviderEnum'
+        redirectUrl:
+          type: string
+          description: Redirect URL for the SSO provider
+        enforceOnlySSO:
+          type: boolean
+          description: Whether SSO is enforced for this domain
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        ssoDomainVerifiedAt:
+          type: string
+          format: date-time
+          description: Timestamp when the SSO domain was verified by Dynamic API. This will be present when the SSO domain ownership has been verified by setting a TXT record in DNS.
+        ssoDomainVerificationChallenge:
+          type: string
+          description: TXT record challenge string for the SSO domain verification. This will be provided when the SSO provider domain ownership needs to be verified by setting a TXT record in DNS.
+    UnprocessableEntityErrorPayload:
+      type: object
+      description: Contains information which the integrating client of this API can use to tailor an experience to a customer to fix the underlying issue that triggered this error.
+      properties:
+        email:
+          type: string
+          format: email
+          example: joe@email.com
+        loginProvider:
+          $ref: '#/components/schemas/ProviderEnum'
+        embeddedWalletName:
+          type: string
+        embeddedSocialSigninProvider:
+          $ref: '#/components/schemas/ProviderEnum'
+        mergeConflicts:
+          $ref: '#/components/schemas/MergeConflicts'
+        additionalMessages:
+          type: array
+          items:
+            type: string
+    OrganizationsResponse:
+      type: object
+      properties:
+        organizations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Organization'
+    EmbeddedWalletVersionEnum:
+      type: string
+      enum:
+      - V1
+      - V2
+      - V3
+    CustomFieldValidValue:
+      type: object
+      required:
+      - label
+      properties:
+        label:
+          $ref: '#/components/schemas/NonEmptyStringWith255MaxLengthAndSpecialChars'
+        key:
+          $ref: '#/components/schemas/NonEmptyStringWith255MaxLengthAndSpecialChars'
+    SsoProviderCreateRequest:
+      type: object
+      required:
+      - clientId
+      - clientSecret
+      - ssoDomain
+      - provider
+      - emailDomain
+      properties:
+        clientId:
+          type: string
+          maxLength: 255
+          description: Client ID for the SSO provider
+        clientSecret:
+          type: string
+          maxLength: 255
+          description: Client secret for the SSO provider
+        ssoDomain:
+          type: string
+          maxLength: 255
+          description: SSO domain for the provider
+        emailDomain:
+          type: string
+          maxLength: 255
+          description: Email domain for the company emails to be used for SSO
+        provider:
+          $ref: '#/components/schemas/SsoProviderEnum'
+    MergeConflicts:
+      type: object
+      description: Contains information needed for the SDK to surface merge conflicts when attempting to merge information from one user to another
+      required:
+      - fromUser
+      - conflicts
+      properties:
+        fromUser:
+          $ref: '#/components/schemas/SdkUser'
+        conflicts:
+          type: array
+          items:
+            $ref: '#/components/schemas/MergeUserConflict'
+    MfaBackupCodeAcknowledgement:
+      type:
+      - string
+      - 'null'
+      enum:
+      - pending
+      - complete
+    BillingSubscriptionPlanTypeEnum:
+      type: string
+      enum:
+      - free
+      - advanced
+      - enterprise
+      - standard
+    uuid:
+      type: string
+      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+      minLength: 36
+      maxLength: 36
+      example: 95b11417-f18f-457f-8804-68e361f9164f
+    ProviderKernelVersionEnum:
+      type: string
+      enum:
+      - v2_4
+      - v3_0
+      - v3_1
+      - v3_2
+      - v3_3
+    SdkUser:
+      allOf:
+      - $ref: '#/components/schemas/BaseUser'
+      - type: object
+        required:
+        - verifiedCredentials
+    ThresholdSignatureScheme:
+      type: string
+      enum:
+      - TWO_OF_TWO
+      - TWO_OF_THREE
+      - THREE_OF_FIVE
+    OrganizationRequest:
+      type: object
+      required:
+      - name
+      properties:
+        name:
+          $ref: '#/components/schemas/NonEmptyStringWith255MaxLength'
+        description:
+          $ref: '#/components/schemas/NonEmptyStringWith255MaxLength'
+        websiteUrl:
+          $ref: '#/components/schemas/NonEmptyUrlWith255MaxLength'
+        implementationTimeline:
+          $ref: '#/components/schemas/WhenToImplementEnum'
+    OrganizationResponse:
+      type: object
+      properties:
+        organization:
+          type: object
+          required:
+          - id
+          - name
+          properties:
+            id:
+              $ref: '#/components/schemas/uuid'
+            name:
+              type: string
+              example: Acme Corp
+            description:
+              $ref: '#/components/schemas/OptionalNonEmptyString'
+            websiteUrl:
+              $ref: '#/components/schemas/OptionalNonEmptyUrl'
+            address:
+              $ref: '#/components/schemas/OrganizationAddressFields'
+    WalletProperties:
+      anyOf:
+      - $ref: '#/components/schemas/TurnkeyWalletProperties'
+      - $ref: '#/components/schemas/HardwareWalletProperties'
+      - $ref: '#/components/schemas/CoinbaseMpcWalletProperties'
+      - $ref: '#/components/schemas/SmartWalletProperties'
+      - $ref: '#/components/schemas/WaasWalletProperties'
+    OrganizationAddressFields:
+      type: object
+      properties:
+        addressLine1:
+          $ref: '#/components/schemas/OptionalNonEmptyStringWith255MaxLength'
+        addressLine2:
+          $ref: '#/components/schemas/OptionalNonEmptyStringWith255MaxLength'
+        city:
+          $ref: '#/components/schemas/OptionalNonEmptyStringWith50MaxLength'
+        region:
+          $ref: '#/components/schemas/OptionalNonEmptyStringWith50MaxLength'
+        postalCode:
+          $ref: '#/components/schemas/OptionalNonEmptyStringWith50MaxLength'
+        country:
+          $ref: '#/components/schemas/IsoCountryCode'
+    OptionalNonEmptyStringWith50MaxLength:
+      type: string
+      pattern: ^$|^(?=\S)[\p{L}\p{N}a-zA-Z _.,:!?&%@\/+\-'|]+(?<=\S)$
+      example: An example name
+      maxLength: 50
+  responses:
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BadRequest'
+    UnprocessableEntity:
+      description: Unprocessable Entity
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UnprocessableEntity'
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/InternalServerError'
+    NotFound:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/NotFound'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Unauthorized'
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Forbidden'
+  parameters:
+    organizationId:
+      in: path
+      name: organizationId
+      required: true
+      description: ID of organization
+      schema:
+        $ref: '#/components/schemas/uuid'
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

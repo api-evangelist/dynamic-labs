@@ -1,0 +1,218 @@
+openapi: 3.2.0
+info:
+  title: Dashboard Allowlists Visits API
+  description: Dashboard API documentation
+  version: 1.0.0
+servers:
+- url: https://app.dynamicauth.com/api/v0
+- url: https://app.dynamic.xyz/api/v0
+- url: http://localhost:3333/api/v0
+tags:
+- name: Visits
+paths:
+  /environments/{environmentId}/visitors:
+    get:
+      operationId: getEnvironmentVisitors
+      tags:
+      - Visits
+      summary: Get all visitors for an environment
+      parameters:
+      - $ref: '#/components/parameters/environmentId'
+      - in: query
+        name: filter
+        required: false
+        style: form
+        schema:
+          $ref: '#/components/schemas/VisitorSearchFilterParams'
+      - in: query
+        name: orderBy
+        required: false
+        schema:
+          $ref: '#/components/schemas/orderBy'
+      - in: query
+        name: offset
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+        description: The number of items to skip before starting to collect the result set
+        required: false
+      - in: query
+        name: limit
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+        description: The numbers of items to return
+        required: false
+      responses:
+        '200':
+          description: List of visitors
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VisitorsResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - bearerAuth: []
+components:
+  schemas:
+    InternalServerError:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Internal Server Error
+    BadRequest:
+      type: object
+      properties:
+        error:
+          type: string
+    VisitorsResponse:
+      type: object
+      properties:
+        count:
+          type: integer
+        visitors:
+          type: array
+          items:
+            $ref: '#/components/schemas/Visitor'
+    Visitor:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/uuid'
+        address:
+          type: string
+          maxLength: 255
+        chain:
+          $ref: '#/components/schemas/ChainEnum'
+        walletName:
+          type: string
+          maxLength: 255
+        provider:
+          $ref: '#/components/schemas/WalletProviderEnum'
+        createdAt:
+          type: string
+          format: date-time
+        projectEnvironmentId:
+          $ref: '#/components/schemas/uuid'
+      required:
+      - id
+      - address
+      - chain
+      - walletName
+      - provider
+      - createdAt
+    ChainEnum:
+      type: string
+      enum:
+      - ETH
+      - EVM
+      - FLOW
+      - SOL
+      - ALGO
+      - STARK
+      - COSMOS
+      - BTC
+      - ECLIPSE
+      - SUI
+      - SPARK
+      - TRON
+      - APTOS
+      - TON
+      - STELLAR
+    WalletProviderEnum:
+      type: string
+      enum:
+      - browserExtension
+      - custodialService
+      - walletConnect
+      - qrCode
+      - deepLink
+      - embeddedWallet
+      - smartContractWallet
+    Unauthorized:
+      type: object
+      properties:
+        error:
+          type: string
+          example: No jwt provided!
+    orderBy:
+      type: string
+      description: $COLUMN_NAME-asc|desc
+      pattern: ^[A-Za-z]*-(asc|desc)$
+      example: something-asc
+    VisitorFilterableFieldsEnum:
+      type: string
+      enum:
+      - all
+      - id
+      - walletPublicKey
+    uuid:
+      type: string
+      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+      minLength: 36
+      maxLength: 36
+      example: 95b11417-f18f-457f-8804-68e361f9164f
+    Forbidden:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Access Forbidden
+    VisitorSearchFilterParams:
+      type: object
+      properties:
+        filterValue:
+          type: string
+        filterColumn:
+          $ref: '#/components/schemas/VisitorFilterableFieldsEnum'
+        chain:
+          $ref: '#/components/schemas/ChainEnum'
+  parameters:
+    environmentId:
+      in: path
+      name: environmentId
+      required: true
+      description: ID of the environment
+      schema:
+        $ref: '#/components/schemas/uuid'
+  responses:
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Forbidden'
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BadRequest'
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/InternalServerError'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Unauthorized'
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

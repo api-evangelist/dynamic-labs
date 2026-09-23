@@ -1,6 +1,6 @@
-openapi: 3.0.3
+openapi: 3.2.0
 info:
-  title: Dynamic Allowlists Embedded Wallets API
+  title: Dynamic Embedded Wallets API
   description: Representative OpenAPI description of the Dynamic environment-scoped REST API for web3 authentication and embedded wallets. Admin endpoints authenticate with an environment-scoped bearer API token (dyn_ prefixed); SDK endpoints authenticate with a user JWT obtained via the client SDK. This document is a faithful, non-exhaustive representation of publicly documented surfaces at https://docs.dynamic.xyz/api-reference. Consult the live API reference for the complete schema catalog.
   termsOfService: https://www.dynamic.xyz/terms
   contact:
@@ -23,7 +23,7 @@ paths:
       operationId: createEmbeddedWallet
       tags:
       - Embedded Wallets
-      summary: Create an embedded wallet for a user.
+      summary: Create an embedded wallet for a user
       description: Creates a new MPC-TSS embedded wallet for the specified user. Fails if the user already has an embedded wallet of the requested chain linked.
       parameters:
       - $ref: '#/components/parameters/EnvironmentId'
@@ -46,36 +46,6 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 components:
-  parameters:
-    EnvironmentId:
-      name: environmentId
-      in: path
-      required: true
-      description: The ID of the Dynamic environment (project).
-      schema:
-        type: string
-        format: uuid
-    UserId:
-      name: userId
-      in: path
-      required: true
-      description: The ID of the user.
-      schema:
-        type: string
-        format: uuid
-  responses:
-    Unauthorized:
-      description: The bearer token is missing or invalid.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-    BadRequest:
-      description: The request was malformed or a precondition failed.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
   schemas:
     Wallet:
       type: object
@@ -94,8 +64,9 @@ components:
         name:
           type: string
         publicKey:
-          type: string
-          nullable: true
+          type:
+          - string
+          - 'null'
     CreateEmbeddedWalletRequest:
       type: object
       properties:
@@ -124,6 +95,36 @@ components:
           - message
       required:
       - error
+  parameters:
+    UserId:
+      name: userId
+      in: path
+      required: true
+      description: The ID of the user.
+      schema:
+        type: string
+        format: uuid
+    EnvironmentId:
+      name: environmentId
+      in: path
+      required: true
+      description: The ID of the Dynamic environment (project).
+      schema:
+        type: string
+        format: uuid
+  responses:
+    BadRequest:
+      description: The request was malformed or a precondition failed.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: The bearer token is missing or invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
   securitySchemes:
     bearerAuth:
       type: http
