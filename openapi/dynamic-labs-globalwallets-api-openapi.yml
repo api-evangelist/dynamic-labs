@@ -149,67 +149,118 @@ paths:
           $ref: '#/components/responses/InternalServerError'
 components:
   schemas:
-    InternalServerError:
+    MergeConflicts:
       type: object
+      description: Contains information needed for the SDK to surface merge conflicts when attempting to merge information from one user to another
+      required:
+      - fromUser
+      - conflicts
       properties:
-        error:
-          type: string
-          example: Internal Server Error
-    OptionalNonEmptyMarkdownText:
-      type: string
-      pattern: ^$|^(?!.*&lt;[^&]+&gt;)[a-zA-Z0-9\s\/;:\*\-\(\)\[\]%#@'"\\.,=+\$&]+$
-      example: This is a markdown example with a **bold** text and a [link](https://website-sample.com)
-      maxLength: 1024
-    GlobalWalletSettingsUpdateRequest:
-      type: object
-      properties:
-        walletName:
-          $ref: '#/components/schemas/OptionalNonEmptyStringWith50MaxLength'
-        popupPageTitle:
-          $ref: '#/components/schemas/OptionalNonEmptyStringWith50MaxLength'
-        walletIconUrl:
-          $ref: '#/components/schemas/OptionalNonEmptyIconUrl'
-        customCssUrl:
-          $ref: '#/components/schemas/OptionalNonEmptyCssUrl'
-        termsOfServiceUrl:
-          $ref: '#/components/schemas/OptionalNonEmptyUrl'
-        privacyPolicyUrl:
-          $ref: '#/components/schemas/OptionalNonEmptyUrl'
-        termsOfServiceAndPrivacyPolicyMarkdown:
-          $ref: '#/components/schemas/OptionalNonEmptyMarkdownText'
-        customMenuLinks:
+        fromUser:
+          $ref: '#/components/schemas/SdkUser'
+        conflicts:
           type: array
           items:
-            type: object
-            required:
-            - label
-            - url
-            properties:
-              label:
-                $ref: '#/components/schemas/NonEmptyStringWith50MaxLength'
-              url:
-                $ref: '#/components/schemas/NonEmptyUrl'
-        enableLoginWithExternalWallets:
-          type: boolean
-    ProviderKernelVersionEnum:
-      type: string
-      enum:
-      - v2_4
-      - v3_0
-      - v3_1
-      - v3_2
-      - v3_3
-    NonEmptyStringWith50MaxLength:
+            $ref: '#/components/schemas/MergeUserConflict'
+    NonEmptyStringWith255MaxLength:
       type: string
       pattern: ^(?=\S)[\p{L}\p{N}a-zA-Z _.,:!?&%@\/+\-'|]+(?<=\S)$
+      maxLength: 255
       example: An example name
-      maxLength: 50
+    WalletAddressType:
+      type: string
+      enum:
+      - ordinals
+      - payment
+      - cosmos
+      - evm
+      - ton
+    TurnkeyWalletProperties:
+      deprecated: true
+      type: object
+      properties:
+        turnkeySubOrganizationId:
+          allOf:
+          - $ref: '#/components/schemas/uuid'
+          deprecated: true
+        turnkeyPrivateKeyId:
+          allOf:
+          - $ref: '#/components/schemas/uuid'
+          deprecated: true
+        turnkeyHDWalletId:
+          allOf:
+          - $ref: '#/components/schemas/uuid'
+          deprecated: true
+        isAuthenticatorAttached:
+          type: boolean
+          description: Whether or not the wallet has an authenticator (passkey, api key, etc) attached to it.
+        turnkeyUserId:
+          allOf:
+          - $ref: '#/components/schemas/uuid'
+          deprecated: true
+        isSessionKeyCompatible:
+          type: boolean
+        version:
+          $ref: '#/components/schemas/EmbeddedWalletVersionEnum'
+        ecdsaProviderType:
+          $ref: '#/components/schemas/ecdsaValidatorOptions'
+        entryPointVersion:
+          $ref: '#/components/schemas/ProviderEntryPointVersionEnum'
+        kernelVersion:
+          $ref: '#/components/schemas/ProviderKernelVersionEnum'
+    ProjectSettingsKyc:
+      type: object
+      properties:
+        name:
+          type: string
+        required:
+          type: boolean
+        enabled:
+          type: boolean
+        unique:
+          type: boolean
+        verify:
+          type: boolean
+        type:
+          $ref: '#/components/schemas/KycFieldType'
+        validationRules:
+          $ref: '#/components/schemas/CustomFieldValidationRules'
+        validationType:
+          $ref: '#/components/schemas/CustomFieldType'
+        label:
+          type: string
+        position:
+          type: number
+      required:
+      - name
+      - required
+      - enabled
+      - unique
+      - verify
+    JwtVerifiedCredentialFormatEnum:
+      type: string
+      enum:
+      - blockchain
+      - email
+      - oauth
+      - passkey
+      - phoneNumber
+      - externalUser
+    NonEmptyStringWith255MaxLengthAndSpecialChars:
+      type: string
+      pattern: ^(?=\S)[\p{L}\p{N}a-zA-Z _.,:!?&%@\/+\-'()\[\]*]+(?<=\S)$
+      maxLength: 255
+      example: An example name
     CustomFieldType:
       type: string
       enum:
       - text
       - checkbox
       - select
+    NonEmptyUrl:
+      type: string
+      pattern: ^(https?:\/\/)?[a-z0-9]+([-.]+[a-z0-9]+)*\.[a-z]{2,10}([0-9]{1,5})?(\/.*)?$
+      example: https://website-sample.com
     WaasWalletProperties:
       type: object
       properties:
@@ -226,85 +277,16 @@ components:
           $ref: '#/components/schemas/WaasWalletSettings'
         version:
           $ref: '#/components/schemas/EmbeddedWalletVersionEnum'
-    OptionalNonEmptyIconUrl:
-      type: string
-      pattern: ^$|^(https?:\/\/)?[a-z0-9]+([-.]+[a-z0-9]+)*\.[a-z]{2,10}([0-9]{1,5})?(\/[^\/]*)*\/[^\/]*\.(?:png|svg)$
-      example: https://website-sample/icon.svg
-    HardwareWalletProperties:
-      type: object
-      properties:
-        hardwareWallet:
-          $ref: '#/components/schemas/HardwareWalletEnum'
-    ThresholdSignatureScheme:
+    WalletProviderEnum:
       type: string
       enum:
-      - TWO_OF_TWO
-      - TWO_OF_THREE
-      - THREE_OF_FIVE
-    ProviderEnum:
-      type: string
-      description: The 'turnkey' value is deprecated and will be removed in a future version.
-      enum:
-      - emailOnly
-      - magicLink
-      - apple
-      - bitbucket
-      - coinbasesocial
-      - discord
-      - epicgames
-      - facebook
-      - farcaster
-      - github
-      - gitlab
-      - google
-      - instagram
-      - linkedin
-      - microsoft
-      - twitch
-      - twitter
-      - blocto
-      - banxa
-      - coinbaseOnramp
-      - cryptoDotCom
-      - dynamic
-      - alchemy
-      - zerodev
-      - telegram
-      - turnkey
-      - coinbaseWaas
-      - sms
-      - spotify
-      - tiktok
-      - line
-      - steam
-      - shopify
-      - zksync
-      - kraken
-      - blockaid
-      - passkey
-      - okta
-      - sendgrid
-      - resend
-    MergeUserConflict:
-      type: object
-      description: Contains a merge conflict between two users with different values for the same user field data
-      required:
-      - field
-      - fromUser
-      - currentUser
-      properties:
-        field:
-          $ref: '#/components/schemas/ProjectSettingsKyc'
-        fromUser:
-          $ref: '#/components/schemas/MergeUser'
-        currentUser:
-          $ref: '#/components/schemas/MergeUser'
-    Unauthorized:
-      type: object
-      properties:
-        error:
-          type: string
-          example: No jwt provided!
+      - browserExtension
+      - custodialService
+      - walletConnect
+      - qrCode
+      - deepLink
+      - embeddedWallet
+      - smartContractWallet
     GlobalWalletSettingsCreateRequest:
       type: object
       required:
@@ -338,214 +320,14 @@ components:
                 $ref: '#/components/schemas/NonEmptyUrl'
         enableLoginWithExternalWallets:
           type: boolean
-    OptionalNonEmptyCssUrl:
-      type: string
-      pattern: ^$|^(https?:\/\/)?[a-z0-9]+([-.]+[a-z0-9]+)*\.[a-z]{2,10}([0-9]{1,5})?(\/[^\/]*)*\/[^\/]*\.css$
-      example: https://website-sample/custom.css
-    NonEmptyStringWith255MaxLength:
-      type: string
-      pattern: ^(?=\S)[\p{L}\p{N}a-zA-Z _.,:!?&%@\/+\-'|]+(?<=\S)$
-      maxLength: 255
-      example: An example name
-    OptionalNonEmptyStringWith50MaxLength:
-      type: string
-      pattern: ^$|^(?=\S)[\p{L}\p{N}a-zA-Z _.,:!?&%@\/+\-'|]+(?<=\S)$
-      example: An example name
-      maxLength: 50
-    WalletAddressType:
-      type: string
-      enum:
-      - ordinals
-      - payment
-      - cosmos
-      - evm
-      - ton
-    MfaBackupCodeAcknowledgement:
-      type:
-      - string
-      - 'null'
-      enum:
-      - pending
-      - complete
-    KycFieldType:
-      type: string
-      enum:
-      - standard
-      - custom
-    JwtVerifiedCredentialFormatEnum:
-      type: string
-      enum:
-      - blockchain
-      - email
-      - oauth
-      - passkey
-      - phoneNumber
-      - externalUser
-    CoinbaseMpcWalletProperties:
-      type: object
-      properties:
-        claimed:
-          type: boolean
-          description: Dynamic pregenerated this wallet and stored the passcode
-        source:
-          $ref: '#/components/schemas/PasswordSourceTypeEnum'
-    UnprocessableEntity:
-      type: object
-      properties:
-        error:
-          type: string
-          example: Resources already exists for this Object
-        code:
-          $ref: '#/components/schemas/UnprocessableEntityErrorCode'
-        payload:
-          $ref: '#/components/schemas/UnprocessableEntityErrorPayload'
-      required:
-      - error
-    BaseUser:
-      type: object
-      required:
-      - id
-      - projectEnvironmentId
-      properties:
-        id:
-          $ref: '#/components/schemas/uuid'
-        projectEnvironmentId:
-          $ref: '#/components/schemas/uuid'
-        verifiedCredentials:
-          type: array
-          items:
-            $ref: '#/components/schemas/JwtVerifiedCredential'
-        lastVerifiedCredentialId:
-          $ref: '#/components/schemas/uuid'
-        sessionId:
-          $ref: '#/components/schemas/uuid'
-        alias:
-          $ref: '#/components/schemas/OptionalNullableNonEmptyStringWith255MaxLength'
-        country:
-          $ref: '#/components/schemas/CountryCode'
-        email:
-          type:
-          - string
-          - 'null'
-          format: email
-          maxLength: 255
-        firstName:
-          $ref: '#/components/schemas/OptionalNullableNonEmptyStringWith255MaxLength'
-        jobTitle:
-          $ref: '#/components/schemas/OptionalNullableNonEmptyStringWith255MaxLength'
-        lastName:
-          $ref: '#/components/schemas/OptionalNullableNonEmptyStringWith255MaxLength'
-        phoneNumber:
-          type:
-          - string
-          - 'null'
-          maxLength: 255
-        policiesConsent:
-          type:
-          - boolean
-          - 'null'
-        tShirtSize:
-          $ref: '#/components/schemas/OptionalNullableNonEmptyStringWith255MaxLength'
-        team:
-          $ref: '#/components/schemas/OptionalNullableNonEmptyStringWith255MaxLength'
-        username:
-          $ref: '#/components/schemas/OptionalNullableNonEmptyStringWith255MaxLength'
-        firstVisit:
-          type: string
-          format: date-time
-        lastVisit:
-          type: string
-          format: date-time
-        newUser:
-          type: boolean
-        metadata:
-          type: object
-        mfaBackupCodeAcknowledgement:
-          $ref: '#/components/schemas/MfaBackupCodeAcknowledgement'
-        btcWallet:
-          type:
-          - string
-          - 'null'
-        kdaWallet:
-          type:
-          - string
-          - 'null'
-        ltcWallet:
-          type:
-          - string
-          - 'null'
-        ckbWallet:
-          type:
-          - string
-          - 'null'
-        kasWallet:
-          type:
-          - string
-          - 'null'
-        dogeWallet:
-          type:
-          - string
-          - 'null'
-        emailNotification:
-          type:
-          - boolean
-          - 'null'
-        discordNotification:
-          type:
-          - boolean
-          - 'null'
-        newsletterNotification:
-          type:
-          - boolean
-          - 'null'
-        lists:
-          type: array
-          description: Access lists evaluated by Dynamic when considering access for the user.
-          items:
-            type: string
-        scope:
-          type: string
-          description: 'A whitespace-separate list of permissions associated with the JWT token issued. This conforms to the JWT standard for scope claims: https://datatracker.ietf.org/doc/html/rfc8693#section-4.2'
-          example: superuser marketing operations
-        missingFields:
-          type: array
-          items:
-            $ref: '#/components/schemas/ProjectSettingsKyc'
-    WalletAdditionalAddress:
-      type: object
-      description: An additional address associated with a wallet.
-      required:
-      - address
-      - type
-      properties:
-        address:
-          type: string
-          description: An address associated with a wallet.
-        publicKey:
-          type: string
-          description: The public key associated with the address.
-        type:
-          $ref: '#/components/schemas/WalletAddressType'
     ecdsaValidatorOptions:
       type: string
       enum:
       - zerodev_signer_to_ecdsa
       - zerodev_multi_chain
-    OptionalNullableNonEmptyStringWith255MaxLength:
-      type:
-      - string
-      - 'null'
-      pattern: ^$|^(?=\S)[\p{L}\p{N} _.,:!?&%@\/+-]+(?<=\S)$
-      example: An example name
-      maxLength: 255
-    GlobalWalletSettings:
+    GlobalWalletSettingsUpdateRequest:
       type: object
-      required:
-      - id
-      - walletName
       properties:
-        id:
-          $ref: '#/components/schemas/uuid'
         walletName:
           $ref: '#/components/schemas/OptionalNonEmptyStringWith50MaxLength'
         popupPageTitle:
@@ -574,12 +356,69 @@ components:
                 $ref: '#/components/schemas/NonEmptyUrl'
         enableLoginWithExternalWallets:
           type: boolean
-        enabledAt:
-          type:
-          - string
-          - 'null'
-          description: If global wallet is enabled, then this timestamp will be present.
-          format: date-time
+    CoinbaseMpcWalletProperties:
+      type: object
+      properties:
+        claimed:
+          type: boolean
+          description: Dynamic pregenerated this wallet and stored the passcode
+        source:
+          $ref: '#/components/schemas/PasswordSourceTypeEnum'
+    InternalServerError:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Internal Server Error
+    ThresholdSignatureScheme:
+      type: string
+      enum:
+      - TWO_OF_TWO
+      - TWO_OF_THREE
+      - THREE_OF_FIVE
+    SmartWalletProperties:
+      type: object
+      properties:
+        entryPointVersion:
+          $ref: '#/components/schemas/ProviderEntryPointVersionEnum'
+        kernelVersion:
+          $ref: '#/components/schemas/ProviderKernelVersionEnum'
+        ecdsaProviderType:
+          $ref: '#/components/schemas/ecdsaValidatorOptions'
+    ProviderEntryPointVersionEnum:
+      type: string
+      enum:
+      - v6
+      - v7
+    UnprocessableEntity:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Resources already exists for this Object
+        code:
+          $ref: '#/components/schemas/UnprocessableEntityErrorCode'
+        payload:
+          $ref: '#/components/schemas/UnprocessableEntityErrorPayload'
+      required:
+      - error
+    OptionalNullableNonEmptyStringWith255MaxLength:
+      type:
+      - string
+      - 'null'
+      pattern: ^$|^(?=\S)[\p{L}\p{N} _.,:!?&%@\/+-]+(?<=\S)$
+      example: An example name
+      maxLength: 255
+    HardwareWalletEnum:
+      type: string
+      enum:
+      - ledger
+    Unauthorized:
+      type: object
+      properties:
+        error:
+          type: string
+          example: No jwt provided!
     CustomFieldValidationRules:
       type: object
       properties:
@@ -606,113 +445,11 @@ components:
           description: The text that will be displayed for the checkbox field
           example: Agree to the terms and conditions
       description: Optional validation rules for the custom field
-    HardwareWalletEnum:
+    KycFieldType:
       type: string
       enum:
-      - ledger
-    ProjectSettingsKyc:
-      type: object
-      properties:
-        name:
-          type: string
-        required:
-          type: boolean
-        enabled:
-          type: boolean
-        unique:
-          type: boolean
-        verify:
-          type: boolean
-        type:
-          $ref: '#/components/schemas/KycFieldType'
-        validationRules:
-          $ref: '#/components/schemas/CustomFieldValidationRules'
-        validationType:
-          $ref: '#/components/schemas/CustomFieldType'
-        label:
-          type: string
-        position:
-          type: number
-      required:
-      - name
-      - required
-      - enabled
-      - unique
-      - verify
-    MergeConflicts:
-      type: object
-      description: Contains information needed for the SDK to surface merge conflicts when attempting to merge information from one user to another
-      required:
-      - fromUser
-      - conflicts
-      properties:
-        fromUser:
-          $ref: '#/components/schemas/SdkUser'
-        conflicts:
-          type: array
-          items:
-            $ref: '#/components/schemas/MergeUserConflict'
-    CustomFieldValidValue:
-      type: object
-      required:
-      - label
-      properties:
-        label:
-          $ref: '#/components/schemas/NonEmptyStringWith255MaxLengthAndSpecialChars'
-        key:
-          $ref: '#/components/schemas/NonEmptyStringWith255MaxLengthAndSpecialChars'
-    NameServiceData:
-      type: object
-      properties:
-        avatar:
-          type: string
-        name:
-          type: string
-    UnprocessableEntityErrorPayload:
-      type: object
-      description: Contains information which the integrating client of this API can use to tailor an experience to a customer to fix the underlying issue that triggered this error.
-      properties:
-        email:
-          type: string
-          format: email
-          example: joe@email.com
-        loginProvider:
-          $ref: '#/components/schemas/ProviderEnum'
-        embeddedWalletName:
-          type: string
-        embeddedSocialSigninProvider:
-          $ref: '#/components/schemas/ProviderEnum'
-        mergeConflicts:
-          $ref: '#/components/schemas/MergeConflicts'
-        additionalMessages:
-          type: array
-          items:
-            type: string
-    SdkUser:
-      allOf:
-      - $ref: '#/components/schemas/BaseUser'
-      - type: object
-        required:
-        - verifiedCredentials
-    WalletProperties:
-      anyOf:
-      - $ref: '#/components/schemas/TurnkeyWalletProperties'
-      - $ref: '#/components/schemas/HardwareWalletProperties'
-      - $ref: '#/components/schemas/CoinbaseMpcWalletProperties'
-      - $ref: '#/components/schemas/SmartWalletProperties'
-      - $ref: '#/components/schemas/WaasWalletProperties'
-    NotFound:
-      type: object
-      required:
-      - error
-      - code
-      properties:
-        error:
-          type: string
-          example: Not Found
-        code:
-          type: string
-          example: not_found
+      - standard
+      - custom
     UnprocessableEntityErrorCode:
       type: string
       enum:
@@ -835,6 +572,35 @@ components:
       - passkey_not_found
       - cannot_delete_passkey_linked_to_embedded_wallet
       - cannot_delete_last_sign_in_verified_credential
+    EmbeddedWalletVersionEnum:
+      type: string
+      enum:
+      - V1
+      - V2
+      - V3
+    SdkUser:
+      allOf:
+      - $ref: '#/components/schemas/BaseUser'
+      - type: object
+        required:
+        - verifiedCredentials
+    OptionalNonEmptyStringWith50MaxLength:
+      type: string
+      pattern: ^$|^(?=\S)[\p{L}\p{N}a-zA-Z _.,:!?&%@\/+\-'|]+(?<=\S)$
+      example: An example name
+      maxLength: 50
+    OptionalNonEmptyIconUrl:
+      type: string
+      pattern: ^$|^(https?:\/\/)?[a-z0-9]+([-.]+[a-z0-9]+)*\.[a-z]{2,10}([0-9]{1,5})?(\/[^\/]*)*\/[^\/]*\.(?:png|svg)$
+      example: https://website-sample/icon.svg
+    CountryCode:
+      type:
+      - string
+      - 'null'
+      description: Standard ISO 3166-1 alpha-2 two-letter country code
+      pattern: ^[A-Z]{2}$
+      example: US
+      maxLength: 255
     WaasWalletSettings:
       type: object
       properties:
@@ -846,135 +612,52 @@ components:
           $ref: '#/components/schemas/ThresholdSignatureScheme'
         revokeOnNextSignOn:
           type: boolean
-    TurnkeyWalletProperties:
-      deprecated: true
+    WalletAdditionalAddress:
       type: object
+      description: An additional address associated with a wallet.
+      required:
+      - address
+      - type
       properties:
-        turnkeySubOrganizationId:
-          allOf:
-          - $ref: '#/components/schemas/uuid'
-          deprecated: true
-        turnkeyPrivateKeyId:
-          allOf:
-          - $ref: '#/components/schemas/uuid'
-          deprecated: true
-        turnkeyHDWalletId:
-          allOf:
-          - $ref: '#/components/schemas/uuid'
-          deprecated: true
-        isAuthenticatorAttached:
-          type: boolean
-          description: Whether or not the wallet has an authenticator (passkey, api key, etc) attached to it.
-        turnkeyUserId:
-          allOf:
-          - $ref: '#/components/schemas/uuid'
-          deprecated: true
-        isSessionKeyCompatible:
-          type: boolean
-        version:
-          $ref: '#/components/schemas/EmbeddedWalletVersionEnum'
-        ecdsaProviderType:
-          $ref: '#/components/schemas/ecdsaValidatorOptions'
-        entryPointVersion:
-          $ref: '#/components/schemas/ProviderEntryPointVersionEnum'
-        kernelVersion:
-          $ref: '#/components/schemas/ProviderKernelVersionEnum'
-    CountryCode:
-      type:
-      - string
-      - 'null'
-      description: Standard ISO 3166-1 alpha-2 two-letter country code
-      pattern: ^[A-Z]{2}$
-      example: US
-      maxLength: 255
-    EmbeddedWalletVersionEnum:
-      type: string
-      enum:
-      - V1
-      - V2
-      - V3
-    WalletProviderEnum:
-      type: string
-      enum:
-      - browserExtension
-      - custodialService
-      - walletConnect
-      - qrCode
-      - deepLink
-      - embeddedWallet
-      - smartContractWallet
-    BadRequest:
+        address:
+          type: string
+          description: An address associated with a wallet.
+        publicKey:
+          type: string
+          description: The public key associated with the address.
+        type:
+          $ref: '#/components/schemas/WalletAddressType'
+    MergeUserConflict:
       type: object
+      description: Contains a merge conflict between two users with different values for the same user field data
+      required:
+      - field
+      - fromUser
+      - currentUser
+      properties:
+        field:
+          $ref: '#/components/schemas/ProjectSettingsKyc'
+        fromUser:
+          $ref: '#/components/schemas/MergeUser'
+        currentUser:
+          $ref: '#/components/schemas/MergeUser'
+    NotFound:
+      type: object
+      required:
+      - error
+      - code
       properties:
         error:
           type: string
-    MergeUser:
-      type: object
-      description: Contains the current field value for the user.
-      required:
-      - userId
-      - value
-      properties:
-        userId:
-          $ref: '#/components/schemas/uuid'
-        value:
-          $ref: '#/components/schemas/NonEmptyStringWith255MaxLength'
-    ProviderEntryPointVersionEnum:
-      type: string
-      enum:
-      - v6
-      - v7
-    WalletKeyShareInfo:
-      type: object
-      required:
-      - id
-      - backupLocation
-      - passwordEncrypted
-      properties:
-        id:
-          $ref: '#/components/schemas/uuid'
-        backupLocation:
+          example: Not Found
+        code:
           type: string
-        passwordEncrypted:
-          type: boolean
-        externalKeyShareId:
-          $ref: '#/components/schemas/uuid'
-    NonEmptyUrl:
+          example: not_found
+    NonEmptyStringWith50MaxLength:
       type: string
-      pattern: ^(https?:\/\/)?[a-z0-9]+([-.]+[a-z0-9]+)*\.[a-z]{2,10}([0-9]{1,5})?(\/.*)?$
-      example: https://website-sample.com
-    uuid:
-      type: string
-      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
-      minLength: 36
-      maxLength: 36
-      example: 95b11417-f18f-457f-8804-68e361f9164f
-    SmartWalletProperties:
-      type: object
-      properties:
-        entryPointVersion:
-          $ref: '#/components/schemas/ProviderEntryPointVersionEnum'
-        kernelVersion:
-          $ref: '#/components/schemas/ProviderKernelVersionEnum'
-        ecdsaProviderType:
-          $ref: '#/components/schemas/ecdsaValidatorOptions'
-    WalletPublicKey:
-      type: string
-      pattern: ^[A-Za-z0-9]{18,100}$
-      description: Valid blockchain wallet address, must be an alphanumeric string without any special characters
-      example: '0xbF394748301603f18d953C90F0b087CBEC0E1834'
-      maxLength: 255
-    PasswordSourceTypeEnum:
-      type: string
-      enum:
-      - dynamic
-      - user
-    Forbidden:
-      type: object
-      properties:
-        error:
-          type: string
-          example: Access Forbidden
+      pattern: ^(?=\S)[\p{L}\p{N}a-zA-Z _.,:!?&%@\/+\-'|]+(?<=\S)$
+      example: An example name
+      maxLength: 50
     JwtVerifiedCredential:
       type: object
       required:
@@ -1067,23 +750,332 @@ components:
           type: string
           format: date-time
           description: This timestamp indicates the last time this verified credential was verified.
+    WalletProperties:
+      anyOf:
+      - $ref: '#/components/schemas/TurnkeyWalletProperties'
+      - $ref: '#/components/schemas/HardwareWalletProperties'
+      - $ref: '#/components/schemas/CoinbaseMpcWalletProperties'
+      - $ref: '#/components/schemas/SmartWalletProperties'
+      - $ref: '#/components/schemas/WaasWalletProperties'
+    PasswordSourceTypeEnum:
+      type: string
+      enum:
+      - dynamic
+      - user
     OptionalNonEmptyUrl:
       type: string
       pattern: ^$|^(https?:\/\/)?[a-z0-9]+([-.]+[a-z0-9]+)*\.[a-z]{2,10}([0-9]{1,5})?(\/.*)?$
       example: https://website-sample.com
-    NonEmptyStringWith255MaxLengthAndSpecialChars:
+    Forbidden:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Access Forbidden
+    BadRequest:
+      type: object
+      properties:
+        error:
+          type: string
+    UnprocessableEntityErrorPayload:
+      type: object
+      description: Contains information which the integrating client of this API can use to tailor an experience to a customer to fix the underlying issue that triggered this error.
+      properties:
+        email:
+          type: string
+          format: email
+          example: joe@email.com
+        loginProvider:
+          $ref: '#/components/schemas/ProviderEnum'
+        embeddedWalletName:
+          type: string
+        embeddedSocialSigninProvider:
+          $ref: '#/components/schemas/ProviderEnum'
+        mergeConflicts:
+          $ref: '#/components/schemas/MergeConflicts'
+        additionalMessages:
+          type: array
+          items:
+            type: string
+    WalletPublicKey:
       type: string
-      pattern: ^(?=\S)[\p{L}\p{N}a-zA-Z _.,:!?&%@\/+\-'()\[\]*]+(?<=\S)$
+      pattern: ^[A-Za-z0-9]{18,100}$
+      description: Valid blockchain wallet address, must be an alphanumeric string without any special characters
+      example: '0xbF394748301603f18d953C90F0b087CBEC0E1834'
       maxLength: 255
-      example: An example name
-  parameters:
-    environmentId:
-      in: path
-      name: environmentId
-      required: true
-      description: ID of the environment
-      schema:
-        $ref: '#/components/schemas/uuid'
+    CustomFieldValidValue:
+      type: object
+      required:
+      - label
+      properties:
+        label:
+          $ref: '#/components/schemas/NonEmptyStringWith255MaxLengthAndSpecialChars'
+        key:
+          $ref: '#/components/schemas/NonEmptyStringWith255MaxLengthAndSpecialChars'
+    GlobalWalletSettings:
+      type: object
+      required:
+      - id
+      - walletName
+      properties:
+        id:
+          $ref: '#/components/schemas/uuid'
+        walletName:
+          $ref: '#/components/schemas/OptionalNonEmptyStringWith50MaxLength'
+        popupPageTitle:
+          $ref: '#/components/schemas/OptionalNonEmptyStringWith50MaxLength'
+        walletIconUrl:
+          $ref: '#/components/schemas/OptionalNonEmptyIconUrl'
+        customCssUrl:
+          $ref: '#/components/schemas/OptionalNonEmptyCssUrl'
+        termsOfServiceUrl:
+          $ref: '#/components/schemas/OptionalNonEmptyUrl'
+        privacyPolicyUrl:
+          $ref: '#/components/schemas/OptionalNonEmptyUrl'
+        termsOfServiceAndPrivacyPolicyMarkdown:
+          $ref: '#/components/schemas/OptionalNonEmptyMarkdownText'
+        customMenuLinks:
+          type: array
+          items:
+            type: object
+            required:
+            - label
+            - url
+            properties:
+              label:
+                $ref: '#/components/schemas/NonEmptyStringWith50MaxLength'
+              url:
+                $ref: '#/components/schemas/NonEmptyUrl'
+        enableLoginWithExternalWallets:
+          type: boolean
+        enabledAt:
+          type:
+          - string
+          - 'null'
+          description: If global wallet is enabled, then this timestamp will be present.
+          format: date-time
+    ProviderEnum:
+      type: string
+      description: The 'turnkey' value is deprecated and will be removed in a future version.
+      enum:
+      - emailOnly
+      - magicLink
+      - apple
+      - bitbucket
+      - coinbasesocial
+      - discord
+      - epicgames
+      - facebook
+      - farcaster
+      - github
+      - gitlab
+      - google
+      - instagram
+      - linkedin
+      - microsoft
+      - twitch
+      - twitter
+      - blocto
+      - banxa
+      - coinbaseOnramp
+      - cryptoDotCom
+      - dynamic
+      - alchemy
+      - zerodev
+      - telegram
+      - turnkey
+      - coinbaseWaas
+      - sms
+      - spotify
+      - tiktok
+      - line
+      - steam
+      - shopify
+      - zksync
+      - kraken
+      - blockaid
+      - passkey
+      - okta
+      - sendgrid
+      - resend
+    HardwareWalletProperties:
+      type: object
+      properties:
+        hardwareWallet:
+          $ref: '#/components/schemas/HardwareWalletEnum'
+    OptionalNonEmptyMarkdownText:
+      type: string
+      pattern: ^$|^(?!.*&lt;[^&]+&gt;)[a-zA-Z0-9\s\/;:\*\-\(\)\[\]%#@'"\\.,=+\$&]+$
+      example: This is a markdown example with a **bold** text and a [link](https://website-sample.com)
+      maxLength: 1024
+    NameServiceData:
+      type: object
+      properties:
+        avatar:
+          type: string
+        name:
+          type: string
+    BaseUser:
+      type: object
+      required:
+      - id
+      - projectEnvironmentId
+      properties:
+        id:
+          $ref: '#/components/schemas/uuid'
+        projectEnvironmentId:
+          $ref: '#/components/schemas/uuid'
+        verifiedCredentials:
+          type: array
+          items:
+            $ref: '#/components/schemas/JwtVerifiedCredential'
+        lastVerifiedCredentialId:
+          $ref: '#/components/schemas/uuid'
+        sessionId:
+          $ref: '#/components/schemas/uuid'
+        alias:
+          $ref: '#/components/schemas/OptionalNullableNonEmptyStringWith255MaxLength'
+        country:
+          $ref: '#/components/schemas/CountryCode'
+        email:
+          type:
+          - string
+          - 'null'
+          format: email
+          maxLength: 255
+        firstName:
+          $ref: '#/components/schemas/OptionalNullableNonEmptyStringWith255MaxLength'
+        jobTitle:
+          $ref: '#/components/schemas/OptionalNullableNonEmptyStringWith255MaxLength'
+        lastName:
+          $ref: '#/components/schemas/OptionalNullableNonEmptyStringWith255MaxLength'
+        phoneNumber:
+          type:
+          - string
+          - 'null'
+          maxLength: 255
+        policiesConsent:
+          type:
+          - boolean
+          - 'null'
+        tShirtSize:
+          $ref: '#/components/schemas/OptionalNullableNonEmptyStringWith255MaxLength'
+        team:
+          $ref: '#/components/schemas/OptionalNullableNonEmptyStringWith255MaxLength'
+        username:
+          $ref: '#/components/schemas/OptionalNullableNonEmptyStringWith255MaxLength'
+        firstVisit:
+          type: string
+          format: date-time
+        lastVisit:
+          type: string
+          format: date-time
+        newUser:
+          type: boolean
+        metadata:
+          type: object
+        mfaBackupCodeAcknowledgement:
+          $ref: '#/components/schemas/MfaBackupCodeAcknowledgement'
+        btcWallet:
+          type:
+          - string
+          - 'null'
+        kdaWallet:
+          type:
+          - string
+          - 'null'
+        ltcWallet:
+          type:
+          - string
+          - 'null'
+        ckbWallet:
+          type:
+          - string
+          - 'null'
+        kasWallet:
+          type:
+          - string
+          - 'null'
+        dogeWallet:
+          type:
+          - string
+          - 'null'
+        emailNotification:
+          type:
+          - boolean
+          - 'null'
+        discordNotification:
+          type:
+          - boolean
+          - 'null'
+        newsletterNotification:
+          type:
+          - boolean
+          - 'null'
+        lists:
+          type: array
+          description: Access lists evaluated by Dynamic when considering access for the user.
+          items:
+            type: string
+        scope:
+          type: string
+          description: 'A whitespace-separate list of permissions associated with the JWT token issued. This conforms to the JWT standard for scope claims: https://datatracker.ietf.org/doc/html/rfc8693#section-4.2'
+          example: superuser marketing operations
+        missingFields:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProjectSettingsKyc'
+    MergeUser:
+      type: object
+      description: Contains the current field value for the user.
+      required:
+      - userId
+      - value
+      properties:
+        userId:
+          $ref: '#/components/schemas/uuid'
+        value:
+          $ref: '#/components/schemas/NonEmptyStringWith255MaxLength'
+    MfaBackupCodeAcknowledgement:
+      type:
+      - string
+      - 'null'
+      enum:
+      - pending
+      - complete
+    uuid:
+      type: string
+      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+      minLength: 36
+      maxLength: 36
+      example: 95b11417-f18f-457f-8804-68e361f9164f
+    WalletKeyShareInfo:
+      type: object
+      required:
+      - id
+      - backupLocation
+      - passwordEncrypted
+      properties:
+        id:
+          $ref: '#/components/schemas/uuid'
+        backupLocation:
+          type: string
+        passwordEncrypted:
+          type: boolean
+        externalKeyShareId:
+          $ref: '#/components/schemas/uuid'
+    OptionalNonEmptyCssUrl:
+      type: string
+      pattern: ^$|^(https?:\/\/)?[a-z0-9]+([-.]+[a-z0-9]+)*\.[a-z]{2,10}([0-9]{1,5})?(\/[^\/]*)*\/[^\/]*\.css$
+      example: https://website-sample/custom.css
+    ProviderKernelVersionEnum:
+      type: string
+      enum:
+      - v2_4
+      - v3_0
+      - v3_1
+      - v3_2
+      - v3_3
   responses:
     Forbidden:
       description: Forbidden
@@ -1091,6 +1083,18 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/Forbidden'
+    UnprocessableEntity:
+      description: Unprocessable Entity
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UnprocessableEntity'
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/InternalServerError'
     BadRequest:
       description: Bad Request
       content:
@@ -1103,24 +1107,20 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/Unauthorized'
-    InternalServerError:
-      description: Internal Server Error
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/InternalServerError'
     NotFound:
       description: Not Found
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/NotFound'
-    UnprocessableEntity:
-      description: Unprocessable Entity
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/UnprocessableEntity'
+  parameters:
+    environmentId:
+      in: path
+      name: environmentId
+      required: true
+      description: ID of the environment
+      schema:
+        $ref: '#/components/schemas/uuid'
   securitySchemes:
     bearerAuth:
       type: http

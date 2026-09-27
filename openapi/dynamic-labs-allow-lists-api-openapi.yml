@@ -88,27 +88,6 @@ paths:
           $ref: '#/components/responses/Unauthorized'
 components:
   schemas:
-    CreateAllowlistRequest:
-      type: object
-      properties:
-        name:
-          type: string
-        type:
-          type: string
-          enum:
-          - email
-          - walletAddress
-          - country
-      required:
-      - name
-      - type
-    AllowlistList:
-      type: object
-      properties:
-        allowlists:
-          type: array
-          items:
-            $ref: '#/components/schemas/Allowlist'
     AllowlistEntry:
       type: object
       properties:
@@ -138,6 +117,13 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AllowlistEntry'
+    AllowlistList:
+      type: object
+      properties:
+        allowlists:
+          type: array
+          items:
+            $ref: '#/components/schemas/Allowlist'
     Error:
       type: object
       properties:
@@ -152,6 +138,20 @@ components:
           - message
       required:
       - error
+    CreateAllowlistRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+          enum:
+          - email
+          - walletAddress
+          - country
+      required:
+      - name
+      - type
   responses:
     Unauthorized:
       description: The bearer token is missing or invalid.

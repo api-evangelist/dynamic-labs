@@ -676,8 +676,6 @@ apis:
   humanURL: https://www.dynamic.xyz/docs/api-reference/users
   baseURL: https://app.dynamicauth.com/api/v0
   tags:
-  - Allowlists
-  tags_raw:
   - Allow Lists
   properties:
   - type: OpenAPI

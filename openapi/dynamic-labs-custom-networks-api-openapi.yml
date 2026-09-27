@@ -151,42 +151,32 @@ paths:
       security:
       - bearerAuth: []
 components:
-  schemas:
+  responses:
     InternalServerError:
-      type: object
-      properties:
-        error:
-          type: string
-          example: Internal Server Error
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/InternalServerError'
     BadRequest:
-      type: object
-      properties:
-        error:
-          type: string
-    ChainEnum:
-      type: string
-      enum:
-      - ETH
-      - EVM
-      - FLOW
-      - SOL
-      - ALGO
-      - STARK
-      - COSMOS
-      - BTC
-      - ECLIPSE
-      - SUI
-      - SPARK
-      - TRON
-      - APTOS
-      - TON
-      - STELLAR
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BadRequest'
     Unauthorized:
-      type: object
-      properties:
-        error:
-          type: string
-          example: No jwt provided!
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Unauthorized'
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Forbidden'
+  schemas:
     CustomNetworkRequest:
       type: object
       required:
@@ -241,6 +231,30 @@ components:
           maximum: 18
           description: Number of decimals for the native currency
           example: 18
+    ChainEnum:
+      type: string
+      enum:
+      - ETH
+      - EVM
+      - FLOW
+      - SOL
+      - ALGO
+      - STARK
+      - COSMOS
+      - BTC
+      - ECLIPSE
+      - SUI
+      - SPARK
+      - TRON
+      - APTOS
+      - TON
+      - STELLAR
+    InternalServerError:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Internal Server Error
     CustomNetworkResponse:
       type: object
       properties:
@@ -291,6 +305,23 @@ components:
               type: number
               minimum: 0
               maximum: 18
+    Unauthorized:
+      type: object
+      properties:
+        error:
+          type: string
+          example: No jwt provided!
+    Forbidden:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Access Forbidden
+    BadRequest:
+      type: object
+      properties:
+        error:
+          type: string
     uuid:
       type: string
       pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
@@ -302,12 +333,6 @@ components:
       pattern: ^(https?:\/\/)?[a-z0-9]+([-.]+[a-z0-9]+)*\.[a-z]{2,10}([0-9]{1,5})?(\/.*)?$
       maxLength: 255
       example: https://website-sample.com
-    Forbidden:
-      type: object
-      properties:
-        error:
-          type: string
-          example: Access Forbidden
   parameters:
     organizationId:
       in: path
@@ -323,31 +348,6 @@ components:
       description: The unique identifier of the custom network
       schema:
         $ref: '#/components/schemas/uuid'
-  responses:
-    Forbidden:
-      description: Forbidden
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Forbidden'
-    BadRequest:
-      description: Bad Request
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/BadRequest'
-    InternalServerError:
-      description: Internal Server Error
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/InternalServerError'
-    Unauthorized:
-      description: Unauthorized
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Unauthorized'
   securitySchemes:
     bearerAuth:
       type: http

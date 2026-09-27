@@ -81,18 +81,6 @@ paths:
           $ref: '#/components/responses/Unauthorized'
 components:
   schemas:
-    CreateApiTokenRequest:
-      type: object
-      properties:
-        name:
-          type: string
-        expiresAt:
-          type:
-          - string
-          - 'null'
-          format: date-time
-      required:
-      - name
     ApiTokenList:
       type: object
       properties:
@@ -100,6 +88,20 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ApiToken'
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+          required:
+          - message
+      required:
+      - error
     ApiToken:
       type: object
       properties:
@@ -121,20 +123,18 @@ components:
           - string
           - 'null'
           format: date-time
-    Error:
+    CreateApiTokenRequest:
       type: object
       properties:
-        error:
-          type: object
-          properties:
-            code:
-              type: string
-            message:
-              type: string
-          required:
-          - message
+        name:
+          type: string
+        expiresAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
       required:
-      - error
+      - name
   responses:
     Unauthorized:
       description: The bearer token is missing or invalid.

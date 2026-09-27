@@ -83,24 +83,19 @@ paths:
       - bearerAuth: []
 components:
   schemas:
+    OrganizationMfaSettingsResponse:
+      type: object
+      properties:
+        mfaSettings:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrganizationMfaSettings'
     InternalServerError:
       type: object
       properties:
         error:
           type: string
           example: Internal Server Error
-    Unauthorized:
-      type: object
-      properties:
-        error:
-          type: string
-          example: No jwt provided!
-    uuid:
-      type: string
-      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
-      minLength: 36
-      maxLength: 36
-      example: 95b11417-f18f-457f-8804-68e361f9164f
     OrganizationMfaSettings:
       type: object
       required:
@@ -113,25 +108,49 @@ components:
           format: date-time
         mfaDeviceType:
           $ref: '#/components/schemas/MFADeviceType'
-    OrganizationMfaSettingsResponse:
+    Unauthorized:
       type: object
       properties:
-        mfaSettings:
-          type: array
-          items:
-            $ref: '#/components/schemas/OrganizationMfaSettings'
+        error:
+          type: string
+          example: No jwt provided!
     Forbidden:
       type: object
       properties:
         error:
           type: string
           example: Access Forbidden
+    uuid:
+      type: string
+      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+      minLength: 36
+      maxLength: 36
+      example: 95b11417-f18f-457f-8804-68e361f9164f
     MFADeviceType:
       type: string
       enum:
       - totp
       - passkey
       - email
+  responses:
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/InternalServerError'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Unauthorized'
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Forbidden'
   parameters:
     organizationId:
       in: path
@@ -147,25 +166,6 @@ components:
       description: MFA device type
       schema:
         $ref: '#/components/schemas/MFADeviceType'
-  responses:
-    Forbidden:
-      description: Forbidden
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Forbidden'
-    InternalServerError:
-      description: Internal Server Error
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/InternalServerError'
-    Unauthorized:
-      description: Unauthorized
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Unauthorized'
   securitySchemes:
     bearerAuth:
       type: http

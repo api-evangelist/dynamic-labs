@@ -80,15 +80,14 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Wallet'
+  responses:
+    Unauthorized:
+      description: The bearer token is missing or invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
   parameters:
-    UserId:
-      name: userId
-      in: path
-      required: true
-      description: The ID of the user.
-      schema:
-        type: string
-        format: uuid
     EnvironmentId:
       name: environmentId
       in: path
@@ -97,13 +96,14 @@ components:
       schema:
         type: string
         format: uuid
-  responses:
-    Unauthorized:
-      description: The bearer token is missing or invalid.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
+    UserId:
+      name: userId
+      in: path
+      required: true
+      description: The ID of the user.
+      schema:
+        type: string
+        format: uuid
   securitySchemes:
     bearerAuth:
       type: http

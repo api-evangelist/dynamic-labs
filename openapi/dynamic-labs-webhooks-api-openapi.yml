@@ -113,23 +113,6 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 components:
-  parameters:
-    WebhookId:
-      name: webhookId
-      in: path
-      required: true
-      description: The ID of the webhook.
-      schema:
-        type: string
-        format: uuid
-    EnvironmentId:
-      name: environmentId
-      in: path
-      required: true
-      description: The ID of the Dynamic environment (project).
-      schema:
-        type: string
-        format: uuid
   schemas:
     CreateWebhookRequest:
       type: object
@@ -147,27 +130,6 @@ components:
       required:
       - url
       - scopes
-    Webhook:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        url:
-          type: string
-          format: uri
-        isEnabled:
-          type: boolean
-        scopes:
-          type: array
-          items:
-            type: string
-            description: Event scope such as user.created, wallet.linked, or user.session.created.
-        secret:
-          type:
-          - string
-          - 'null'
-          description: Signing secret used to verify webhook payloads, returned only on creation.
     Error:
       type: object
       properties:
@@ -189,6 +151,27 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Webhook'
+    Webhook:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        url:
+          type: string
+          format: uri
+        isEnabled:
+          type: boolean
+        scopes:
+          type: array
+          items:
+            type: string
+            description: Event scope such as user.created, wallet.linked, or user.session.created.
+        secret:
+          type:
+          - string
+          - 'null'
+          description: Signing secret used to verify webhook payloads, returned only on creation.
   responses:
     Unauthorized:
       description: The bearer token is missing or invalid.
@@ -196,6 +179,23 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
+  parameters:
+    WebhookId:
+      name: webhookId
+      in: path
+      required: true
+      description: The ID of the webhook.
+      schema:
+        type: string
+        format: uuid
+    EnvironmentId:
+      name: environmentId
+      in: path
+      required: true
+      description: The ID of the Dynamic environment (project).
+      schema:
+        type: string
+        format: uuid
   securitySchemes:
     bearerAuth:
       type: http

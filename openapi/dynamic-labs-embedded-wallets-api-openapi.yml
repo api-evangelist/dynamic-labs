@@ -67,20 +67,6 @@ components:
           type:
           - string
           - 'null'
-    CreateEmbeddedWalletRequest:
-      type: object
-      properties:
-        chains:
-          type: array
-          description: The chains to provision embedded wallets for.
-          items:
-            type: string
-            enum:
-            - EVM
-            - SOL
-            - BTC
-      required:
-      - chains
     Error:
       type: object
       properties:
@@ -95,23 +81,20 @@ components:
           - message
       required:
       - error
-  parameters:
-    UserId:
-      name: userId
-      in: path
-      required: true
-      description: The ID of the user.
-      schema:
-        type: string
-        format: uuid
-    EnvironmentId:
-      name: environmentId
-      in: path
-      required: true
-      description: The ID of the Dynamic environment (project).
-      schema:
-        type: string
-        format: uuid
+    CreateEmbeddedWalletRequest:
+      type: object
+      properties:
+        chains:
+          type: array
+          description: The chains to provision embedded wallets for.
+          items:
+            type: string
+            enum:
+            - EVM
+            - SOL
+            - BTC
+      required:
+      - chains
   responses:
     BadRequest:
       description: The request was malformed or a precondition failed.
@@ -125,6 +108,23 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
+  parameters:
+    EnvironmentId:
+      name: environmentId
+      in: path
+      required: true
+      description: The ID of the Dynamic environment (project).
+      schema:
+        type: string
+        format: uuid
+    UserId:
+      name: userId
+      in: path
+      required: true
+      description: The ID of the user.
+      schema:
+        type: string
+        format: uuid
   securitySchemes:
     bearerAuth:
       type: http
