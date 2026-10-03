@@ -95,6 +95,18 @@ components:
         email:
           type: string
           format: email
+    uuid:
+      type: string
+      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+      minLength: 36
+      maxLength: 36
+      example: 95b11417-f18f-457f-8804-68e361f9164f
+    WalletPublicKey:
+      type: string
+      pattern: ^[A-Za-z0-9]{18,100}$
+      description: Valid blockchain wallet address, must be an alphanumeric string without any special characters
+      example: '0xbF394748301603f18d953C90F0b087CBEC0E1834'
+      maxLength: 255
     Session:
       type: object
       properties:
@@ -116,25 +128,6 @@ components:
           - string
           - 'null'
           format: date-time
-    ForbiddenWithErrorAndPayload:
-      type: object
-      properties:
-        error:
-          $ref: '#/components/schemas/ErrorMessageWithCode'
-        payload:
-          $ref: '#/components/schemas/ForbiddenErrorPayload'
-    InternalServerError:
-      type: object
-      properties:
-        error:
-          type: string
-          example: Internal Server Error
-    Unauthorized:
-      type: object
-      properties:
-        error:
-          type: string
-          example: No jwt provided!
     ErrorMessageWithCode:
       type: object
       properties:
@@ -142,6 +135,33 @@ components:
           type: string
         message:
           type: string
+    Unauthorized:
+      type: object
+      properties:
+        error:
+          type: string
+          example: No jwt provided!
+    ForbiddenWithErrorAndPayload:
+      type: object
+      properties:
+        error:
+          $ref: '#/components/schemas/ErrorMessageWithCode'
+        payload:
+          $ref: '#/components/schemas/ForbiddenErrorPayload'
+    RevokeAllSessionsResponse:
+      type: object
+      required:
+      - message
+      properties:
+        message:
+          type: string
+          description: Status message indicating the revocation has been queued
+    InternalServerError:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Internal Server Error
     NotFound:
       type: object
       required:
@@ -160,44 +180,61 @@ components:
         error:
           type: string
           example: Access Forbidden
-    WalletPublicKey:
-      type: string
-      pattern: ^[A-Za-z0-9]{18,100}$
-      description: Valid blockchain wallet address, must be an alphanumeric string without any special characters
-      example: '0xbF394748301603f18d953C90F0b087CBEC0E1834'
-      maxLength: 255
     BadRequest:
       type: object
       properties:
         error:
           type: string
-    uuid:
-      type: string
-      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
-      minLength: 36
-      maxLength: 36
-      example: 95b11417-f18f-457f-8804-68e361f9164f
-    RevokeAllSessionsResponse:
-      type: object
-      required:
-      - message
-      properties:
-        message:
-          type: string
-          description: Status message indicating the revocation has been queued
+  responses:
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Forbidden'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Unauthorized'
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/InternalServerError'
+    ForbiddenWithErrorAndPayload:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ForbiddenWithErrorAndPayload'
+    NotFound:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/NotFound'
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BadRequest'
   parameters:
-    sessionId:
-      name: sessionId
-      in: path
-      description: ID of the session
-      required: true
-      schema:
-        $ref: '#/components/schemas/uuid'
     environmentId:
       in: path
       name: environmentId
       required: true
       description: ID of the environment
+      schema:
+        $ref: '#/components/schemas/uuid'
+    sessionId:
+      name: sessionId
+      in: path
+      description: ID of the session
+      required: true
       schema:
         $ref: '#/components/schemas/uuid'
     userId:
@@ -207,43 +244,6 @@ components:
         $ref: '#/components/schemas/uuid'
       required: true
       description: UUID of the user
-  responses:
-    Forbidden:
-      description: Forbidden
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Forbidden'
-    ForbiddenWithErrorAndPayload:
-      description: Forbidden
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ForbiddenWithErrorAndPayload'
-    InternalServerError:
-      description: Internal Server Error
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/InternalServerError'
-    BadRequest:
-      description: Bad Request
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/BadRequest'
-    Unauthorized:
-      description: Unauthorized
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Unauthorized'
-    NotFound:
-      description: Not Found
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/NotFound'
   securitySchemes:
     bearerAuth:
       type: http

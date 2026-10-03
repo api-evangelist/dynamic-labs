@@ -113,23 +113,14 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 components:
+  responses:
+    Unauthorized:
+      description: The bearer token is missing or invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
   schemas:
-    CreateWebhookRequest:
-      type: object
-      properties:
-        url:
-          type: string
-          format: uri
-        isEnabled:
-          type: boolean
-          default: true
-        scopes:
-          type: array
-          items:
-            type: string
-      required:
-      - url
-      - scopes
     Error:
       type: object
       properties:
@@ -144,13 +135,6 @@ components:
           - message
       required:
       - error
-    WebhookList:
-      type: object
-      properties:
-        webhooks:
-          type: array
-          items:
-            $ref: '#/components/schemas/Webhook'
     Webhook:
       type: object
       properties:
@@ -172,27 +156,43 @@ components:
           - string
           - 'null'
           description: Signing secret used to verify webhook payloads, returned only on creation.
-  responses:
-    Unauthorized:
-      description: The bearer token is missing or invalid.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
+    WebhookList:
+      type: object
+      properties:
+        webhooks:
+          type: array
+          items:
+            $ref: '#/components/schemas/Webhook'
+    CreateWebhookRequest:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+        isEnabled:
+          type: boolean
+          default: true
+        scopes:
+          type: array
+          items:
+            type: string
+      required:
+      - url
+      - scopes
   parameters:
-    WebhookId:
-      name: webhookId
-      in: path
-      required: true
-      description: The ID of the webhook.
-      schema:
-        type: string
-        format: uuid
     EnvironmentId:
       name: environmentId
       in: path
       required: true
       description: The ID of the Dynamic environment (project).
+      schema:
+        type: string
+        format: uuid
+    WebhookId:
+      name: webhookId
+      in: path
+      required: true
+      description: The ID of the webhook.
       schema:
         type: string
         format: uuid

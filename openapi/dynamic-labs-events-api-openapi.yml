@@ -77,7 +77,56 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 components:
+  parameters:
+    eventId:
+      in: path
+      name: eventId
+      required: true
+      description: ID of the event
+      schema:
+        $ref: '#/components/schemas/uuid'
+    resourceType:
+      in: query
+      name: resourceType
+      schema:
+        type: string
+      required: false
+      description: Resource type of event
+    cursor:
+      in: query
+      name: cursor
+      schema:
+        type: string
+      required: false
+      description: Cursor for pagination
+    environmentId:
+      in: path
+      name: environmentId
+      required: true
+      description: ID of the environment
+      schema:
+        $ref: '#/components/schemas/uuid'
+    startDate:
+      in: query
+      name: startDate
+      required: false
+      schema:
+        type: string
+      description: Start date of the event query
+    endDate:
+      in: query
+      name: endDate
+      required: false
+      schema:
+        type: string
+      description: End date of the event query
   schemas:
+    uuid:
+      type: string
+      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+      minLength: 36
+      maxLength: 36
+      example: 95b11417-f18f-457f-8804-68e361f9164f
     EventContext:
       type: object
       properties:
@@ -85,6 +134,17 @@ components:
           type: string
         version:
           type: string
+    Unauthorized:
+      type: object
+      properties:
+        error:
+          type: string
+          example: No jwt provided!
+    EnvironmentEnum:
+      type: string
+      enum:
+      - sandbox
+      - live
     EventType:
       type: object
       required:
@@ -95,22 +155,6 @@ components:
           type: string
         description:
           type: string
-    EventTypesResponse:
-      type: array
-      items:
-        $ref: '#/components/schemas/EventType'
-    InternalServerError:
-      type: object
-      properties:
-        error:
-          type: string
-          example: Internal Server Error
-    Unauthorized:
-      type: object
-      properties:
-        error:
-          type: string
-          example: No jwt provided!
     Event:
       type: object
       required:
@@ -141,17 +185,22 @@ components:
           type: object
         context:
           $ref: '#/components/schemas/EventContext'
+    InternalServerError:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Internal Server Error
     Forbidden:
       type: object
       properties:
         error:
           type: string
           example: Access Forbidden
-    EnvironmentEnum:
-      type: string
-      enum:
-      - sandbox
-      - live
+    EventTypesResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/EventType'
     EventsResponse:
       type: object
       properties:
@@ -161,12 +210,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Event'
-    uuid:
-      type: string
-      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
-      minLength: 36
-      maxLength: 36
-      example: 95b11417-f18f-457f-8804-68e361f9164f
   responses:
     Forbidden:
       description: Forbidden
@@ -174,61 +217,18 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/Forbidden'
-    InternalServerError:
-      description: Internal Server Error
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/InternalServerError'
     Unauthorized:
       description: Unauthorized
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Unauthorized'
-  parameters:
-    cursor:
-      in: query
-      name: cursor
-      schema:
-        type: string
-      required: false
-      description: Cursor for pagination
-    resourceType:
-      in: query
-      name: resourceType
-      schema:
-        type: string
-      required: false
-      description: Resource type of event
-    eventId:
-      in: path
-      name: eventId
-      required: true
-      description: ID of the event
-      schema:
-        $ref: '#/components/schemas/uuid'
-    environmentId:
-      in: path
-      name: environmentId
-      required: true
-      description: ID of the environment
-      schema:
-        $ref: '#/components/schemas/uuid'
-    endDate:
-      in: query
-      name: endDate
-      required: false
-      schema:
-        type: string
-      description: End date of the event query
-    startDate:
-      in: query
-      name: startDate
-      required: false
-      schema:
-        type: string
-      description: Start date of the event query
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/InternalServerError'
   securitySchemes:
     bearerAuth:
       type: http

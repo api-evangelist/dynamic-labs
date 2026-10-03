@@ -40,24 +40,24 @@ paths:
           $ref: '#/components/responses/InternalServerError'
 components:
   responses:
-    InternalServerError:
-      description: Internal Server Error
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/InternalServerError'
-    BadRequest:
-      description: Bad Request
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/BadRequest'
     Unauthorized:
       description: Unauthorized
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Unauthorized'
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BadRequest'
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/InternalServerError'
   schemas:
     InternalServerError:
       type: object
@@ -83,27 +83,6 @@ components:
       - APTOS
       - TON
       - STELLAR
-    Unauthorized:
-      type: object
-      properties:
-        error:
-          type: string
-          example: No jwt provided!
-    ChainTokensResponse:
-      type: array
-      items:
-        $ref: '#/components/schemas/ChainToken'
-    WalletPublicKey:
-      type: string
-      pattern: ^[A-Za-z0-9]{18,100}$
-      description: Valid blockchain wallet address, must be an alphanumeric string without any special characters
-      example: '0xbF394748301603f18d953C90F0b087CBEC0E1834'
-      maxLength: 255
-    BadRequest:
-      type: object
-      properties:
-        error:
-          type: string
     ChainToken:
       description: Defined an one token which can have multiple contract addresses dependent to networkId
       type: object
@@ -138,6 +117,27 @@ components:
           example: 1
         contractAddress:
           $ref: '#/components/schemas/WalletPublicKey'
+    Unauthorized:
+      type: object
+      properties:
+        error:
+          type: string
+          example: No jwt provided!
+    BadRequest:
+      type: object
+      properties:
+        error:
+          type: string
+    WalletPublicKey:
+      type: string
+      pattern: ^[A-Za-z0-9]{18,100}$
+      description: Valid blockchain wallet address, must be an alphanumeric string without any special characters
+      example: '0xbF394748301603f18d953C90F0b087CBEC0E1834'
+      maxLength: 255
+    ChainTokensResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/ChainToken'
   parameters:
     chainName:
       name: chainName

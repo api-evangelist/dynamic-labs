@@ -65,16 +65,6 @@ paths:
       - bearerAuth: []
 components:
   schemas:
-    WalletProviderEnum:
-      type: string
-      enum:
-      - browserExtension
-      - custodialService
-      - walletConnect
-      - qrCode
-      - deepLink
-      - embeddedWallet
-      - smartContractWallet
     Visitor:
       type: object
       properties:
@@ -102,6 +92,74 @@ components:
       - walletName
       - provider
       - createdAt
+    WalletProviderEnum:
+      type: string
+      enum:
+      - browserExtension
+      - custodialService
+      - walletConnect
+      - qrCode
+      - deepLink
+      - embeddedWallet
+      - smartContractWallet
+    InternalServerError:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Internal Server Error
+    VisitorSearchFilterParams:
+      type: object
+      properties:
+        filterValue:
+          type: string
+        filterColumn:
+          $ref: '#/components/schemas/VisitorFilterableFieldsEnum'
+        chain:
+          $ref: '#/components/schemas/ChainEnum'
+    VisitorFilterableFieldsEnum:
+      type: string
+      enum:
+      - all
+      - id
+      - walletPublicKey
+    uuid:
+      type: string
+      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+      minLength: 36
+      maxLength: 36
+      example: 95b11417-f18f-457f-8804-68e361f9164f
+    BadRequest:
+      type: object
+      properties:
+        error:
+          type: string
+    orderBy:
+      type: string
+      description: $COLUMN_NAME-asc|desc
+      pattern: ^[A-Za-z]*-(asc|desc)$
+      example: something-asc
+    Forbidden:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Access Forbidden
+    VisitorsResponse:
+      type: object
+      properties:
+        count:
+          type: integer
+        visitors:
+          type: array
+          items:
+            $ref: '#/components/schemas/Visitor'
+    Unauthorized:
+      type: object
+      properties:
+        error:
+          type: string
+          example: No jwt provided!
     ChainEnum:
       type: string
       enum:
@@ -120,89 +178,31 @@ components:
       - APTOS
       - TON
       - STELLAR
-    InternalServerError:
-      type: object
-      properties:
-        error:
-          type: string
-          example: Internal Server Error
-    orderBy:
-      type: string
-      description: $COLUMN_NAME-asc|desc
-      pattern: ^[A-Za-z]*-(asc|desc)$
-      example: something-asc
-    Unauthorized:
-      type: object
-      properties:
-        error:
-          type: string
-          example: No jwt provided!
-    Forbidden:
-      type: object
-      properties:
-        error:
-          type: string
-          example: Access Forbidden
-    VisitorsResponse:
-      type: object
-      properties:
-        count:
-          type: integer
-        visitors:
-          type: array
-          items:
-            $ref: '#/components/schemas/Visitor'
-    VisitorFilterableFieldsEnum:
-      type: string
-      enum:
-      - all
-      - id
-      - walletPublicKey
-    uuid:
-      type: string
-      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
-      minLength: 36
-      maxLength: 36
-      example: 95b11417-f18f-457f-8804-68e361f9164f
-    BadRequest:
-      type: object
-      properties:
-        error:
-          type: string
-    VisitorSearchFilterParams:
-      type: object
-      properties:
-        filterValue:
-          type: string
-        filterColumn:
-          $ref: '#/components/schemas/VisitorFilterableFieldsEnum'
-        chain:
-          $ref: '#/components/schemas/ChainEnum'
   responses:
-    InternalServerError:
-      description: Internal Server Error
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/InternalServerError'
-    BadRequest:
-      description: Bad Request
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/BadRequest'
     Unauthorized:
       description: Unauthorized
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Unauthorized'
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BadRequest'
     Forbidden:
       description: Forbidden
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Forbidden'
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/InternalServerError'
   parameters:
     environmentId:
       in: path
