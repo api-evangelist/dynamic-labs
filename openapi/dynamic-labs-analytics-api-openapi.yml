@@ -56,6 +56,15 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
+  parameters:
+    EnvironmentId:
+      name: environmentId
+      in: path
+      required: true
+      description: The ID of the Dynamic environment (project).
+      schema:
+        type: string
+        format: uuid
   schemas:
     WalletAnalytics:
       type: object
@@ -84,15 +93,6 @@ components:
           - message
       required:
       - error
-  parameters:
-    EnvironmentId:
-      name: environmentId
-      in: path
-      required: true
-      description: The ID of the Dynamic environment (project).
-      schema:
-        type: string
-        format: uuid
   securitySchemes:
     bearerAuth:
       type: http

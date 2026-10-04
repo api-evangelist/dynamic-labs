@@ -65,6 +65,71 @@ paths:
       - bearerAuth: []
 components:
   schemas:
+    VisitorsResponse:
+      type: object
+      properties:
+        count:
+          type: integer
+        visitors:
+          type: array
+          items:
+            $ref: '#/components/schemas/Visitor'
+    Unauthorized:
+      type: object
+      properties:
+        error:
+          type: string
+          example: No jwt provided!
+    BadRequest:
+      type: object
+      properties:
+        error:
+          type: string
+    ChainEnum:
+      type: string
+      enum:
+      - ETH
+      - EVM
+      - FLOW
+      - SOL
+      - ALGO
+      - STARK
+      - COSMOS
+      - BTC
+      - ECLIPSE
+      - SUI
+      - SPARK
+      - TRON
+      - APTOS
+      - TON
+      - STELLAR
+    uuid:
+      type: string
+      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+      minLength: 36
+      maxLength: 36
+      example: 95b11417-f18f-457f-8804-68e361f9164f
+    InternalServerError:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Internal Server Error
+    orderBy:
+      type: string
+      description: $COLUMN_NAME-asc|desc
+      pattern: ^[A-Za-z]*-(asc|desc)$
+      example: something-asc
+    WalletProviderEnum:
+      type: string
+      enum:
+      - browserExtension
+      - custodialService
+      - walletConnect
+      - qrCode
+      - deepLink
+      - embeddedWallet
+      - smartContractWallet
     Visitor:
       type: object
       properties:
@@ -92,22 +157,18 @@ components:
       - walletName
       - provider
       - createdAt
-    WalletProviderEnum:
+    VisitorFilterableFieldsEnum:
       type: string
       enum:
-      - browserExtension
-      - custodialService
-      - walletConnect
-      - qrCode
-      - deepLink
-      - embeddedWallet
-      - smartContractWallet
-    InternalServerError:
+      - all
+      - id
+      - walletPublicKey
+    Forbidden:
       type: object
       properties:
         error:
           type: string
-          example: Internal Server Error
+          example: Access Forbidden
     VisitorSearchFilterParams:
       type: object
       properties:
@@ -117,92 +178,6 @@ components:
           $ref: '#/components/schemas/VisitorFilterableFieldsEnum'
         chain:
           $ref: '#/components/schemas/ChainEnum'
-    VisitorFilterableFieldsEnum:
-      type: string
-      enum:
-      - all
-      - id
-      - walletPublicKey
-    uuid:
-      type: string
-      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
-      minLength: 36
-      maxLength: 36
-      example: 95b11417-f18f-457f-8804-68e361f9164f
-    BadRequest:
-      type: object
-      properties:
-        error:
-          type: string
-    orderBy:
-      type: string
-      description: $COLUMN_NAME-asc|desc
-      pattern: ^[A-Za-z]*-(asc|desc)$
-      example: something-asc
-    Forbidden:
-      type: object
-      properties:
-        error:
-          type: string
-          example: Access Forbidden
-    VisitorsResponse:
-      type: object
-      properties:
-        count:
-          type: integer
-        visitors:
-          type: array
-          items:
-            $ref: '#/components/schemas/Visitor'
-    Unauthorized:
-      type: object
-      properties:
-        error:
-          type: string
-          example: No jwt provided!
-    ChainEnum:
-      type: string
-      enum:
-      - ETH
-      - EVM
-      - FLOW
-      - SOL
-      - ALGO
-      - STARK
-      - COSMOS
-      - BTC
-      - ECLIPSE
-      - SUI
-      - SPARK
-      - TRON
-      - APTOS
-      - TON
-      - STELLAR
-  responses:
-    Unauthorized:
-      description: Unauthorized
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Unauthorized'
-    BadRequest:
-      description: Bad Request
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/BadRequest'
-    Forbidden:
-      description: Forbidden
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Forbidden'
-    InternalServerError:
-      description: Internal Server Error
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/InternalServerError'
   parameters:
     environmentId:
       in: path
@@ -211,6 +186,31 @@ components:
       description: ID of the environment
       schema:
         $ref: '#/components/schemas/uuid'
+  responses:
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/InternalServerError'
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Forbidden'
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BadRequest'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Unauthorized'
   securitySchemes:
     bearerAuth:
       type: http

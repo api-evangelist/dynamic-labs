@@ -87,20 +87,56 @@ paths:
       - bearerAuth: []
 components:
   schemas:
-    ForbiddenErrorPayload:
-      type: object
-      properties:
-        walletPublicKey:
-          $ref: '#/components/schemas/WalletPublicKey'
-        email:
-          type: string
-          format: email
     uuid:
       type: string
       pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
       minLength: 36
       maxLength: 36
       example: 95b11417-f18f-457f-8804-68e361f9164f
+    ForbiddenWithErrorAndPayload:
+      type: object
+      properties:
+        error:
+          $ref: '#/components/schemas/ErrorMessageWithCode'
+        payload:
+          $ref: '#/components/schemas/ForbiddenErrorPayload'
+    NotFound:
+      type: object
+      required:
+      - error
+      - code
+      properties:
+        error:
+          type: string
+          example: Not Found
+        code:
+          type: string
+          example: not_found
+    InternalServerError:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Internal Server Error
+    BadRequest:
+      type: object
+      properties:
+        error:
+          type: string
+    RevokeAllSessionsResponse:
+      type: object
+      required:
+      - message
+      properties:
+        message:
+          type: string
+          description: Status message indicating the revocation has been queued
+    Unauthorized:
+      type: object
+      properties:
+        error:
+          type: string
+          example: No jwt provided!
     WalletPublicKey:
       type: string
       pattern: ^[A-Za-z0-9]{18,100}$
@@ -135,56 +171,20 @@ components:
           type: string
         message:
           type: string
-    Unauthorized:
-      type: object
-      properties:
-        error:
-          type: string
-          example: No jwt provided!
-    ForbiddenWithErrorAndPayload:
-      type: object
-      properties:
-        error:
-          $ref: '#/components/schemas/ErrorMessageWithCode'
-        payload:
-          $ref: '#/components/schemas/ForbiddenErrorPayload'
-    RevokeAllSessionsResponse:
-      type: object
-      required:
-      - message
-      properties:
-        message:
-          type: string
-          description: Status message indicating the revocation has been queued
-    InternalServerError:
-      type: object
-      properties:
-        error:
-          type: string
-          example: Internal Server Error
-    NotFound:
-      type: object
-      required:
-      - error
-      - code
-      properties:
-        error:
-          type: string
-          example: Not Found
-        code:
-          type: string
-          example: not_found
     Forbidden:
       type: object
       properties:
         error:
           type: string
           example: Access Forbidden
-    BadRequest:
+    ForbiddenErrorPayload:
       type: object
       properties:
-        error:
+        walletPublicKey:
+          $ref: '#/components/schemas/WalletPublicKey'
+        email:
           type: string
+          format: email
   responses:
     Forbidden:
       description: Forbidden
@@ -192,18 +192,6 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/Forbidden'
-    Unauthorized:
-      description: Unauthorized
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Unauthorized'
-    InternalServerError:
-      description: Internal Server Error
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/InternalServerError'
     ForbiddenWithErrorAndPayload:
       description: Forbidden
       content:
@@ -216,6 +204,18 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/NotFound'
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/InternalServerError'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Unauthorized'
     BadRequest:
       description: Bad Request
       content:
@@ -223,6 +223,13 @@ components:
           schema:
             $ref: '#/components/schemas/BadRequest'
   parameters:
+    userId:
+      in: path
+      name: userId
+      schema:
+        $ref: '#/components/schemas/uuid'
+      required: true
+      description: UUID of the user
     environmentId:
       in: path
       name: environmentId
@@ -237,13 +244,6 @@ components:
       required: true
       schema:
         $ref: '#/components/schemas/uuid'
-    userId:
-      in: path
-      name: userId
-      schema:
-        $ref: '#/components/schemas/uuid'
-      required: true
-      description: UUID of the user
   securitySchemes:
     bearerAuth:
       type: http

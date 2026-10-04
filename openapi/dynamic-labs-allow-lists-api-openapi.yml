@@ -87,28 +87,18 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 components:
-  responses:
-    Unauthorized:
-      description: The bearer token is missing or invalid.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
   schemas:
-    CreateAllowlistRequest:
+    AllowlistEntry:
       type: object
       properties:
-        name:
+        id:
           type: string
-        type:
+          format: uuid
+        value:
           type: string
-          enum:
-          - email
-          - walletAddress
-          - country
+          description: The email, wallet address, or country code allowed.
       required:
-      - name
-      - type
+      - value
     Error:
       type: object
       properties:
@@ -123,24 +113,20 @@ components:
           - message
       required:
       - error
-    AllowlistList:
+    CreateAllowlistRequest:
       type: object
       properties:
-        allowlists:
-          type: array
-          items:
-            $ref: '#/components/schemas/Allowlist'
-    AllowlistEntry:
-      type: object
-      properties:
-        id:
+        name:
           type: string
-          format: uuid
-        value:
+        type:
           type: string
-          description: The email, wallet address, or country code allowed.
+          enum:
+          - email
+          - walletAddress
+          - country
       required:
-      - value
+      - name
+      - type
     Allowlist:
       type: object
       properties:
@@ -159,6 +145,20 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AllowlistEntry'
+    AllowlistList:
+      type: object
+      properties:
+        allowlists:
+          type: array
+          items:
+            $ref: '#/components/schemas/Allowlist'
+  responses:
+    Unauthorized:
+      description: The bearer token is missing or invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
   parameters:
     EnvironmentId:
       name: environmentId

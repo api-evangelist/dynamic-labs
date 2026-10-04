@@ -85,34 +85,6 @@ components:
       description: ID of the event
       schema:
         $ref: '#/components/schemas/uuid'
-    resourceType:
-      in: query
-      name: resourceType
-      schema:
-        type: string
-      required: false
-      description: Resource type of event
-    cursor:
-      in: query
-      name: cursor
-      schema:
-        type: string
-      required: false
-      description: Cursor for pagination
-    environmentId:
-      in: path
-      name: environmentId
-      required: true
-      description: ID of the environment
-      schema:
-        $ref: '#/components/schemas/uuid'
-    startDate:
-      in: query
-      name: startDate
-      required: false
-      schema:
-        type: string
-      description: Start date of the event query
     endDate:
       in: query
       name: endDate
@@ -120,6 +92,34 @@ components:
       schema:
         type: string
       description: End date of the event query
+    cursor:
+      in: query
+      name: cursor
+      schema:
+        type: string
+      required: false
+      description: Cursor for pagination
+    resourceType:
+      in: query
+      name: resourceType
+      schema:
+        type: string
+      required: false
+      description: Resource type of event
+    startDate:
+      in: query
+      name: startDate
+      required: false
+      schema:
+        type: string
+      description: Start date of the event query
+    environmentId:
+      in: path
+      name: environmentId
+      required: true
+      description: ID of the environment
+      schema:
+        $ref: '#/components/schemas/uuid'
   schemas:
     uuid:
       type: string
@@ -127,34 +127,25 @@ components:
       minLength: 36
       maxLength: 36
       example: 95b11417-f18f-457f-8804-68e361f9164f
-    EventContext:
-      type: object
-      properties:
-        userId:
-          type: string
-        version:
-          type: string
-    Unauthorized:
+    InternalServerError:
       type: object
       properties:
         error:
           type: string
-          example: No jwt provided!
-    EnvironmentEnum:
-      type: string
-      enum:
-      - sandbox
-      - live
-    EventType:
+          example: Internal Server Error
+    EventTypesResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/EventType'
+    EventsResponse:
       type: object
-      required:
-      - name
-      - description
       properties:
-        name:
+        cursor:
           type: string
-        description:
-          type: string
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Event'
     Event:
       type: object
       required:
@@ -185,31 +176,40 @@ components:
           type: object
         context:
           $ref: '#/components/schemas/EventContext'
-    InternalServerError:
+    EventContext:
+      type: object
+      properties:
+        userId:
+          type: string
+        version:
+          type: string
+    Unauthorized:
       type: object
       properties:
         error:
           type: string
-          example: Internal Server Error
+          example: No jwt provided!
+    EventType:
+      type: object
+      required:
+      - name
+      - description
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+    EnvironmentEnum:
+      type: string
+      enum:
+      - sandbox
+      - live
     Forbidden:
       type: object
       properties:
         error:
           type: string
           example: Access Forbidden
-    EventTypesResponse:
-      type: array
-      items:
-        $ref: '#/components/schemas/EventType'
-    EventsResponse:
-      type: object
-      properties:
-        cursor:
-          type: string
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/Event'
   responses:
     Forbidden:
       description: Forbidden
@@ -217,18 +217,18 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/Forbidden'
-    Unauthorized:
-      description: Unauthorized
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Unauthorized'
     InternalServerError:
       description: Internal Server Error
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/InternalServerError'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Unauthorized'
   securitySchemes:
     bearerAuth:
       type: http

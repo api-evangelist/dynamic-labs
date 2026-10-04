@@ -151,43 +151,52 @@ paths:
       security:
       - bearerAuth: []
 components:
-  responses:
-    Unauthorized:
-      description: Unauthorized
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Unauthorized'
-    BadRequest:
-      description: Bad Request
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/BadRequest'
-    Forbidden:
-      description: Forbidden
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Forbidden'
-    InternalServerError:
-      description: Internal Server Error
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/InternalServerError'
+  parameters:
+    organizationId:
+      in: path
+      name: organizationId
+      required: true
+      description: ID of organization
+      schema:
+        $ref: '#/components/schemas/uuid'
+    networkId:
+      name: networkId
+      in: path
+      required: true
+      description: The unique identifier of the custom network
+      schema:
+        $ref: '#/components/schemas/uuid'
   schemas:
-    InternalServerError:
+    Unauthorized:
       type: object
       properties:
         error:
           type: string
-          example: Internal Server Error
-    NonEmptyUrlWith255MaxLength:
+          example: No jwt provided!
+    uuid:
       type: string
-      pattern: ^(https?:\/\/)?[a-z0-9]+([-.]+[a-z0-9]+)*\.[a-z]{2,10}([0-9]{1,5})?(\/.*)?$
-      maxLength: 255
-      example: https://website-sample.com
+      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+      minLength: 36
+      maxLength: 36
+      example: 95b11417-f18f-457f-8804-68e361f9164f
+    ChainEnum:
+      type: string
+      enum:
+      - ETH
+      - EVM
+      - FLOW
+      - SOL
+      - ALGO
+      - STARK
+      - COSMOS
+      - BTC
+      - ECLIPSE
+      - SUI
+      - SPARK
+      - TRON
+      - APTOS
+      - TON
+      - STELLAR
     CustomNetworkRequest:
       type: object
       required:
@@ -242,23 +251,12 @@ components:
           maximum: 18
           description: Number of decimals for the native currency
           example: 18
-    uuid:
-      type: string
-      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
-      minLength: 36
-      maxLength: 36
-      example: 95b11417-f18f-457f-8804-68e361f9164f
-    BadRequest:
+    InternalServerError:
       type: object
       properties:
         error:
           type: string
-    Forbidden:
-      type: object
-      properties:
-        error:
-          type: string
-          example: Access Forbidden
+          example: Internal Server Error
     CustomNetworkResponse:
       type: object
       properties:
@@ -309,45 +307,47 @@ components:
               type: number
               minimum: 0
               maximum: 18
-    ChainEnum:
+    NonEmptyUrlWith255MaxLength:
       type: string
-      enum:
-      - ETH
-      - EVM
-      - FLOW
-      - SOL
-      - ALGO
-      - STARK
-      - COSMOS
-      - BTC
-      - ECLIPSE
-      - SUI
-      - SPARK
-      - TRON
-      - APTOS
-      - TON
-      - STELLAR
-    Unauthorized:
+      pattern: ^(https?:\/\/)?[a-z0-9]+([-.]+[a-z0-9]+)*\.[a-z]{2,10}([0-9]{1,5})?(\/.*)?$
+      maxLength: 255
+      example: https://website-sample.com
+    BadRequest:
       type: object
       properties:
         error:
           type: string
-          example: No jwt provided!
-  parameters:
-    organizationId:
-      in: path
-      name: organizationId
-      required: true
-      description: ID of organization
-      schema:
-        $ref: '#/components/schemas/uuid'
-    networkId:
-      name: networkId
-      in: path
-      required: true
-      description: The unique identifier of the custom network
-      schema:
-        $ref: '#/components/schemas/uuid'
+    Forbidden:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Access Forbidden
+  responses:
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BadRequest'
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Forbidden'
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/InternalServerError'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Unauthorized'
   securitySchemes:
     bearerAuth:
       type: http

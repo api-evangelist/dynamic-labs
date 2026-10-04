@@ -47,33 +47,19 @@ paths:
           $ref: '#/components/responses/Unauthorized'
 components:
   responses:
-    Unauthorized:
-      description: The bearer token is missing or invalid.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
     BadRequest:
       description: The request was malformed or a precondition failed.
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: The bearer token is missing or invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
   schemas:
-    CreateEmbeddedWalletRequest:
-      type: object
-      properties:
-        chains:
-          type: array
-          description: The chains to provision embedded wallets for.
-          items:
-            type: string
-            enum:
-            - EVM
-            - SOL
-            - BTC
-      required:
-      - chains
     Error:
       type: object
       properties:
@@ -88,6 +74,20 @@ components:
           - message
       required:
       - error
+    CreateEmbeddedWalletRequest:
+      type: object
+      properties:
+        chains:
+          type: array
+          description: The chains to provision embedded wallets for.
+          items:
+            type: string
+            enum:
+            - EVM
+            - SOL
+            - BTC
+      required:
+      - chains
     Wallet:
       type: object
       properties:
@@ -109,19 +109,19 @@ components:
           - string
           - 'null'
   parameters:
-    UserId:
-      name: userId
-      in: path
-      required: true
-      description: The ID of the user.
-      schema:
-        type: string
-        format: uuid
     EnvironmentId:
       name: environmentId
       in: path
       required: true
       description: The ID of the Dynamic environment (project).
+      schema:
+        type: string
+        format: uuid
+    UserId:
+      name: userId
+      in: path
+      required: true
+      description: The ID of the user.
       schema:
         type: string
         format: uuid
