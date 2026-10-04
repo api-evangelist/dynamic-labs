@@ -29,6 +29,9 @@ accessModel:
   generated: '2026-07-22'
   method: derived
 image: https://kinlane-images.s3.amazonaws.com/shared/apis-json/icons/dynamic-labs.png
+x-docs-platform: mintlify
+x-docs-platform-confidence: medium
+x-docs-platform-checked: 2026-10-03
 tags:
 - Web3
 - Authentication
@@ -676,6 +679,8 @@ apis:
   humanURL: https://www.dynamic.xyz/docs/api-reference/users
   baseURL: https://app.dynamicauth.com/api/v0
   tags:
+  - Allowlists
+  tags_raw:
   - Allow Lists
   properties:
   - type: OpenAPI
@@ -815,6 +820,9 @@ apis:
   - type: Documentation
     url: https://www.dynamic.xyz/docs/api-reference/analytics/get-environments-analyticswallets
 common:
+- type: CapabilityMap
+  url: capabilities/dynamic-labs-capability-edges.yml
+  name: Dynamic Business Capability Map
 - type: AgenticAccess
   url: agentic-access/dynamic-labs-agentic-access.yml
 - type: TrustCenter
