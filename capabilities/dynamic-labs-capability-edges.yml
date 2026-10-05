@@ -1,0 +1,78 @@
+slug: dynamic-labs
+provider: Dynamic
+generated_by: planning/capability-mapping/scripts/classify_capabilities.py
+model: claude-opus-5
+frame:
+- Software & Technology
+min_confidence: 0.7
+capability_model:
+  source: https://github.com/vincentmakes/turbo-ea-capabilities
+  license: CC-BY-4.0
+  attribution: Turbo EA Capabilities by Vincent Verdet — Turbo EA, https://github.com/vincentmakes/turbo-ea-capabilities,
+    CC BY 4.0
+  notice: NOTICE
+edge_count: 6
+edges:
+- tag: Webhooks
+  spec_file: dynamic-labs-webhooks-api-openapi.yml
+  capability_id: BC-4270.80
+  capability_id_l1: BC-4270
+  capability_name: Webhook & Event Subscription Management
+  confidence: 0.9
+  evidence: POST /environments/{environmentId}/webhooks 'Create a webhook'; schemas 'Webhook', 'WebhookList',
+    'CreateWebhookRequest'
+  reason: Full CRUD lifecycle over outbound webhook subscriptions scoped to a developer environment, which
+    is exactly Webhook & Event Subscription Management within the developer platform/API ecosystem capability.
+- tag: MFA
+  spec_file: dynamic-labs-mfa-api-openapi.yml
+  capability_id: BC-620.20
+  capability_id_l1: BC-620
+  capability_name: Identity & Access Management
+  confidence: 0.78
+  evidence: DELETE /users/{userId}/mfa  resetAllMfaDevices  Delete all MFA Devices for the user; POST
+    /users/{userId}/mfa/reset  Reset the user's MFA methods
+  reason: Operations administer multi-factor authentication devices/methods for end users, which is authentication
+    credential administration — Identity & Access Management. No business-domain reading other than IAM
+    fits.
+- tag: API Tokens
+  spec_file: dynamic-labs-api-tokens-api-openapi.yml
+  capability_id: BC-4270.40
+  capability_id_l1: BC-4270
+  capability_name: Developer Identity & Credential Management
+  confidence: 0.75
+  evidence: POST /environments/{environmentId}/tokens createApiToken Create a new API token; schema CreateApiTokenRequest,
+    ApiToken
+  reason: Issuance, listing and revocation of environment-scoped API tokens used by developers to call
+    the platform's API — developer credential lifecycle on a developer platform, matching Developer Identity
+    & Credential Management.
+- tag: MFA Settings
+  spec_file: dynamic-labs-mfa-settings-api-openapi.yml
+  capability_id: BC-620.20
+  capability_id_l1: BC-620
+  capability_name: Identity & Access Management
+  confidence: 0.72
+  evidence: PUT /organizations/{organizationId}/mfaSettings/{mfaDeviceType}/enable  enableMfaDeviceForOrganization  Enable
+    the given mfa device for the organization
+  reason: Enabling/disabling permitted MFA device types at organization level is authentication policy
+    configuration, i.e. IAM. Some ambiguity with per-tenant feature configuration, hence moderated confidence.
+- tag: Sessions
+  spec_file: dynamic-labs-sessions-api-openapi.yml
+  capability_id: BC-620.20
+  capability_id_l1: BC-620
+  capability_name: Identity & Access Management
+  confidence: 0.72
+  evidence: PUT /sessions/{sessionId}/revoke  revokeSessionById  Revoke a session; POST /environments/{environmentId}/users/sessions/revoke  revokeAllEnvironmentSessions
+  reason: Inspecting and revoking end-user authentication sessions is access administration (IAM). Not
+    a business-domain noun here.
+- tag: User API Tokens
+  spec_file: dynamic-labs-user-api-tokens-api-openapi.yml
+  capability_id: BC-4270.40
+  capability_id_l1: BC-4270
+  capability_name: Developer Identity & Credential Management
+  confidence: 0.7
+  evidence: POST /user/tokens createUserApiToken 'Create a new API Token for Dashboard User'; schemas
+    'TokenScopes', 'TokenCreatedBy'
+  reason: Operations issue, list and revoke scoped API tokens for developers using the vendor's dashboard
+    — issuance and stewardship of developer credentials for the platform API. Mapped to Developer Identity
+    & Credential Management rather than enterprise IAM because the tokens are platform/developer credentials,
+    though that boundary keeps confidence moderate.
