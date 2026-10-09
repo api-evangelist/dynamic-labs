@@ -1,4 +1,4 @@
-generated: '2026-09-16'
+generated: '2026-09-23'
 method: generated
 source: openapi/dynamic-labs-allow-lists-api-openapi.yml, openapi/dynamic-labs-analytics-api-openapi.yml,
   openapi/dynamic-labs-api-tokens-api-openapi.yml, openapi/dynamic-labs-chainalysis-api-openapi.yml,
@@ -25,11 +25,11 @@ description: Recommended x-agentic-access execution contracts, classified heuris
 summary:
   operations: 294
   by_action_class:
-    connected: 105
-    acting: 189
+    connected: 108
+    acting: 186
   by_consequence:
-    read: 105
-    write: 161
+    read: 108
+    write: 158
     safety-critical: 20
     physical: 8
   human_in_the_loop_required: 20
@@ -1058,18 +1058,12 @@ operations:
   method: post
   operationId: fetchNameServiceSigningMessage
   x-agentic-access:
-    action-class: acting
-    consequence: write
-    subject: required
-    audience: null
+    action-class: connected
+    consequence: read
+    subject: optional
     token:
-      max-ttl: 900
-    escalation:
-      human-in-the-loop: conditional
-      triggers:
-      - abnormal
-      - high-value
-    audit: required
+      max-ttl: 3600
+    audit: none
 - path: /environments/{environmentId}/nameService/{chainName}/enable
   method: put
   operationId: enableNameService
@@ -1384,18 +1378,12 @@ operations:
   method: post
   operationId: getUserAccountBalances
   x-agentic-access:
-    action-class: acting
-    consequence: write
-    subject: required
-    audience: null
+    action-class: connected
+    consequence: read
+    subject: optional
     token:
-      max-ttl: 900
-    escalation:
-      human-in-the-loop: conditional
-      triggers:
-      - abnormal
-      - high-value
-    audit: required
+      max-ttl: 3600
+    audit: none
 - path: /exchangeRates
   method: get
   operationId: getExchangeRates
@@ -2846,18 +2834,12 @@ operations:
   method: post
   operationId: postMultichainAccountBalances
   x-agentic-access:
-    action-class: acting
-    consequence: write
-    subject: required
-    audience: null
+    action-class: connected
+    consequence: read
+    subject: optional
     token:
-      max-ttl: 900
-    escalation:
-      human-in-the-loop: conditional
-      triggers:
-      - abnormal
-      - high-value
-    audit: required
+      max-ttl: 3600
+    audit: none
 - path: /sdk/{environmentId}/telegram/auth
   method: get
   operationId: getTelegramAuth
