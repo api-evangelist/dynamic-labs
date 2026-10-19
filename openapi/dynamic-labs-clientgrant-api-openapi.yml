@@ -1,0 +1,392 @@
+openapi: 3.2.0
+info:
+  title: Dashboard Client Grant API
+  description: Dashboard API documentation
+  version: 1.0.0
+servers:
+- url: https://app.dynamicauth.com/api/v0
+- url: https://app.dynamic.xyz/api/v0
+- url: http://localhost:3333/api/v0
+tags:
+- name: ClientGrant
+  description: 'OAuth 2.0 Device Authorization Grant flow (RFC 8628) used by first-party
+
+    Dynamic clients (CLI, MCP server, demo apps, IDE plugins) to obtain a
+
+    revocable, 30-day client JWT without ever seeing the user''s dashboard
+
+    session token.'
+paths:
+  /auth/grant/code:
+    post:
+      operationId: requestGrantCode
+      tags:
+      - ClientGrant
+      summary: Initiate a client grant request
+      x-cli-ignore: true
+      description: 'Public — the caller has no credentials yet. Generates a `grant_code`
+
+        (long secret used by the polling client) and a `user_code` (short code
+
+        shown to the user for visual verification). Both are stored in Redis
+
+        with a 15-minute TTL.'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GrantCodeRequest'
+      responses:
+        '200':
+          description: Grant initiated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GrantCodeResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /auth/grant/approve:
+    post:
+      operationId: approveGrant
+      tags:
+      - ClientGrant
+      summary: Approve or deny a pending client grant
+      x-cli-ignore: true
+      description: 'Called by the dashboard authorize page on behalf of the authenticated
+
+        user. Resolves a pending grant identified by `user_code`. Idempotent
+
+        against the same user_code only while the grant is still pending.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GrantApproveRequest'
+      responses:
+        '200':
+          description: Grant resolved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GrantApproveResponse'
+        '400':
+          description: Bad request (missing or invalid fields).
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Unknown or expired user_code.
+        '409':
+          description: Grant has already been approved or denied.
+        '410':
+          description: Grant entry expired between userCode lookup and read.
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /auth/grant/token:
+    post:
+      operationId: pollGrantToken
+      tags:
+      - ClientGrant
+      summary: Poll for the result of a client grant
+      x-cli-ignore: true
+      description: 'Polled by the client to check whether the grant has been approved or
+
+        denied. Public — the `grant_code` itself is the proof of identity.
+
+        Status follows RFC 8628 conventions: `authorization_pending`,
+
+        `slow_down`, `approved`, `access_denied`, `expired_token`. On
+
+        `approved`, the response includes the minted client JWT.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GrantTokenRequest'
+      responses:
+        '200':
+          description: Current grant state. See `status` for details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GrantTokenResponse'
+        '400':
+          description: Missing grant_code.
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /auth/grant/peek:
+    get:
+      operationId: peekGrant
+      tags:
+      - ClientGrant
+      summary: Read public-safe metadata about a pending grant
+      x-cli-ignore: true
+      description: 'Used by the dashboard authorize page to render `Authorize {clientName}?`
+
+        before the user clicks Approve. Requires the dashboard user to be
+
+        authenticated. Does NOT return the `grant_code` — only the metadata
+
+        that''s safe to display in a logged-in browser.'
+      parameters:
+      - in: query
+        name: user_code
+        required: true
+        schema:
+          type: string
+        description: The user_code from the URL `?code=` query param.
+      responses:
+        '200':
+          description: Grant metadata.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GrantPeekResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Unknown or expired user_code.
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+components:
+  schemas:
+    ClientMetadata:
+      description: 'Optional metadata sent at grant request time so the authorizing user
+
+        can recognize the client in the management UI. Every field is optional —
+
+        a CLI may know its hostname, an embedded MCP server may not.
+
+        '
+      type: object
+      properties:
+        name:
+          description: Package or product name. e.g. `@dynamic-labs/dynamic-cli`
+          type: string
+          maxLength: 255
+        version:
+          description: Semver-compatible version string. e.g. `0.4.2`
+          type: string
+          maxLength: 64
+        hostname:
+          description: Machine hostname where the client is running. e.g. `my-laptop`
+          type: string
+          maxLength: 255
+        os:
+          description: 'Operating system identifier as reported by the client.
+
+            Typical values: `darwin`, `linux`, `win32`.
+
+            '
+          type: string
+          maxLength: 64
+    GrantTokenResponse:
+      description: 'Response from `POST /auth/grant/token`. The `status` field follows
+
+        RFC 8628''s "error-via-200" convention so the client can branch its polling
+
+        loop on `status` without interpreting HTTP error codes.
+
+        '
+      type: object
+      required:
+      - status
+      properties:
+        status:
+          description: Current state of the grant.
+          type: string
+          enum:
+          - authorization_pending
+          - approved
+          - access_denied
+          - expired_token
+          - slow_down
+        jwt:
+          description: The minted client JWT. Present only when `status === "approved"`.
+          type: string
+        token_type:
+          description: Always `bearer` when a token is returned.
+          type: string
+    GrantApproveRequest:
+      description: Request body for `POST /auth/grant/approve`.
+      type: object
+      required:
+      - user_code
+      - action
+      properties:
+        user_code:
+          description: The user_code displayed in the client's terminal/UI.
+          type: string
+        action:
+          $ref: '#/components/schemas/GrantActionEnum'
+    ClientTypeEnum:
+      description: 'Type of first-party client being authorized. `cli` for the dyn CLI,
+
+        `mcp` for an MCP server, `demo` for demo applications oauth-ing into
+
+        redcoast, `ide-plugin` for editor extensions, and `other` as a catch-all.
+
+        '
+      type: string
+      enum:
+      - cli
+      - mcp
+      - demo
+      - ide-plugin
+      - other
+    GrantActionEnum:
+      description: 'Outcome of an `/auth/grant/approve` call. `approve` mints a fresh client
+
+        JWT and stores it against the grant for the polling client to collect;
+
+        `deny` records an `access_denied` terminal status.
+
+        '
+      type: string
+      enum:
+      - approve
+      - deny
+    GrantApproveResponse:
+      description: Response from `POST /auth/grant/approve`.
+      type: object
+      required:
+      - status
+      properties:
+        status:
+          $ref: '#/components/schemas/GrantActionEnum'
+    GrantPeekResponse:
+      description: 'Response from `GET /auth/grant/peek?user_code=...`. Used by the dashboard
+
+        authorize page to render `Authorize {clientName}?` before the user clicks
+
+        Approve. Does NOT return the grant_code — only the public-safe metadata.
+
+        '
+      type: object
+      required:
+      - client_type
+      properties:
+        client_type:
+          $ref: '#/components/schemas/ClientTypeEnum'
+        client_metadata:
+          $ref: '#/components/schemas/ClientMetadata'
+        requester_location:
+          description: 'CF-geolocated `city, region, country` of the `/auth/grant/code`
+
+            requester. Omitted off-edge (preview / local).
+
+            '
+          type: string
+          maxLength: 256
+        approver_location:
+          description: 'CF-geolocated `city, region, country` of the dashboard user
+
+            viewing the consent screen. Omitted off-edge.
+
+            '
+          type: string
+          maxLength: 256
+        country_mismatch:
+          description: '`true` when both `cf-ipcountry` values are known and differ.
+
+            Omitted (not `false`) when either country is unknown — callers
+
+            must treat omitted as "do not warn".
+
+            '
+          type: boolean
+    GrantTokenRequest:
+      description: Request body for `POST /auth/grant/token`.
+      type: object
+      required:
+      - grant_code
+      properties:
+        grant_code:
+          type: string
+    Unauthorized:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message describing the authentication failure
+          type: string
+          example: No jwt provided!
+    InternalServerError:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message
+          type: string
+          example: Internal Server Error
+    GrantCodeRequest:
+      description: 'Request body for `POST /auth/grant/code`. `client_type` is required so the
+
+        authorizing user always sees what kind of client they are approving; pass
+
+        `other` if no specific category fits.
+
+        '
+      type: object
+      required:
+      - client_type
+      properties:
+        client_type:
+          $ref: '#/components/schemas/ClientTypeEnum'
+        client_metadata:
+          $ref: '#/components/schemas/ClientMetadata'
+    GrantCodeResponse:
+      description: 'Response from `POST /auth/grant/code`. Returns the long-secret `grant_code`
+
+        that only the polling client should ever see, plus a short `user_code`
+
+        that the user verifies on the dashboard authorize page.
+
+        '
+      type: object
+      required:
+      - grant_code
+      - user_code
+      - verification_uri
+      - verification_uri_complete
+      - expires_in
+      - interval
+      properties:
+        grant_code:
+          description: Long random secret used by the client to poll for the result.
+          type: string
+        user_code:
+          description: Short code shown to the user (`XXXX-XXXX`, no ambiguous chars).
+          type: string
+        verification_uri:
+          description: Where the user goes to authorize the request.
+          type: string
+          format: uri
+        verification_uri_complete:
+          description: '`verification_uri` with `?code={user_code}` appended.'
+          type: string
+          format: uri
+        expires_in:
+          description: Seconds until the grant expires (typically 900 = 15 min).
+          type: integer
+        interval:
+          description: Minimum seconds between polling attempts (typically 5).
+          type: integer
+  responses:
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/InternalServerError'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Unauthorized'
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

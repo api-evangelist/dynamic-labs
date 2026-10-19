@@ -1,6 +1,6 @@
 openapi: 3.2.0
 info:
-  title: Dashboard Allowlists Chainalysis API
+  title: Dashboard Chainalysis API
   description: Dashboard API documentation
   version: 1.0.0
 servers:
@@ -9,10 +9,12 @@ servers:
 - url: http://localhost:3333/api/v0
 tags:
 - name: Chainalysis
+  description: Configure Chainalysis integration for blockchain address screening and risk assessment.
 paths:
   /environments/{environmentId}/integrations/chainalysis:
     get:
       summary: Find the Chainalysis configuration for an environment
+      description: Returns the sanctions screening configuration for the specified environment. Sanction checks are always enabled.
       operationId: getChainalysisByEnvironmentId
       tags:
       - Chainalysis
@@ -35,89 +37,58 @@ paths:
           $ref: '#/components/responses/InternalServerError'
       security:
       - bearerAuth: []
-  /environments/{environmentId}/integrations/chainalysis/sanctions/enable:
-    put:
-      summary: Enable the Sanctions API
-      operationId: enableSanctionsApiByEnvironmentId
-      tags:
-      - Chainalysis
-      security:
-      - bearerAuth: []
-      parameters:
-      - $ref: '#/components/parameters/environmentId'
-      responses:
-        '200':
-          description: Created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ChainalysisConfiguration'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-  /environments/{environmentId}/integrations/chainalysis/sanctions/disable:
-    put:
-      summary: Disables the Sanctions API
-      operationId: disableSanctionsApiByEnvironmentId
-      tags:
-      - Chainalysis
-      security:
-      - bearerAuth: []
-      parameters:
-      - $ref: '#/components/parameters/environmentId'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ChainalysisConfiguration'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
 components:
-  parameters:
-    environmentId:
-      in: path
-      name: environmentId
-      required: true
-      description: ID of the environment
-      schema:
-        $ref: '#/components/schemas/uuid'
   schemas:
-    Unauthorized:
-      type: object
-      properties:
-        error:
-          type: string
-          example: No jwt provided!
     uuid:
       type: string
       pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
       minLength: 36
       maxLength: 36
       example: 95b11417-f18f-457f-8804-68e361f9164f
+    Forbidden:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message
+          type: string
+          example: Access Forbidden
+        code:
+          description: Machine-readable reason for the 403, set only by endpoints that distinguish rejections. Flow endpoints use sanctions_blocked, session_token_invalid and risk_blocked.
+          type: string
+          example: sanctions_blocked
+    Unauthorized:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message describing the authentication failure
+          type: string
+          example: No jwt provided!
+    InternalServerError:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message
+          type: string
+          example: Internal Server Error
     ChainalysisConfiguration:
       type: object
       properties:
         id:
           $ref: '#/components/schemas/uuid'
         sanctionsApiEnabled:
+          description: Whether Chainalysis sanctions screening is enabled for wallet addresses
           type: boolean
         kytApiEnabled:
+          description: Whether Chainalysis Know Your Transaction (KYT) monitoring is enabled
           type: boolean
         projectEnvironmentId:
           $ref: '#/components/schemas/uuid'
         createdAt:
+          description: ISO 8601 timestamp of when the Chainalysis configuration was created
           type: string
           format: date-time
         updatedAt:
+          description: ISO 8601 timestamp of when the Chainalysis configuration was last updated
           type: string
           format: date-time
       required:
@@ -127,18 +98,6 @@ components:
       - kytApiEnabled
       - createdAt
       - updatedAt
-    InternalServerError:
-      type: object
-      properties:
-        error:
-          type: string
-          example: Internal Server Error
-    Forbidden:
-      type: object
-      properties:
-        error:
-          type: string
-          example: Access Forbidden
   responses:
     InternalServerError:
       description: Internal Server Error
@@ -158,6 +117,14 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/Unauthorized'
+  parameters:
+    environmentId:
+      in: path
+      name: environmentId
+      required: true
+      description: ID of the environment
+      schema:
+        $ref: '#/components/schemas/uuid'
   securitySchemes:
     bearerAuth:
       type: http

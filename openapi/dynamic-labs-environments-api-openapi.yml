@@ -1,121 +1,3382 @@
 openapi: 3.2.0
 info:
-  title: Dynamic Environments API
-  description: Representative OpenAPI description of the Dynamic environment-scoped REST API for web3 authentication and embedded wallets. Admin endpoints authenticate with an environment-scoped bearer API token (dyn_ prefixed); SDK endpoints authenticate with a user JWT obtained via the client SDK. This document is a faithful, non-exhaustive representation of publicly documented surfaces at https://docs.dynamic.xyz/api-reference. Consult the live API reference for the complete schema catalog.
-  termsOfService: https://www.dynamic.xyz/terms
-  contact:
-    name: Dynamic Support
-    url: https://www.dynamic.xyz/contact
-  version: v0
+  title: Dashboard Environments API
+  description: Dashboard API documentation
+  version: 1.0.0
 servers:
 - url: https://app.dynamicauth.com/api/v0
-  description: Production
 - url: https://app.dynamic.xyz/api/v0
-  description: Production (alternate host)
-security:
-- bearerAuth: []
+- url: http://localhost:3333/api/v0
 tags:
 - name: Environments
-  description: Retrieve and update environment (project) configuration.
+  description: Manage environments (live and sandbox) where your authentication configuration lives.
 paths:
-  /environments/{environmentId}:
+  /environments/{environmentId}/wallet/sanctions:
     get:
-      operationId: getEnvironment
+      operationId: checkWalletSanctionsByEnvironmentId
       tags:
       - Environments
-      summary: Get an environment by ID
-      description: Returns the configuration and settings for the specified environment (project).
+      summary: Check if a wallet address is sanctioned
+      description: Check if a wallet address is sanctioned. Returns whether the wallet is blocked or not.
       parameters:
-      - $ref: '#/components/parameters/EnvironmentId'
+      - $ref: '#/components/parameters/environmentId'
+      - in: query
+        name: walletAddress
+        required: true
+        schema:
+          $ref: '#/components/schemas/WalletPublicKey'
+        description: The wallet address to check for sanctions
+      - in: query
+        name: chain
+        required: true
+        schema:
+          $ref: '#/components/schemas/ChainEnum'
+        description: The blockchain chain of the wallet
+      - $ref: '#/components/parameters/screeningScope'
+      - $ref: '#/components/parameters/screeningApplyPolicies'
+      - $ref: '#/components/parameters/screeningAmountUsd'
+      - $ref: '#/components/parameters/screeningAsset'
       responses:
         '200':
-          description: OK
+          description: Wallet sanctions check result
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Environment'
+                $ref: '#/components/schemas/WalletSanctionsResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
-    patch:
-      operationId: updateEnvironment
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - bearerAuth: []
+  /environments/{environmentId}:
+    x-auth-critical: true
+    get:
+      summary: Get an environment by ID
+      description: Returns a single environment by its unique identifier.
+      operationId: getEnvironmentById
       tags:
       - Environments
-      summary: Update an environment
-      description: Updates settings for the specified environment.
       parameters:
-      - $ref: '#/components/parameters/EnvironmentId'
+      - $ref: '#/components/parameters/environmentId'
+      responses:
+        '200':
+          description: Environment response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectEnvironment'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: Not found
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - bearerAuth: []
+    put:
+      operationId: updateProjectSettings
+      x-cli-ignore: true
+      tags:
+      - Environments
+      summary: Update the environment settings
+      description: 'Updates the settings for the specified environment.
+
+
+        When the organization has admin action approvals enabled and the update
+
+        would weaken a step-up authentication protection, the change is not
+
+        applied. It is filed as a `settings_change` admin action request and the
+
+        endpoint returns `202` — the settings only take effect once another admin
+
+        approves the request.'
+      parameters:
+      - $ref: '#/components/parameters/environmentId'
       requestBody:
-        required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EnvironmentUpdate'
+              $ref: '#/components/schemas/ProjectSettings'
       responses:
         '200':
-          description: OK
+          description: Project settings response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Environment'
+                $ref: '#/components/schemas/ProjectSettings'
+        '202':
+          description: The change requires admin approval and has been filed as a pending action request. The settings were not applied.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminActionRequestResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - bearerAuth: []
+  /environments/{environmentId}/statistics/visitors:
+    get:
+      operationId: getVisitorsCountByEnvironmentId
+      tags:
+      - Environments
+      summary: Get visitor statistics for the environment
+      description: Returns visitor statistics for the specified environment.
+      parameters:
+      - $ref: '#/components/parameters/environmentId'
+      responses:
+        '200':
+          description: Environment Unique Visitor Count Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvironmentVisitorsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - bearerAuth: []
+  /environments/{environmentId}/keys:
+    get:
+      operationId: getKeysForEnvironment
+      tags:
+      - Environments
+      summary: Get API keys for the environment
+      description: Returns the API keys for the specified environment.
+      parameters:
+      - $ref: '#/components/parameters/environmentId'
+      responses:
+        '200':
+          description: Environment Key response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeyResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: Key not found
+        '500':
+          description: Error response
+      security:
+      - bearerAuth: []
+  /environments/{environmentId}/lookup:
+    get:
+      operationId: getEnvironmentLocation
+      tags:
+      - Environments
+      summary: Get the organization and project owning an environment
+      description: Returns the organization and project that own the specified environment. Available to members of that organization.
+      parameters:
+      - $ref: '#/components/parameters/environmentId'
+      responses:
+        '200':
+          description: Environment location response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvironmentLocation'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - bearerAuth: []
+  /projects/{projectId}/environments:
+    get:
+      operationId: getEnvironmentsByProjectId
+      tags:
+      - Environments
+      summary: Get environments for a project
+      description: Returns the environments for the specified project.
+      parameters:
+      - $ref: '#/components/parameters/projectId'
+      responses:
+        '200':
+          description: Project environments response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvironmentsResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - bearerAuth: []
+  /environments/{environmentId}/verifyApiKey:
+    post:
+      operationId: verifyApiKey
+      tags:
+      - Environments
+      summary: Verify if an API key is valid for a specific environment
+      description: Simple endpoint to verify if the provided API key (DYN_API_TOKEN) is valid and has access to the specified environment. Returns true if the token is verified, false otherwise.
+      security:
+      - bearerAuth: []
+      parameters:
+      - $ref: '#/components/parameters/environmentId'
+      responses:
+        '200':
+          description: API key verification result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WaasVerifyApiKeyResponse'
+        '400':
+          description: Bad request - token is required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WaasVerifyApiKeyErrorResponse'
+        '401':
+          description: Unauthorized - invalid or expired token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WaasVerifyApiKeyErrorResponse'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 components:
   schemas:
-    Error:
+    NativeCurrency:
+      type: object
+      properties:
+        decimals:
+          description: Number of decimal places the native currency supports
+          type: number
+          example: '18'
+        name:
+          description: Display name of the native currency
+          type: string
+          example: Ether
+        symbol:
+          description: Ticker symbol of the native currency
+          type: string
+          example: ETH
+        denom:
+          description: Denomination identifier used on Cosmos-based chains
+          type: string
+          example: uatom
+        iconUrl:
+          description: URL of the native currency icon image
+          type: string
+        pricingProviderTokenId:
+          description: Token identifier used by the pricing provider for price lookups
+          type: string
+      required:
+      - decimals
+      - name
+      - symbol
+    SdkViewSectionAlignment:
+      type: string
+      enum:
+      - center
+      - left
+      - right
+    NameServiceData:
+      type: object
+      properties:
+        avatar:
+          description: URL of the avatar associated with the name service record
+          type: string
+        name:
+          description: Resolved name from the name service (e.g. ENS name)
+          type: string
+    VerifiedCredentialId:
+      description: UUID v4 with an optional -zerodev suffix for ZeroDev EIP-7702 smart-wallet credentials
+      type: string
+      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(-zerodev)?$
+      minLength: 36
+      maxLength: 45
+      example: 95b11417-f18f-457f-8804-68e361f9164f-zerodev
+    WaasBackupOptionsEnum:
+      type: string
+      enum:
+      - googleDrive
+      - iCloud
+      - dynamic
+      - external
+      - delegated
+      - offlineRecovery
+    OptionalNonEmptyStringWith75MaxLength:
+      type: string
+      pattern: ^$|^(?=\S)[\p{L}\p{N}a-zA-Z _.,:!?&%@\/+\-'|]+(?<=\S)$
+      example: An example name
+      maxLength: 75
+    ProjectSettingsSdk:
+      type: object
+      properties:
+        nameService:
+          $ref: '#/components/schemas/NameServiceSdkSettings'
+        featureFlags:
+          $ref: '#/components/schemas/FeatureFlags'
+        emailSignIn:
+          description: Email-based sign-in configuration settings
+          type: object
+          properties:
+            signInProvider:
+              $ref: '#/components/schemas/SignInProviderEnum'
+        socialSignIn:
+          description: Social sign-in provider configuration settings
+          type: object
+          properties:
+            signInProvider:
+              $ref: '#/components/schemas/SignInProviderEnum'
+            providers:
+              type: array
+              items:
+                $ref: '#/components/schemas/SocialSignInProvider'
+        exchangeOptions:
+          description: List of configured exchange options for token swaps
+          type: array
+          items:
+            $ref: '#/components/schemas/ExchangeOption'
+        multiWallet:
+          description: Whether to allow users to connect multiple wallets
+          type: boolean
+        multiWalletUnlinkDisabled:
+          description: Whether to disable the ability for users to unlink wallets in multi-wallet mode
+          type: boolean
+        mobile:
+          $ref: '#/components/schemas/MobileSettings'
+        confirmWalletTransfers:
+          description: Whether to require confirmation for wallet transfer operations
+          type: boolean
+          x-security-impact:
+            path: sdk.confirmWalletTransfers
+            weakenedWhen: when-false
+            message: wallet transfer confirmation removed
+        onrampFunding:
+          description: Whether to enable fiat-to-crypto onramp funding
+          type: boolean
+        passkeyEmbeddedWalletEnabled:
+          type: boolean
+          description: passkeyEmbeddedWalletEnabled is deprecated as of v0.19. Please enable embedded wallets using the provider API.
+          deprecated: true
+        automaticEmbeddedWalletCreation:
+          description: Whether to automatically create an embedded wallet for new users
+          type: boolean
+        passkeyEmbeddedWalletRecoveryEnabled:
+          description: Whether to enable passkey-based recovery for embedded wallets
+          type: boolean
+        embeddedWalletSecurityMethods:
+          type: array
+          description: Embedded wallet authenticator security methods required upon creation of the embedded wallet at onboarding
+          items:
+            $ref: '#/components/schemas/EmbeddedWalletSecurityMethod'
+        embeddedWallets:
+          description: Embedded wallet configuration settings
+          type: object
+          properties:
+            automaticEmbeddedWalletCreation:
+              type: boolean
+              description: When true embedded wallets will be generated during onboarding for the users. When false customer needs to trigger the creation.
+            automaticEmbeddedWalletCreationForExternal:
+              type: boolean
+              description: When true embedded wallets will be created for external wallets during sign in. When false embedded wallets are not generated for external wallets during sign in.
+            showEmbeddedWalletActionsUI:
+              type: boolean
+              description: When true users will see embedded wallets action confirmation views.
+            emailRecoveryEnabled:
+              type: boolean
+              description: When true users will be able to start recovery for their accounts.
+            forceAuthenticatorAtSignup:
+              type: boolean
+              description: When true user will be prompted to add a security method during onboarding. When false user will need to add a security method before a transaction
+            allowSkippingAuthenticatorAtSignup:
+              type: boolean
+              description: When combined with forceAuthenticatorAtSignup it allows user to skip adding a security method during onboarding. User will need to add it before a transaction.
+            sessionKeyDuration:
+              $ref: '#/components/schemas/Duration'
+            supportedSecurityMethods:
+              $ref: '#/components/schemas/SupportedSecurityMethods'
+            chainConfigurations:
+              $ref: '#/components/schemas/ChainConfigurations'
+            domainEnabledByProvider:
+              type: boolean
+              description: When a client domain needs to be whitelisted explicitly by one of our embedded wallet providers, this will be true when Dynamic has confirmed that this is the case.
+            defaultWalletVersion:
+              $ref: '#/components/schemas/EmbeddedWalletVersionEnum'
+            promptForKeyExport:
+              type: boolean
+              description: When true, the user will be prompted to export their private key after creating a wallet.
+            transactionSimulation:
+              type: boolean
+              description: When true, user transactions will show asset transfers in the Confirmation UI.
+            evmGasSponsorshipEnabled:
+              type: boolean
+              description: When true, EVM gas sponsorship is available for this environment.
+            evmGasSponsorshipRelayMode:
+              type: string
+              enum:
+              - clientAndServer
+              - serverOnly
+              description: Restricts who may submit EVM sponsored transactions. serverOnly rejects end-user (client) submissions; environment API token and server-auth submissions are still accepted. Defaults to clientAndServer.
+            evmGasSponsorshipNetworks:
+              type: array
+              items:
+                type: string
+                pattern: ^(mainnet|testnet|\d+)$
+              description: Restricts EVM gas sponsorship to specific networks. Use mainnet or testnet for every supported chain of that class, or a numeric chain id for a single chain. Absent or empty covers every supported chain.
+            svmGasSponsorshipEnabled:
+              type: boolean
+              description: When true, network fees for Solana embedded wallet transactions will be sponsored.
+        waas:
+          description: Wallet-as-a-Service configuration settings
+          type: object
+          properties:
+            allowMultipleWaasWalletsPerChain:
+              type: boolean
+              description: When true, users can have multiple WAAS wallets per chain.
+            passcodeRequired:
+              type: boolean
+              description: When true, passcode security method is forced for v3 embedded wallets. Usually it is an optional security method.
+            onSignUp:
+              type: object
+              properties:
+                promptBackupOptions:
+                  type: boolean
+                  description: When true, backup options are shown during sign up for v3 embedded wallets.
+                promptClientShareExport:
+                  type: boolean
+                  description: When true, users will be prompted to export their client share.
+              required:
+              - promptBackupOptions
+              - promptClientShareExport
+            backupOptions:
+              type: array
+              items:
+                $ref: '#/components/schemas/WaasBackupOptionsEnum'
+            iCloud:
+              type: object
+              description: Apple iCloud configuration for key share backup.
+              properties:
+                containerIdentifier:
+                  type: string
+                  description: The iCloud container identifier for storing key share backups.
+                apiToken:
+                  type: string
+                  description: CloudKit Web Services API token for public operations.
+                environment:
+                  type: string
+                  enum:
+                  - development
+                  - production
+                  description: The CloudKit environment to use.
+            relayUrl:
+              type: string
+              description: The URL of the relay server for the environment. If not provided, the default relay server will be used.
+            delegatedAccessEndpoint:
+              type: string
+              description: 'Webhook URL where Dynamic delivers encrypted key shares for share-delivery flows.
+
+                Despite the legacy name, this endpoint carries multiple event families:
+
+                `wallet.delegation.*` (delegated access) and `wallet.offlineRecovery.created`
+
+                (developer recovery share). Configure once; subscribers differentiate by
+
+                `eventName` on the inbound payload. If not provided, neither feature can be enabled.
+
+                '
+            delegatedAccess:
+              $ref: '#/components/schemas/ProjectSettingsSdkWaasDelegatedAccess'
+            offlineRecovery:
+              $ref: '#/components/schemas/ProjectSettingsSdkWaasOfflineRecovery'
+            enableForwardMPCClient:
+              type: boolean
+              description: When true, the sdk will utilize the forward MPC client for select MPC operations.
+            customKeyshareRelayBaseUrl:
+              type: string
+              description: When applicable, this is the custom base URL hostname to use for the WAAS keyshare backup relay. If not provided, the default will be used.
+            exportDisabled:
+              type: boolean
+              description: When true, private key exports are disabled at both API and wallet enclave levels. When false (default), users can export their private keys from v3 embedded wallets.
+            fireblocksMigration:
+              type: object
+              description: Fireblocks NCW backend configuration the SDK reads when migrating a Fireblocks embedded wallet into a Dynamic WaaS wallet.
+              properties:
+                backendBaseUrl:
+                  type: string
+                  description: Base URL of the Fireblocks NCW backend the SDK calls during migration.
+                environment:
+                  type: string
+                  enum:
+                  - sandbox
+                  - production
+                  description: The Fireblocks NCW environment to target.
+          required:
+          - passcodeRequired
+          - onSignUp
+          - backupOptions
+        walletConnect:
+          description: WalletConnect integration configuration settings
+          type: object
+          properties:
+            projectId:
+              type: string
+            v2Enabled:
+              type: boolean
+            walletProjectId:
+              type: string
+        confirmEmailProviderForVerify:
+          description: Whether to require email provider confirmation during verification
+          type: boolean
+          x-security-impact:
+            path: sdk.confirmEmailProviderForVerify
+            weakenedWhen: when-false
+            message: email-provider confirmation during verification removed
+        displayDynamicMessaging:
+          description: Whether to display Dynamic branding messaging in the SDK
+          type: boolean
+        hideNetworkInDynamicWidget:
+          description: Whether to hide the network selector in the Dynamic widget
+          type: boolean
+        minApiVersion:
+          $ref: '#/components/schemas/MinApiVersionEnum'
+        preventOrphanedAccounts:
+          description: Whether to prevent users from removing their last authentication method
+          type: boolean
+          x-security-impact:
+            path: sdk.preventOrphanedAccounts
+            weakenedWhen: when-false
+            message: orphaned-account prevention disabled
+        views:
+          type: array
+          description: Configs used to create the views in the sdk.
+          items:
+            $ref: '#/components/schemas/SdkView'
+        accountAbstraction:
+          description: Account abstraction (ERC-4337) configuration settings
+          type: object
+          properties:
+            allWallets:
+              description: If set to false, will create smart wallets for embedded wallets only.
+              type: boolean
+            allUsers:
+              description: If set to false, will create smart wallets for new users only.
+              type: boolean
+            separateSmartWalletAndSigner:
+              description: if set to false, only smart wallet will be in user wallets list.
+              type: boolean
+            enablePasskeys:
+              description: If set to false, will disable passkeys (if specified) for zksync wallets.
+              type: boolean
+        blockEmailSubaddresses:
+          description: Whether to block email subaddresses (plus addressing) during sign-up
+          type: boolean
+          x-security-impact:
+            path: sdk.blockEmailSubaddresses
+            weakenedWhen: when-false
+            message: email subaddress block disabled
+        enableMultiAsset:
+          description: Whether to enable multi-asset support in the wallet
+          type: boolean
+        showFiat:
+          description: Whether to display fiat currency values in the wallet
+          type: boolean
+        disabledWalletConnectors:
+          type: array
+          description: Ids of wallet connectors to filter out from available options in the sdk
+          items:
+            $ref: '#/components/schemas/WalletConnectorKey'
+        funding:
+          $ref: '#/components/schemas/Funding'
+    SdkUser:
+      allOf:
+      - $ref: '#/components/schemas/BaseUser'
+      - type: object
+        required:
+        - verifiedCredentials
+    ProjectSettingsChains:
+      type: object
+      properties:
+        name:
+          description: Display name of the chain
+          type: string
+        enabled:
+          description: Whether this chain is enabled for the project
+          type: boolean
+        networks:
+          description: List of network configurations for this chain
+          type: array
+          items:
+            $ref: '#/components/schemas/Network'
+      required:
+      - name
+      - enabled
+    NonEmptyStringWith255MaxLength:
+      type: string
+      pattern: ^(?=\S)[\p{L}\p{N}a-zA-Z _.,:!?&%@\/+\-'|]+(?<=\S)$
+      maxLength: 255
+      example: An example name
+    SdkViewSection:
+      type: object
+      description: A section used create the view in the sdk.
+      required:
+      - type
+      properties:
+        type:
+          $ref: '#/components/schemas/SdkViewSectionType'
+        label:
+          type: string
+          description: The label for the section. This will be displayed above the section or as part of the separator component if it is a Separator section.
+        numOfItemsToDisplay:
+          type: integer
+          description: The deafult number of items to display in the section. For Wallet section, represents the number of wallet items to be displayed by default. User has to click a button to view more options if there are any. For Social section, represents the number of social providers to be displayed by default. User has to click a button to view more options if there are any.
+        defaultItem:
+          type: string
+          description: The option to be displayed as the main one. The default item will be displayed in a more prominent way than the rest of the items in the section. For Wallet section, represents the wallet item to be displayed by default. For Social section, represents the social provider to be displayed by default.
+        alignment:
+          $ref: '#/components/schemas/SdkViewSectionAlignment'
+    ProjectSettingsGeneralApps:
+      type: object
+      additionalProperties:
+        type:
+        - string
+        - 'null'
+        format: url
+      example:
+        slack: https://dynamic.xyz
+        twitter: https://dynamic.xyz
+    UnprocessableEntity:
       type: object
       properties:
         error:
-          type: object
-          properties:
-            code:
-              type: string
-            message:
-              type: string
-          required:
-          - message
+          description: Human-readable error message describing the validation failure
+          type: string
+          example: Resources already exists for this Object
+        code:
+          $ref: '#/components/schemas/UnprocessableEntityErrorCode'
+        payload:
+          $ref: '#/components/schemas/UnprocessableEntityErrorPayload'
+        retryAfterSeconds:
+          description: Seconds the client should wait before retrying, present on rate-limit errors
+          type: integer
+          example: 600
       required:
       - error
-    Environment:
+    caip2:
+      description: CAIP-2 Chain ID (https://github.com/ChainAgnostic/CAIPs/blob/main/CAIPs/caip-2.md)
+      type: string
+      pattern: ^[-a-z0-9]{3,8}:[-_a-zA-Z0-9]{1,32}$
+      minLength: 5
+      maxLength: 41
+      example: eip155:1
+    ProjectSettingsPrivacy:
       type: object
+      properties:
+        collectIp:
+          description: Whether to collect and store user IP addresses
+          type: boolean
+    HCaptchaSettings:
+      type: object
+      deprecated: true
+      description: Deprecated — use `security.captcha` instead. Only populated when the environment's configured captcha provider is hCaptcha.
+      properties:
+        enabled:
+          description: Whether hCaptcha verification is enabled
+          type: boolean
+          x-security-impact:
+            path: security.hCaptcha.enabled
+            weakenedWhen: when-false
+            message: hCaptcha verification disabled
+        secretKey:
+          description: Secret key used to validate captcha response. This will never be surfaced in a GET response.
+          type: string
+        siteKey:
+          description: Public site key used to render the hCaptcha widget
+          type: string
+    HeldBusinessAccountMemberRole:
+      type: string
+      description: 'The role a member actually holds: a built-in (`owner`, `admin`, `viewer`) or a customer-defined role the account has defined. Wider than AssignableBusinessAccountRoleName because a held role can be `owner`, which cannot be assigned directly.
+
+        '
+      pattern: ^[a-z0-9](?:[a-z0-9_-]{0,30}[a-z0-9])?$
+      example: cfo
+    uuid:
+      type: string
+      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+      minLength: 36
+      maxLength: 36
+      example: 95b11417-f18f-457f-8804-68e361f9164f
+    Provider:
+      type: object
+      required:
+      - provider
+      properties:
+        id:
+          $ref: '#/components/schemas/uuid'
+        provider:
+          $ref: '#/components/schemas/ProviderEnum'
+        enabledAt:
+          description: ISO 8601 timestamp of when this provider was enabled
+          type:
+          - string
+          - 'null'
+          format: date-time
+        clientId:
+          description: 'Standard OAuth client ID. For more information, see: https://www.oauth.com/oauth2-servers/client-registration/client-id-secret/'
+          type: string
+        clientSecret:
+          description: Provider secret. The OAuth client secret for OAuth-based providers (see https://www.oauth.com/oauth2-servers/client-registration/client-id-secret/); the API key for providers that authenticate by key (e.g., trmWalletScreening, chainalysisAddressScreening).
+          type: string
+        webhookSecret:
+          description: Masked signing secret for verifying inbound webhooks from this provider (currently coinbaseOnramp only), returned as the last 3 characters only.
+          type: string
+        providerProjectId:
+          description: Some providers require additional information, typically called a project ID or site ID
+          type: string
+        authorizationUrl:
+          description: If the provider supports Oauth 2, this field will contain the URL of the login and authorization where a user can authorize the applciation to gain access to their provider account
+          type: string
+        redirectUrl:
+          description: If the provider supports Oauth 2, this field will contain the URL of redirect or callback URL which will need to be provided to the Oauth provider to properly configure your App tp talk with Dynamic
+          type: string
+        defaultChainId:
+          description: 'DEPRECATED: Use defaultChain. The default chain id the SDK should use'
+          type: integer
+        defaultChain:
+          $ref: '#/components/schemas/caip2'
+        keyExportUrl:
+          description: The url of the site to go to export wallets private keys
+          type: string
+        termsAcceptedByUser:
+          $ref: '#/components/schemas/ProviderAgreement'
+        scopes:
+          description: Optional custom space-delimited list of Oauth scopes for the social provider
+          type: string
+        baseAuthUrl:
+          description: Base auth url for oauth provider
+          type: string
+        appleKeyId:
+          description: Key ID required for Apple Oauth2 applications. This is the identifier for a private key.
+          type: string
+        appleTeamId:
+          description: Team ID required for Apple Oauth2 applications. This is associated with the Apple developer membership account.
+          type: string
+        shopifyStore:
+          description: Shopify store required for Shopify Oauth2 applications.
+          type: string
+        domain:
+          type: string
+          description: The subdomain for the provider (mostly used for SSO)
+        accountSid:
+          description: Required to initialize Twilio provider.
+          type: string
+        twilioNumber:
+          description: Required to initialize Twilio provider. Phone number used to send SMS messages.
+          type: string
+        twilioVerifyServiceSid:
+          description: Twilio Verify Service SID for SMS verification.
+          type: string
+        enabledCountries:
+          type: array
+          items:
+            $ref: '#/components/schemas/SmsCountryCode'
+        sendgridIpPoolName:
+          description: The IP pool name for the SendGrid provider.
+          type: string
+        entryPointVersion:
+          $ref: '#/components/schemas/ProviderEntryPointVersionEnum'
+        kernelVersion:
+          $ref: '#/components/schemas/ProviderKernelVersionEnum'
+        factoryAddress:
+          type: string
+          description: The factory address for the provider (currently only used for zksync)
+        paymasterAddress:
+          type: string
+          description: The paymaster address for the provider (currently only used for zksync)
+        passkeyAddress:
+          type: string
+          description: The passkey address for the provider (currently only used for zksync)
+        sessionAddress:
+          type: string
+          description: The session address for the provider (currently only used for zksync)
+        salt:
+          type: string
+          description: The salt for the provider address generation (currently only used for zksync)
+        multichainAccountAbstractionProviders:
+          type: array
+          items:
+            type: object
+            properties:
+              clientId:
+                type: string
+              chain:
+                type: string
+              default:
+                type: boolean
+            required:
+            - clientId
+            - chain
+        ecdsaProviderType:
+          $ref: '#/components/schemas/ecdsaValidatorOptions'
+        createNewAccounts:
+          description: Whether this provider automatically creates new accounts on first login
+          type: boolean
+        enableKernelV3Migration:
+          type: boolean
+        enableEIP7702:
+          type: boolean
+        zerodevBundlerProvider:
+          $ref: '#/components/schemas/ZerodevBundlerProvider'
+        zerodevBundlerRpcUrl:
+          type: string
+        zerodevPaymasterRpcUrl:
+          type: string
+        zerodevKernelDelegationAddress:
+          type: string
+        zerodevProjectVersion:
+          type: string
+          description: The ZeroDev projects endpoint version (v1 or v2)
+        returnUrl:
+          type: string
+          description: URL to return to after completion
+        cancelUrl:
+          type: string
+          description: URL to return to when cancelled
+    SecurityNotifications:
+      type: object
+      properties:
+        verifiedCredentialLinked:
+          type: boolean
+          description: Send email notification when a verified credential is linked to a user account. Defaults to true.
+        verifiedCredentialUnlinked:
+          type: boolean
+          description: Send email notification when a verified credential is unlinked from a user account. Defaults to true.
+        waasPrivateKeyExport:
+          type: boolean
+          description: Send email notification when a user exports their embedded wallet private key. Defaults to true.
+        waasSignedTransaction:
+          type: boolean
+          description: Send email notification when a transaction is signed with an embedded wallet. Defaults to true.
+    TurnkeyWalletProperties:
+      deprecated: true
+      type: object
+      properties:
+        turnkeySubOrganizationId:
+          allOf:
+          - $ref: '#/components/schemas/uuid'
+          deprecated: true
+        turnkeyPrivateKeyId:
+          allOf:
+          - $ref: '#/components/schemas/uuid'
+          deprecated: true
+        turnkeyHDWalletId:
+          allOf:
+          - $ref: '#/components/schemas/uuid'
+          deprecated: true
+        isAuthenticatorAttached:
+          type: boolean
+          description: Whether or not the wallet has an authenticator (passkey, api key, etc) attached to it.
+        turnkeyUserId:
+          allOf:
+          - $ref: '#/components/schemas/uuid'
+          deprecated: true
+        isSessionKeyCompatible:
+          description: Whether this wallet supports session key operations
+          type: boolean
+        version:
+          $ref: '#/components/schemas/EmbeddedWalletVersionEnum'
+        ecdsaProviderType:
+          $ref: '#/components/schemas/ecdsaValidatorOptions'
+        entryPointVersion:
+          $ref: '#/components/schemas/ProviderEntryPointVersionEnum'
+        kernelVersion:
+          $ref: '#/components/schemas/ProviderKernelVersionEnum'
+    DestinationConfigInput:
+      type: object
+      required:
+      - destinations
+      properties:
+        destinations:
+          description: List of chain-specific destination wallet configurations
+          type: array
+          items:
+            $ref: '#/components/schemas/ChainDestinationConfig'
+    WalletPublicKey:
+      type: string
+      pattern: ^[A-Za-z0-9_-]{18,100}$
+      description: Valid blockchain wallet address, must be an alphanumeric string (underscores allowed for chains like Midnight, hyphens allowed for chains using base64url-encoded addresses like TON)
+      example: '0xbF394748301603f18d953C90F0b087CBEC0E1834'
+      maxLength: 255
+    MergeConflicts:
+      type: object
+      description: Contains information needed for the SDK to surface merge conflicts when attempting to merge information from one user to another
+      required:
+      - fromUser
+      - conflicts
+      properties:
+        fromUser:
+          $ref: '#/components/schemas/SdkUser'
+        conflicts:
+          description: List of field-level merge conflicts between users
+          type: array
+          items:
+            $ref: '#/components/schemas/MergeUserConflict'
+    NameService:
+      type: object
+      properties:
+        registry:
+          description: Contract address of the name service registry
+          type: string
+          example: '0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e'
+    ScreeningActionEnum:
+      type: string
+      description: What the environment's screening policy decided; `alert` never blocks.
+      enum:
+      - allow
+      - alert
+      - block
+    ThresholdSignatureScheme:
+      type: string
+      enum:
+      - TWO_OF_TWO
+      - TWO_OF_THREE
+      - THREE_OF_FIVE
+    SocialSignInProviderEnum:
+      type: string
+      enum:
+      - apple
+      - bitbucket
+      - coinbasesocial
+      - discord
+      - epicgames
+      - facebook
+      - farcaster
+      - github
+      - gitlab
+      - google
+      - instagram
+      - linkedin
+      - microsoft
+      - twitch
+      - twitter
+      - telegram
+      - spotify
+      - tiktok
+      - line
+      - steam
+      - shopify
+      - kraken
+      - okta
+      - gemini
+    HardwareWalletProperties:
+      type: object
+      properties:
+        hardwareWallet:
+          $ref: '#/components/schemas/HardwareWalletEnum'
+    Funding:
+      type: object
+      properties:
+        onramps:
+          description: List of enabled onramp providers for fiat-to-crypto purchases
+          type: array
+          items:
+            $ref: '#/components/schemas/OnrampProviders'
+        externalWallets:
+          description: Configuration for external wallet funding
+          type: object
+          properties:
+            enabled:
+              type: boolean
+            minAmount:
+              type: object
+              properties:
+                amount:
+                  type: string
+                currency:
+                  type: string
+            defaultSettings:
+              type: object
+              properties:
+                chainSettings:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/ExternalWalletFundingDefaultSettings'
+          required:
+          - enabled
+      required:
+      - onramps
+    OptionalNonEmptyUrl:
+      type: string
+      pattern: ^$|^(https?:\/\/)?[a-z0-9]+([-.]+[a-z0-9]+)*\.[a-z]{2,10}([0-9]{1,5})?(\/.*)?$
+      example: https://website-sample.com
+    Unauthorized:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message describing the authentication failure
+          type: string
+          example: No jwt provided!
+    EnvironmentLocation:
+      type: object
+      properties:
+        environmentId:
+          $ref: '#/components/schemas/uuid'
+        environmentName:
+          description: Environment name (live or sandbox)
+          type: string
+          enum:
+          - live
+          - sandbox
+        projectId:
+          $ref: '#/components/schemas/uuid'
+        projectName:
+          type: string
+        organizationId:
+          $ref: '#/components/schemas/uuid'
+        organizationName:
+          type: string
+      required:
+      - environmentId
+      - environmentName
+      - projectId
+      - projectName
+      - organizationId
+      - organizationName
+    AdminActionResponseDecision:
+      description: The reviewer's decision on an action request.
+      type: string
+      enum:
+      - approved
+      - denied
+    NonEmptyStringWith50MaxLength:
+      type: string
+      pattern: ^(?=\S)[\p{L}\p{N}a-zA-Z _.,:!?&%@\/+\-'|]+(?<=\S)$
+      example: An example name
+      maxLength: 50
+    WalletAddressType:
+      type: string
+      enum:
+      - ordinals
+      - payment
+      - cosmos
+      - evm
+      - stellar
+      - ton
+      - midnight_unshielded
+      - midnight_dust
+      - midnight_shielded
+    ProviderKernelVersionEnum:
+      type: string
+      enum:
+      - v2_4
+      - v3_0
+      - v3_1
+      - v3_2
+      - v3_3
+    SdkViewSectionType:
+      type: string
+      enum:
+      - email
+      - emailAndPhone
+      - phone
+      - separator
+      - social
+      - text
+      - wallet
+      - passkey
+    NetworkConfigurationResponse:
+      type: object
+      properties:
+        chainName:
+          description: Name of the blockchain family (e.g. EVM, Solana)
+          type: string
+        networks:
+          description: List of network configurations for this chain
+          type: array
+          items:
+            $ref: '#/components/schemas/NetworkConfiguration'
+    ProjectSettingsDesign:
+      type: object
+      properties:
+        modal:
+          $ref: '#/components/schemas/ProjectSettingsDesignModal'
+        button:
+          $ref: '#/components/schemas/ProjectSettingsDesignButton'
+        widget:
+          $ref: '#/components/schemas/ProjectSettingsDesignWidget'
+    AuthStorageEnum:
+      type: string
+      description: Location in the browser where Dynamic will attempt to store the JWT token.
+      enum:
+      - localstorage
+      - cookie
+    SmartWalletProperties:
+      type: object
+      properties:
+        entryPointVersion:
+          $ref: '#/components/schemas/ProviderEntryPointVersionEnum'
+        kernelVersion:
+          $ref: '#/components/schemas/ProviderKernelVersionEnum'
+        ecdsaProviderType:
+          $ref: '#/components/schemas/ecdsaValidatorOptions'
+    ScreeningPolicyScopeEnum:
+      description: 'Whether a policy is the sign-in policy or the transaction policy. An
+
+        environment holds one policy per provider per scope, authored independently —
+
+        a customer may alert at sign-in and block on transactions, or skip the paid
+
+        provider call at one and not the other. Two values, not three: an "applies to both" policy would make the
+
+        overlap with a single-scope row unrepresentable as a unique constraint.
+
+        '
+      type: string
+      enum:
+      - SIGN_IN
+      - TRANSACTION
+    JwtVerifiedCredential:
+      type: object
+      required:
+      - id
+      - format
+      - signInEnabled
+      properties:
+        address:
+          $ref: '#/components/schemas/WalletPublicKey'
+        chain:
+          description: Blockchain network for this credential
+          type: string
+        refId:
+          $ref: '#/components/schemas/uuid'
+        signerRefId:
+          $ref: '#/components/schemas/uuid'
+        email:
+          description: Email address for email-based credentials
+          type: string
+          format: email
+        id:
+          $ref: '#/components/schemas/VerifiedCredentialId'
+        name_service:
+          $ref: '#/components/schemas/NameServiceData'
+        public_identifier:
+          description: This is used to publicly identify a verified credential in a human-friendly way. For example, this will be the email address if credential format=email.
+          type: string
+        wallet_name:
+          description: Name of the wallet provider
+          type: string
+        wallet_provider:
+          $ref: '#/components/schemas/WalletProviderEnum'
+        wallet_properties:
+          $ref: '#/components/schemas/WalletProperties'
+        business_account_properties:
+          $ref: '#/components/schemas/BusinessAccountProperties'
+        format:
+          $ref: '#/components/schemas/JwtVerifiedCredentialFormatEnum'
+        oauth_provider:
+          $ref: '#/components/schemas/ProviderEnum'
+        oauth_username:
+          description: Username from the OAuth provider
+          type: string
+        oauth_display_name:
+          description: Display name from the OAuth provider
+          type:
+          - string
+          - 'null'
+        oauth_account_id:
+          description: Unique account identifier from the OAuth provider
+          type:
+          - string
+          - 'null'
+        phoneNumber:
+          description: This field contains the phone number in the country. This could also contain the area code within a country.
+          example: '9171113333'
+          type: string
+        phoneCountryCode:
+          description: This field contains the phone international country code. See https://countrycode.org/
+          example: '1'
+          type: string
+        isoCountryCode:
+          description: ISO-3166 two-character country code. See https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes
+          example: US
+          type: string
+        oauth_account_photos:
+          description: List of profile photo URLs from the OAuth provider
+          type: array
+          items:
+            type: string
+        oauth_emails:
+          description: List of email addresses from the OAuth provider
+          type: array
+          items:
+            type: string
+        oauth_metadata:
+          type: object
+          description: This object contains JSON metadata for a social-based verified credential. It may contain data about the user that does not fit into the other structured fields, and could include arbitrary fields about the user from the oauth provider's API.
+        previous_users:
+          description: This will only be provided in the responses for GET /users/{userId}.Previous user IDs that owned this verified credential and was tranfered to the current user ID.
+          type: array
+          items:
+            $ref: '#/components/schemas/uuid'
+        embedded_wallet_id:
+          description: Identifier of the linked embedded wallet
+          type:
+          - string
+          - 'null'
+        wallet_additional_addresses:
+          description: List of additional addresses derived from this wallet
+          type: array
+          items:
+            $ref: '#/components/schemas/WalletAdditionalAddress'
+        lastSelectedAt:
+          description: This timestamp indicates the last time this verified wallet was either connected to the user account or selected to become the primary wallet on the account.
+          type: string
+          format: date-time
+        signInEnabled:
+          type: boolean
+          description: This indicates if the user can sign in with this credential
+        verifiedAt:
+          type: string
+          format: date-time
+          description: This timestamp indicates the last time this verified credential was verified.
+    CoinbaseMpcWalletProperties:
+      deprecated: true
+      type: object
+      properties:
+        claimed:
+          type: boolean
+          description: Dynamic pregenerated this wallet and stored the passcode
+        source:
+          $ref: '#/components/schemas/PasswordSourceTypeEnum'
+    SocialSignInProvider:
+      type: object
+      required:
+      - provider
+      properties:
+        provider:
+          $ref: '#/components/schemas/SocialSignInProviderEnum'
+        enabled:
+          description: Whether this social sign-in provider is enabled
+          type: boolean
+    Network:
+      type: object
+      properties:
+        networkId:
+          description: Unique numeric identifier of the network
+          type: number
+          example: '1'
+        chainName:
+          description: Display name of the blockchain network
+          type: string
+          example: Ethereum Mainnet
+        enabled:
+          description: Whether this network is currently enabled for the project
+          type: boolean
+        rpcUrl:
+          description: RPC endpoint URL used to communicate with the network
+          type: string
+        iconUrl:
+          description: URL of the network icon image
+          type: string
+        type:
+          description: Whether the network is a custom user-added network or a default built-in one
+          type: string
+          enum:
+          - custom
+          - default
+      required:
+      - networkId
+      - enabled
+      - chainName
+    UnprocessableEntityErrorCode:
+      type: string
+      enum:
+      - email_cannot_be_null
+      - exchange_cannot_be_enabled
+      - transfer_amount_too_small
+      - transfer_address_not_whitelisted
+      - invalid_scopes
+      - unknown_transfer_error
+      - transfer_mfa_required
+      - transfer_mfa_failed
+      - intent_required
+      - invalid_transfer_funds
+      - invalid_transfer_currency
+      - invalid_exchange_provider
+      - invalid_transfer_network
+      - invalid_email
+      - email_already_exists
+      - allowlist_already_exists
+      - allowlist_entry_already_exists
+      - reassign_wallet_error
+      - reassign_wallet_confirm
+      - members_cannot_delete_themself
+      - username_already_exists
+      - wrong_email_verification_token
+      - wrong_sms_verification_token
+      - invalid_email_verification
+      - invalid_sms_verification
+      - invalid_verification
+      - invalid_position
+      - too_many_sms_verification_attempts
+      - too_many_email_verification_attempts
+      - too_many_verification_attempts
+      - organization_name_already_exists
+      - project_name_already_exists
+      - wallet_not_deployed
+      - email_verification_required
+      - phone_verification_required
+      - invite_address_required
+      - provider_not_available
+      - forbidden_unlink_request
+      - invalid_unlink_request
+      - too_many_api_tokens
+      - lock_timeout
+      - lock_too_many_attempts
+      - nft_token_gating_not_supported_for_chain
+      - empty_chain_name
+      - no_enabled_email_provider
+      - no_enabled_sms_provider
+      - invalid_key_export_url
+      - invalid_dynamic_props
+      - too_many_requests
+      - too_many_organizations_for_user
+      - too_many_projects_for_organization
+      - email_associated_with_different_provider
+      - user_has_already_account_with_email
+      - user_has_already_account_with_phone_number
+      - other_verify_failure
+      - email_tied_to_embedded_wallet
+      - invalid_invite
+      - social_account_already_exists
+      - invalid_email_address
+      - invalid_gate
+      - conflicting_embedded_wallet_providers
+      - invalid_user
+      - invalid_cors_origins
+      - invalid_mobile_deeplink_urls
+      - unauthorized_mobile_deeplink_url
+      - invalid_private_key_format
+      - invalid_embedded_wallet_settings
+      - wallet_not_support_passkey
+      - recovery_email_unavailable_or_invalid
+      - connect_error
+      - invalid_wallet_name
+      - invalid_wallet_address
+      - email_recovery_disabled
+      - no_compatible_wallet_service_enabled
+      - missing_aa_project_id
+      - linked_embedded_wallet
+      - invalid_mpc_environment
+      - invalid_regex
+      - repeated_options
+      - missing_phone_number_or_email
+      - duplicate_exists
+      - mfa_device_not_found
+      - mfa_invalid_code
+      - mfa_invalid_request
+      - invalid_phone
+      - gate_exists
+      - invalid_embedded_wallet_chains_configuration
+      - merge_accounts_confirmation
+      - merge_accounts_invalid
+      - invalid_wallet_id
+      - unable_to_fetch_balances
+      - cannot_switch_to_unique
+      - custom_field_data_not_unique
+      - metadata_size_exceeded
+      - invalid_custom_hostname
+      - blocked_user_cannot_transfer_wallet
+      - feature_not_enabled_in_suborg
+      - invalid_username
+      - invalid_external_auth
+      - invalid_chain_address_match
+      - invalid_update
+      - cannot_delete_last_project
+      - no_hd_wallet_found
+      - wallet_account_exists_for_chain
+      - too_many_embedded_wallets_for_user
+      - too_many_embedded_wallets_per_chain_for_user
+      - invalid_session_public_key
+      - custom_field_not_unique
+      - invalid_aa_project_configuration
+      - no_v1_embedded_wallet_found
+      - embedded_wallet_address_already_linked
+      - key_share_already_backed_up
+      - invalid_key_shares_length
+      - wallet_not_active
+      - wallet_service_connection_error
+      - no_global_wallet_found
+      - invalid_metadata_value
+      - max_passkeys_per_user
+      - passkey_not_found
+      - cannot_delete_passkey_linked_to_embedded_wallet
+      - cannot_delete_last_sign_in_verified_credential
+      - credential_not_enabled_for_sign_in
+      - unsupported_chain
+      - share_set_id_required
+      - address_screening_byok_auth
+      - address_screening_byok_quota
+      - address_screening_byok_shape
+      - address_screening_byok_upstream
+      - captcha_settings_incomplete_key_pair
+      - invalid_signed_transaction
+      - signed_transaction_wallet_mismatch
+      - unsupported_waas_chain
+      - network_not_enabled
+      - broadcast_rejected
+      - broadcast_requires_resign
+      - broadcast_outcome_unknown
+      - broadcast_rate_limited
+      - broadcast_unavailable
+      - broadcast_idempotency_conflict
+      - broadcast_wallet_ineligible
+      - broadcast_not_submitted
+      - chain_mismatch
+      - network_disabled
+      - missing_fee
+      - missing_nonce
+      - missing_gas_limit
+      - ambiguous_fee_style
+      - unsupported_shape
+      - contract_creation_unsupported
+      - multiple_transactions
+      - durable_nonce_unsupported
+      - missing_cosigner
+      - blockhash_too_old
+      - certainty_unreachable
+      - ambiguous_broadcast_identifier
+      - offline_recovery_cloud_backup_conflict
+      - quote_expired
+      - insufficient_balance
+      - exchange_settlement_unsupported
+    ChainConfiguration:
+      type: object
+      required:
+      - name
+      - enabled
+      - primary
+      properties:
+        name:
+          description: Name of the blockchain network
+          type: string
+        enabled:
+          description: Whether this chain is enabled for embedded wallets
+          type: boolean
+        primary:
+          description: Whether this is the primary chain for the environment
+          type: boolean
+    WalletProperties:
+      anyOf:
+      - $ref: '#/components/schemas/TurnkeyWalletProperties'
+      - $ref: '#/components/schemas/HardwareWalletProperties'
+      - $ref: '#/components/schemas/CoinbaseMpcWalletProperties'
+      - $ref: '#/components/schemas/SmartWalletProperties'
+      - $ref: '#/components/schemas/WaasWalletProperties'
+    InternalServerError:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message
+          type: string
+          example: Internal Server Error
+    BusinessAccountMutationIntent:
+      type: object
+      description: 'The initiator''s proposal, signed with their session key. Built by the API, not the client — sign these exact bytes verbatim, because re-serializing can change them and invalidate the signature.
+
+        `autoExecute` is inside the signed bytes, so an approver consents to it and nothing can flip it afterwards.
+
+        '
+      additionalProperties: true
+    Exchange:
+      type: object
+      required:
+      - exchange
+      properties:
+        id:
+          $ref: '#/components/schemas/uuid'
+        exchange:
+          $ref: '#/components/schemas/ExchangeKeyEnum'
+        enabledAt:
+          description: ISO 8601 timestamp of when the exchange was enabled
+          type:
+          - string
+          - 'null'
+          format: date-time
+        socialProvider:
+          $ref: '#/components/schemas/ProviderEnum'
+        onRampProvider:
+          $ref: '#/components/schemas/ProviderEnum'
+    UnprocessableEntityErrorPayload:
+      type: object
+      description: Contains information which the integrating client of this API can use to tailor an experience to a customer to fix the underlying issue that triggered this error.
+      properties:
+        email:
+          description: Email address that caused the validation error
+          type: string
+          format: email
+          example: joe@email.com
+        loginProvider:
+          $ref: '#/components/schemas/ProviderEnum'
+        embeddedWalletName:
+          description: Embedded wallet name that caused the validation error
+          type: string
+        embeddedSocialSigninProvider:
+          $ref: '#/components/schemas/ProviderEnum'
+        mergeConflicts:
+          $ref: '#/components/schemas/MergeConflicts'
+        intent:
+          $ref: '#/components/schemas/BusinessAccountMutationIntent'
+        additionalMessages:
+          description: List of additional validation error messages
+          type: array
+          items:
+            type: string
+    SupportedSecurityMethod:
+      type: object
+      required:
+      - isDefault
+      - isEnabled
+      - isPermanentAuthenticator
+      - listPosition
+      properties:
+        isDefault:
+          description: Whether this security method is selected by default
+          type: boolean
+        isEnabled:
+          description: Whether this security method is currently enabled
+          type: boolean
+        isPermanentAuthenticator:
+          description: Whether this security method serves as a permanent authenticator that cannot be removed
+          type: boolean
+        listPosition:
+          description: Display position order of this security method in the list
+          type: number
+    ProjectSettingsSecurity:
+      type: object
+      properties:
+        addressScreening:
+          $ref: '#/components/schemas/AddressScreeningSettings'
+        jwtDuration:
+          $ref: '#/components/schemas/Duration'
+        hCaptcha:
+          $ref: '#/components/schemas/HCaptchaSettings'
+        captcha:
+          $ref: '#/components/schemas/ProjectSettingsCaptcha'
+        mfa:
+          $ref: '#/components/schemas/MFASettings'
+        auth:
+          $ref: '#/components/schemas/AuthSettings'
+        externalAuth:
+          $ref: '#/components/schemas/ExternalAuth'
+        deviceRegistrationRequired:
+          type: boolean
+          description: When enabled, users must verify new devices via email before accessing the application. Defaults to true when not set.
+          x-security-impact:
+            path: security.deviceRegistrationRequired
+            weakenedWhen: when-false
+            message: new-device email verification disabled
+        environmentLocked:
+          type: boolean
+          description: When enabled, all SDK requests to this environment will be blocked.
+        notifications:
+          $ref: '#/components/schemas/SecurityNotifications'
+    ProviderAgreement:
+      description: Reference to the user that accepted the terms and conditions, if one is necessary for this provider.
+      type: object
+      required:
+      - termsUrl
+      - userId
+      - email
+      - createdAt
+      properties:
+        termsUrl:
+          description: The url of the terms and conditions or privacy policy needed to be shown to the client when creating a new provider that requires terms and conditions to be signed before starting configuration.
+          type: string
+          maxLength: 255
+        email:
+          description: Email address associated with the provider agreement
+          type: string
+          format: email
+          maxLength: 255
+        userId:
+          $ref: '#/components/schemas/uuid'
+        createdAt:
+          description: ISO 8601 timestamp of when the agreement was created
+          type: string
+          format: date-time
+    ProjectSettingsDesignModal:
+      type: object
+      properties:
+        border:
+          description: Border style of the modal
+          type: string
+        brand:
+          description: Brand color applied to the modal
+          type: string
+        primaryColor:
+          description: Primary color used throughout the modal UI
+          type: string
+        radius:
+          description: Border radius of the modal in pixels
+          type: integer
+        theme:
+          description: Color theme of the modal (e.g. light, dark, auto)
+          type: string
+        view:
+          description: Default view to display when the modal opens
+          type: string
+        template:
+          description: Template layout style for the modal
+          type: string
+        displayOrder:
+          description: List defining the display order of authentication methods in the modal
+          type: array
+          items:
+            type: string
+        emailOnly:
+          description: Whether to show only email-based authentication in the modal
+          type: boolean
+        showWalletsButton:
+          description: Whether to show the wallet connection button in the modal
+          type: boolean
+        emailSubmitButtonInsideInput:
+          description: Whether to place the email submit button inside the input field
+          type: boolean
+        splitEmailAndSocial:
+          description: Whether to split email and social login into separate sections
+          type: boolean
+        socialAboveEmail:
+          description: Whether to display social login options above the email input
+          type: boolean
+    Checkout:
+      type: object
+      required:
+      - id
+      - mode
+      - settlementConfig
+      - enableOrchestration
+      - createdAt
+      - updatedAt
+      properties:
+        id:
+          $ref: '#/components/schemas/uuid'
+        mode:
+          $ref: '#/components/schemas/CheckoutModeEnum'
+        settlementConfig:
+          $ref: '#/components/schemas/SettlementConfigInput'
+        destinationConfig:
+          $ref: '#/components/schemas/DestinationConfigInput'
+        depositConfig:
+          $ref: '#/components/schemas/DepositAmountsConfigInput'
+        enableOrchestration:
+          description: Whether Dynamic handles quote optimization, fee collection, and fund settlement automatically
+          type: boolean
+          default: true
+        createdAt:
+          description: ISO 8601 timestamp of when the checkout was created
+          type: string
+          format: date-time
+        updatedAt:
+          description: ISO 8601 timestamp of when the checkout was last updated
+          type: string
+          format: date-time
+    CheckoutModeEnum:
+      type: string
+      enum:
+      - payment
+      - deposit
+    SignInProviderEnum:
+      type: string
+      description: The 'turnkey' value is deprecated and will be removed in a future version.
+      enum:
+      - dynamic
+      - magicLink
+      - blocto
+      - turnkey
+      - coinbaseWaas
+    AdminActionRequestStatus:
+      description: The lifecycle status of an admin action request.
+      type: string
+      enum:
+      - pending
+      - approved
+      - denied
+      - expired
+      - auto_approved
+    EnvironmentVisitorsResponse:
+      type: object
+      properties:
+        users:
+          description: Aggregate user count statistics for the environment
+          type: object
+          properties:
+            count:
+              type: integer
+            uniquePastMonth:
+              type: integer
+        visitors:
+          description: Aggregate visitor count statistics for the environment
+          type: object
+          properties:
+            count:
+              type: integer
+            uniquePastMonth:
+              type: integer
+    NetworkConfiguration:
+      type: object
+      properties:
+        lcdUrl:
+          type: string
+          example: https://lcd.osmosis.zone
+          description: A light client, compared to a full node, tracks only pieces of certain information on a blockchain. Light clients do not track the entire state of a blockchain and also do not contain every transaction/block of a chain.
+        chainName:
+          type: string
+          description: '[Deprecated] use `name` property instead'
+          example: Ethereum Mainnet
+        key:
+          description: Unique key identifier for the network configuration
+          type: string
+          example: ethereum
+        name:
+          description: Full display name of the network
+          type: string
+          example: Ethereum Mainnet
+        shortName:
+          description: Abbreviated name of the network
+          type: string
+          example: ETH
+        isTestnet:
+          description: Whether this network is a test network
+          type: boolean
+          example: false
+        chain:
+          description: Chain identifier code
+          type: string
+          example: ETH
+        chainId:
+          description: Unique chain identifier (e.g. EIP-155 chain ID for EVM networks)
+          type: string
+          example: '1'
+        nameService:
+          $ref: '#/components/schemas/NameService'
+        networkId:
+          description: Network identifier used for routing and lookups
+          type: string
+          example: '1'
+        iconUrls:
+          description: List of URLs for the network icon images
+          type: array
+          items:
+            type: string
+        nativeCurrency:
+          $ref: '#/components/schemas/NativeCurrency'
+        rpcUrls:
+          description: List of public RPC endpoint URLs for the network
+          type: array
+          items:
+            type: string
+            example: https://mainnet.infura.io/v3/
+        privateCustomerRpcUrls:
+          type: array
+          description: Contains the client private RPC urls
+          items:
+            type: string
+            example: https://mainnet.infura.io/v3/
+        blockExplorerUrls:
+          description: List of block explorer URLs for viewing transactions on this network
+          type: array
+          items:
+            type: string
+            example: https://etherscan.io/
+        vanityName:
+          description: Simplified display name for the network used in the UI
+          type: string
+          example: Ethereum
+        bech32Prefix:
+          description: Bech32 address prefix for Cosmos-based chains
+          type: string
+          example: cosmos
+        genesisHash:
+          description: Genesis hash of the network, used for Solana clusters
+          type: string
+          example: 5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp
+        cluster:
+          description: Cluster name for Solana-based networks
+          type: string
+          example: mainnet, devnet, etc
+        hasNativeToken:
+          type: boolean
+          default: true
+          description: Whether this network has a native token. Defaults to true if not specified.
+          example: true
+        supportsFeeTokenSelection:
+          type: boolean
+          default: false
+          description: Whether this network supports selecting a fee token for transactions. Defaults to false if not specified.
+          example: false
+      required:
+      - name
+      - shortName
+      - chain
+      - chainId
+      - networkId
+      - iconUrls
+      - nativeCurrency
+      - rpcUrls
+      - blockExplorerUrls
+    BusinessAccountProperties:
+      type: object
+      description: 'Business-account context attached to a verified credential that belongs to a business account. Present whenever `wallet_properties.shareSetType` is `businessAccountUser`; absent otherwise. Each field is namespaced by its source table so a caller reading the response sees exactly which entity the value came from (no ambiguity between member role and signer type, between business-account name and signer-derived names, etc.).
+
+        '
+      required:
+      - businessAccountId
+      - businessAccountCreatedAt
+      - businessAccountSignerId
+      - businessAccountSignerType
+      - businessAccountMemberRole
+      properties:
+        businessAccountId:
+          $ref: '#/components/schemas/uuid'
+        businessAccountName:
+          type:
+          - string
+          - 'null'
+          description: Display name; user-supplied at create time. Nullable.
+        businessAccountExternalRef:
+          type:
+          - string
+          - 'null'
+          description: Developer-supplied stable ID inside the env. Nullable.
+        businessAccountCreatedAt:
+          type: string
+          format: date-time
+        businessAccountSignerId:
+          $ref: '#/components/schemas/uuid'
+        businessAccountSignerType:
+          $ref: '#/components/schemas/BusinessAccountSignerType'
+        businessAccountMemberRole:
+          $ref: '#/components/schemas/HeldBusinessAccountMemberRole'
+    WalletConnectorKey:
+      type: string
+      pattern: ^(?=\S)[\p{L}\p{N}a-zA-Z _.,:!?&%@\/+\-']+(?<=\S)$
+      minLength: 2
+      maxLength: 50
+      example: metamask
+    WaasWalletShareSetType:
+      type: string
+      enum:
+      - delegated
+      - rootUser
+      - server
+      - businessAccountUser
+      - offlineRecovery
+      description: The role this share set plays for the wallet
+    CaptchaProviderEnum:
+      type: string
+      description: Captcha provider used for verification
+      enum:
+      - hcaptcha
+      - cloudflareTurnstile
+    DestinationTypeEnum:
+      type: string
+      enum:
+      - address
+    WalletAdditionalAddress:
+      type: object
+      description: An additional address associated with a wallet.
+      required:
+      - address
+      - type
+      properties:
+        address:
+          type: string
+          description: An address associated with a wallet.
+        publicKey:
+          type: string
+          description: The public key associated with the address.
+        type:
+          $ref: '#/components/schemas/WalletAddressType'
+        network:
+          type: string
+          description: Network this address is encoded for (e.g. 'mainnet' | 'testnet' | 'preview'). Present when a wallet exposes an address per network.
+    ecdsaValidatorOptions:
+      type: string
+      enum:
+      - zerodev_signer_to_ecdsa
+      - zerodev_multi_chain
+    SettlementConfigInput:
+      type: object
+      required:
+      - strategy
+      - settlements
+      properties:
+        strategy:
+          $ref: '#/components/schemas/SettlementStrategyEnum'
+        settlements:
+          description: List of settlement strategy configurations
+          type: array
+          items:
+            $ref: '#/components/schemas/ChainSettlementConfig'
+    Duration:
+      type: object
+      required:
+      - amount
+      - unit
+      properties:
+        amount:
+          description: Numeric value of the duration
+          type: integer
+        unit:
+          $ref: '#/components/schemas/TimeUnitEnum'
+    ExternalAuth:
+      type: object
+      properties:
+        enabled:
+          description: Whether external JWT authentication is enabled
+          type: boolean
+        iss:
+          $ref: '#/components/schemas/OptionalNullableNonEmptyStringWith255MaxLength'
+        aud:
+          $ref: '#/components/schemas/OptionalNullableNonEmptyStringWith255MaxLength'
+        jwksUrl:
+          $ref: '#/components/schemas/OptionalNonEmptyUrl'
+        cookieName:
+          $ref: '#/components/schemas/OptionalNullableNonEmptyStringWith255MaxLength'
+        assumeEmailVerified:
+          description: When enabled, the backend treats a missing `emailVerified` claim on the external JWT as `true` during signin, so customers don't have to add the claim explicitly. An explicit `false` value is always respected. Defaults to false.
+          type: boolean
+        stepUpEnabled:
+          description: When enabled, users in this environment can complete step-up verification with an assertion JWT minted by the customer's identity provider (`POST /sdk/{environmentId}/externalAuth/verify`). When disabled, that endpoint returns an error. Defaults to true.
+          type: boolean
+    TokenScopes:
+      type: string
+      description: Valid scopes for an environment API token
+      enum:
+      - all.read
+      - waas.delegatedAccess.signMessage
+      - waas.authenticate
+      - environment.settings.read
+      - environment.settings.write
+      - environment.apiTokens.read
+      - environment.apiTokens.write
+      - environment.users.read
+      - environment.users.write
+      - environment.analytics.read
+      - environment.webhooks.read
+      - environment.webhooks.write
+      - environment.events.read
+      - environment.events.write
+      - environment.balances.read
+      - gasless.read
+      - gasless.write
+      - flow.write
+      - waas.policies.write
+    MFASettings:
+      type: object
+      properties:
+        enabled:
+          description: Whether multi-factor authentication is enforced at the session level (prompted at login).
+          type: boolean
+          x-security-impact:
+            path: security.mfa.enabled
+            weakenedWhen: when-false
+            message: multi-factor authentication disabled
+        required:
+          description: 'Whether MFA enrollment is required. Derived from `enrollment` — true when enrollment is `signup` or `action`. Kept for backwards compatibility; new clients should read `enrollment` directly.
+
+            '
+          type: boolean
+          x-security-impact:
+            path: security.mfa.required
+            weakenedWhen: when-false
+            message: MFA no longer required for all users
+        enrollment:
+          $ref: '#/components/schemas/MfaEnrollment'
+        availableMethods:
+          description: List of MFA device types available for enrollment
+          type: array
+          items:
+            $ref: '#/components/schemas/MFADeviceType'
+        methods:
+          description: List of MFA methods with their enabled status
+          type: array
+          items:
+            type: object
+            required:
+            - type
+            - enabled
+            properties:
+              type:
+                $ref: '#/components/schemas/MFADeviceType'
+              enabled:
+                description: Whether this MFA method is enabled
+                type: boolean
+              allowBackupCodes:
+                type:
+                - boolean
+                - 'null'
+        actions:
+          description: List of actions that require MFA verification
+          type: array
+          items:
+            type: object
+            required:
+            - action
+            - required
+            properties:
+              action:
+                $ref: '#/components/schemas/MFAAction'
+              required:
+                description: Whether MFA is required for this action
+                type: boolean
+              tokenBehavior:
+                type: string
+                enum:
+                - single_use
+                - time_bound
+                description: 'Whether the elevated access token is consumed after one use (single_use) or remains valid until expiry (time_bound). Defaults to single_use for wallet scopes, time_bound for others.
+
+                  '
+              tokenExpirySeconds:
+                type: integer
+                minimum: 60
+                maximum: 600
+                description: 'Custom TTL in seconds for the elevated access token. Defaults to 300 (5 min) for single_use, 600 (10 min) for time_bound.
+
+                  '
+    BusinessAccountSignerType:
+      type: string
+      description: Type of a business account signer
+      enum:
+      - endUser
+      - server
+    AuthSettings:
+      type: object
+      required:
+      - storage
+      properties:
+        allowMultipleCredentialsForSignIn:
+          type: boolean
+          description: When false, only the first verified credential (wallet, email, social, phone, passkey, Farcaster) linked by a user will be sign-in enabled. Additional credentials will be linked but marked as signInEnabled false and cannot be used for authentication. Defaults to false.
+        storage:
+          description: List of browser storage mechanisms where the JWT token may be persisted
+          type: array
+          items:
+            $ref: '#/components/schemas/AuthStorageEnum'
+    SdkView:
+      type: object
+      description: Configs used to create the view in the sdk.
+      required:
+      - type
+      properties:
+        type:
+          $ref: '#/components/schemas/SdkViewType'
+        sections:
+          type: array
+          description: The sections which will be used create the view in the sdk. The sections will be displayed in the order that they appear in the array.
+          items:
+            $ref: '#/components/schemas/SdkViewSection'
+    SettlementStrategyEnum:
+      type: string
+      enum:
+      - cheapest
+      - fastest
+      - preferred_order
+    WaasVerifyApiKeyResponse:
+      type: object
+      required:
+      - environmentId
+      - verified
+      properties:
+        environmentId:
+          type: string
+          format: uuid
+          description: The environment ID for which the API key was verified
+        verified:
+          type: boolean
+          description: Indicates whether the API key is valid and has access to the environment
+        scopes:
+          type: array
+          description: Scopes granted to the verified API token
+          items:
+            $ref: '#/components/schemas/TokenScopes'
+    ProjectSettings:
+      type: object
+      properties:
+        environmentName:
+          $ref: '#/components/schemas/EnvironmentEnum'
+        chains:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProjectSettingsChains'
+        customFields:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProjectSettingsKyc'
+        kyc:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProjectSettingsKyc'
+        design:
+          $ref: '#/components/schemas/ProjectSettingsDesign'
+        general:
+          $ref: '#/components/schemas/ProjectSettingsGeneral'
+        privacy:
+          $ref: '#/components/schemas/ProjectSettingsPrivacy'
+        providers:
+          type: array
+          description: External integrations like e-mail, social credentials, mpc providers, etc.
+          items:
+            $ref: '#/components/schemas/Provider'
+        exchanges:
+          type: array
+          description: exchanges such as coinbase, binance, etc
+          items:
+            $ref: '#/components/schemas/Exchange'
+        sdk:
+          $ref: '#/components/schemas/ProjectSettingsSdk'
+        security:
+          $ref: '#/components/schemas/ProjectSettingsSecurity'
+        networks:
+          type: array
+          items:
+            $ref: '#/components/schemas/NetworkConfigurationResponse'
+        checkouts:
+          type: array
+          description: Checkouts for the project environment
+          items:
+            $ref: '#/components/schemas/Checkout'
+      required:
+      - chains
+      - kyc
+      - design
+      - general
+      - privacy
+      - sdk
+      - security
+    BaseUser:
+      type: object
+      required:
+      - id
+      - projectEnvironmentId
+      properties:
+        id:
+          $ref: '#/components/schemas/uuid'
+        projectEnvironmentId:
+          $ref: '#/components/schemas/uuid'
+        verifiedCredentials:
+          description: List of verified credentials (wallets, emails, social accounts) linked to the user
+          type: array
+          items:
+            $ref: '#/components/schemas/JwtVerifiedCredential'
+        lastVerifiedCredentialId:
+          $ref: '#/components/schemas/LastVerifiedCredentialId'
+        sessionId:
+          $ref: '#/components/schemas/uuid'
+        alias:
+          $ref: '#/components/schemas/OptionalNullableNonEmptyStringWith255MaxLength'
+        country:
+          $ref: '#/components/schemas/CountryCode'
+        email:
+          description: Primary email address of the user
+          type:
+          - string
+          - 'null'
+          format: email
+          maxLength: 255
+        firstName:
+          $ref: '#/components/schemas/OptionalNullableNonEmptyStringWith255MaxLength'
+        jobTitle:
+          $ref: '#/components/schemas/OptionalNullableNonEmptyStringWith255MaxLength'
+        lastName:
+          $ref: '#/components/schemas/OptionalNullableNonEmptyStringWith255MaxLength'
+        phoneNumber:
+          description: Phone number of the user
+          type:
+          - string
+          - 'null'
+          maxLength: 255
+        policiesConsent:
+          description: Whether the user has accepted the terms of service and privacy policy
+          type:
+          - boolean
+          - 'null'
+        tShirtSize:
+          $ref: '#/components/schemas/OptionalNullableNonEmptyStringWith255MaxLength'
+        team:
+          $ref: '#/components/schemas/OptionalNullableNonEmptyStringWith255MaxLength'
+        username:
+          $ref: '#/components/schemas/OptionalNullableNonEmptyStringWith255MaxLength'
+        firstVisit:
+          description: ISO 8601 timestamp of when the user first visited
+          type: string
+          format: date-time
+        lastVisit:
+          description: ISO 8601 timestamp of when the user last visited
+          type: string
+          format: date-time
+        newUser:
+          description: Whether this is a newly created user
+          type: boolean
+        metadata:
+          description: Arbitrary key-value metadata associated with the user
+          type: object
+        mfaBackupCodeAcknowledgement:
+          $ref: '#/components/schemas/MfaBackupCodeAcknowledgement'
+        btcWallet:
+          description: Bitcoin wallet address of the user
+          type:
+          - string
+          - 'null'
+        kdaWallet:
+          description: Kadena wallet address of the user
+          type:
+          - string
+          - 'null'
+        ltcWallet:
+          description: Litecoin wallet address of the user
+          type:
+          - string
+          - 'null'
+        ckbWallet:
+          description: Nervos CKB wallet address of the user
+          type:
+          - string
+          - 'null'
+        kasWallet:
+          description: Kaspa wallet address of the user
+          type:
+          - string
+          - 'null'
+        dogeWallet:
+          description: Dogecoin wallet address of the user
+          type:
+          - string
+          - 'null'
+        emailNotification:
+          description: Whether the user has opted in to email notifications
+          type:
+          - boolean
+          - 'null'
+        discordNotification:
+          description: Whether the user has opted in to Discord notifications
+          type:
+          - boolean
+          - 'null'
+        newsletterNotification:
+          description: Whether the user has opted in to newsletter notifications
+          type:
+          - boolean
+          - 'null'
+        lists:
+          type: array
+          description: Access lists evaluated by Dynamic when considering access for the user.
+          items:
+            type: string
+        scope:
+          type: string
+          description: 'A whitespace-separate list of permissions associated with the JWT token issued. This conforms to the JWT standard for scope claims: https://datatracker.ietf.org/doc/html/rfc8693#section-4.2'
+          example: superuser marketing operations
+        missingFields:
+          description: List of required user fields that have not yet been provided
+          type: array
+          items:
+            $ref: '#/components/schemas/ProjectSettingsKyc'
+    ProviderEnum:
+      type: string
+      description: The 'turnkey' value is deprecated and will be removed in a future version.
+      enum:
+      - emailOnly
+      - magicLink
+      - apple
+      - bitbucket
+      - coinbasesocial
+      - discord
+      - epicgames
+      - facebook
+      - farcaster
+      - github
+      - gitlab
+      - google
+      - instagram
+      - linkedin
+      - microsoft
+      - twitch
+      - twitter
+      - blocto
+      - banxa
+      - coinbaseOnramp
+      - binanceOnramp
+      - cryptoDotCom
+      - moonPay
+      - dynamic
+      - alchemy
+      - zerodev
+      - telegram
+      - turnkey
+      - coinbaseWaas
+      - sms
+      - spotify
+      - tiktok
+      - line
+      - steam
+      - shopify
+      - zksync
+      - kraken
+      - blockaid
+      - passkey
+      - okta
+      - sendgrid
+      - resend
+      - trmWalletScreening
+      - chainalysisAddressScreening
+      - gemini
+    MobileSettings:
+      type: object
+      properties:
+        deeplinkUrlsEnabled:
+          type: boolean
+          description: Whether to enable whitelisting mobile deeplink URLs, which will be used for redirecting back to the mobile app. Is required for many features such as social sign in.
+          x-security-impact:
+            path: sdk.mobile.deeplinkUrlsEnabled
+            weakenedWhen: when-false
+            message: mobile deeplink URL whitelist disabled
+    ProjectSettingsDesignWidget:
+      type: object
+      properties:
+        backgroundColor:
+          description: Background color of the widget
+          type: string
+        border:
+          description: Border style of the widget
+          type: string
+        radius:
+          description: Border radius of the widget in pixels
+          type: integer
+        textColor:
+          description: Text color used in the widget
+          type: string
+        theme:
+          description: Color theme of the widget (e.g. light, dark, auto)
+          type: string
+    BadRequest:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message
+          type: string
+        code:
+          description: Machine-readable reason for the 400, set only by endpoints that distinguish rejections. Flow endpoints use exchange_not_supported and exchange_currency_unsupported.
+          type: string
+          example: exchange_currency_unsupported
+    AdminActionResponseItem:
+      description: A single review response from an admin. One row per reviewer per request, stored in a separate table to support future quorum (multiple reviewers).
+      type: object
+      required:
+      - id
+      - actionRequestId
+      - reviewerId
+      - decision
+      - createdAt
       properties:
         id:
           type: string
           format: uuid
-        name:
+        actionRequestId:
+          description: The action request this response belongs to.
           type: string
-        live:
+          format: uuid
+        reviewerId:
+          description: The admin who submitted this review.
+          type: string
+          format: uuid
+        reviewer:
+          $ref: '#/components/schemas/AdminActionRequestUser'
+        decision:
+          $ref: '#/components/schemas/AdminActionResponseDecision'
+        note:
+          description: Optional note from the reviewer explaining their decision.
+          type:
+          - string
+          - 'null'
+        createdAt:
+          type: string
+          format: date-time
+    ProjectSettingsGeneral:
+      type: object
+      properties:
+        displayName:
+          $ref: '#/components/schemas/OptionalNonEmptyStringWith75MaxLength'
+        supportEmail:
+          description: Support email address displayed to users
+          type:
+          - string
+          - 'null'
+          format: email
+          maxLength: 255
+        supportText:
+          description: Custom support text displayed to users in the SDK
+          type:
+          - string
+          - 'null'
+          maxLength: 255
+        appLogo:
+          description: URL of the application logo image displayed in the SDK
+          type:
+          - string
+          - 'null'
+          format: url
+        imageUserNotInAccessList:
+          description: URL of the image shown when a user is not on the access list
+          type:
+          - string
+          - 'null'
+          format: url
+        imageUserInAccessList:
+          description: URL of the image shown when a user is on the access list
+          type:
+          - string
+          - 'null'
+          format: url
+        supportUrls:
+          $ref: '#/components/schemas/ProjectSettingsGeneralApps'
+        collectUserDataWelcomeHeader:
+          description: Header text displayed on the user data collection welcome screen
+          type:
+          - string
+          - 'null'
+          maxLength: 255
+        collectUserDataWelcomeMessage:
+          description: Message text displayed on the user data collection welcome screen
+          type:
+          - string
+          - 'null'
+          maxLength: 100
+        skipOptionalKYCFieldDuringOnboarding:
+          description: Whether to skip optional KYC fields during the onboarding flow
           type: boolean
-          description: Whether this is a live (true) or sandbox (false) environment.
-        projectSettings:
-          type: object
-          additionalProperties: true
-    EnvironmentUpdate:
+        emailCompanyName:
+          $ref: '#/components/schemas/OptionalNonEmptyStringWith75MaxLength'
+    DepositAmountsConfigInput:
+      type: object
+      properties:
+        minimum:
+          description: Minimum deposit amount allowed
+          type: string
+        presets:
+          description: List of preset deposit amount options shown to the user
+          type: array
+          items:
+            type: string
+    LastVerifiedCredentialId:
+      description: ID of the most recently used verified credential. This would refer to a value in the verified credentials list
+      type: string
+      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(-zerodev)?$
+      minLength: 36
+      maxLength: 45
+      example: 95b11417-f18f-457f-8804-68e361f9164f-zerodev
+    CustomFieldValidValue:
+      type: object
+      required:
+      - label
+      properties:
+        label:
+          $ref: '#/components/schemas/NonEmptyStringWith255MaxLengthAndSpecialChars'
+        key:
+          $ref: '#/components/schemas/NonEmptyStringWith255MaxLengthAndSpecialChars'
+    ProviderEntryPointVersionEnum:
+      type: string
+      enum:
+      - v6
+      - v7
+    Key:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/uuid'
+        publicKey:
+          type: string
+          description: Base64-encoded public key of the corresponding private key used to encode a Dynamic JWT
+    ProjectSettingsKyc:
       type: object
       properties:
         name:
+          description: Internal name identifier of the KYC field
           type: string
-        projectSettings:
+        required:
+          description: Whether this KYC field is required for user onboarding
+          type: boolean
+        enabled:
+          description: Whether this KYC field is enabled for collection
+          type: boolean
+        unique:
+          description: Whether this KYC field value must be unique across all users
+          type: boolean
+        verify:
+          description: Whether this KYC field requires verification
+          type: boolean
+        type:
+          $ref: '#/components/schemas/KycFieldType'
+        validationRules:
+          $ref: '#/components/schemas/CustomFieldValidationRules'
+        validationType:
+          $ref: '#/components/schemas/CustomFieldType'
+        label:
+          description: Display label for the KYC field shown to users
+          type: string
+        position:
+          description: Display position order of the KYC field in the form
+          type: number
+      required:
+      - name
+      - required
+      - enabled
+      - unique
+      - verify
+    ZerodevBundlerProvider:
+      type: string
+      enum:
+      - STACKUP
+      - PIMLICO
+      - ALCHEMY
+      - GELATO
+      - ULTRA_RELAY
+    TimeUnitEnum:
+      type: string
+      enum:
+      - days
+      - hours
+      - minutes
+    EmbeddedWalletSecurityMethod:
+      type: string
+      enum:
+      - passkey
+      - passphrase
+    Ed25519Variant:
+      type: string
+      description: Protocol variant for the wallet. `ed25519Standard` = non-exportable Ed25519, used for raw-scalar import where the 32-byte input is the signing scalar itself (not an RFC-8032 seed). Omitted/`ed25519Exportable` = the default seed-based Ed25519. Only meaningful for ed25519 chains (e.g. Solana).
+      enum:
+      - ed25519Exportable
+      - ed25519Standard
+    SdkViewType:
+      type: string
+      enum:
+      - login
+    MFAAction:
+      type: string
+      enum:
+      - wallet.waas.sign
+      - wallet.waas.export
+      - wallet.waas.offline_recovery_trigger
+      - wallet.waas.reshare
+      - wallet.waas.refresh
+      - user.update
+      - business_account.link_wallet
+    WalletSanctionsResponse:
+      type: object
+      required:
+      - walletAddress
+      - chain
+      - isBlocked
+      - action
+      properties:
+        walletAddress:
+          $ref: '#/components/schemas/WalletPublicKey'
+        chain:
+          $ref: '#/components/schemas/ChainEnum'
+        isBlocked:
+          type: boolean
+          description: Whether the wallet address is blocked due to sanctions
+        action:
+          $ref: '#/components/schemas/ScreeningActionEnum'
+    ChainEnum:
+      type: string
+      enum:
+      - ETH
+      - EVM
+      - FLOW
+      - SOL
+      - ALGO
+      - STARK
+      - COSMOS
+      - BTC
+      - ECLIPSE
+      - SUI
+      - SPARK
+      - TRON
+      - APTOS
+      - TON
+      - STELLAR
+      - ALEO
+      - TEMPO
+      - MIDNIGHT
+    AdminActionRequestResponse:
+      description: Wrapper response for a single action request, returned by get/approve/deny endpoints.
+      type: object
+      required:
+      - actionRequest
+      properties:
+        actionRequest:
+          $ref: '#/components/schemas/AdminActionRequest'
+        message:
+          description: Human-readable message, e.g. "This action requires approval from another admin."
+          type: string
+    Conflict:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message
+          type: string
+          example: 'Conflict: invalid state transition'
+    ChainConfigurations:
+      type: array
+      description: Chain specific configuration for dynamic embedded wallets
+      items:
+        $ref: '#/components/schemas/ChainConfiguration'
+    AdminActionType:
+      description: The type of admin action. Determines how the action payload is interpreted and executed.
+      type: string
+      enum:
+      - settings_change
+      - reset_user_mfa
+      - delete_user
+    ProjectEnvironment:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/uuid'
+        settings:
+          $ref: '#/components/schemas/ProjectSettings'
+        createdAt:
+          description: ISO 8601 timestamp of when the environment was created
+          type: string
+          format: date-time
+        updatedAt:
+          description: ISO 8601 timestamp of when the environment was last updated
+          type: string
+          format: date-time
+        sdkVersion:
+          description: Latest SDK version reported by the client for this environment
+          type: string
+      required:
+      - id
+    KycFieldType:
+      type: string
+      enum:
+      - standard
+      - custom
+    FeatureFlags:
+      type: object
+      required:
+      - connectOnlyMultiAsset
+      - enableExchanges
+      properties:
+        connectOnlyMultiAsset:
+          description: Whether multi-asset support is enabled in connect-only mode
+          type: boolean
+        enableExchanges:
+          description: Whether exchange integrations are enabled
+          type: boolean
+        enableExternalWalletOnTransactionSanctions:
+          description: Whether on-transaction sanction screening is enabled for connected wallets
+          type: boolean
+    HardwareWalletEnum:
+      type: string
+      enum:
+      - ledger
+    AdminActionRequest:
+      description: An admin action that may require approval before execution. When approval mode is enabled, sensitive actions create a pending request. When disabled, actions are auto-approved with an audit record.
+      type: object
+      required:
+      - id
+      - organizationId
+      - submittedById
+      - status
+      - actionType
+      - displayName
+      - category
+      - actionPayload
+      - requiredApprovals
+      - currentApprovals
+      - expiresAt
+      - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        organizationId:
+          description: The organization this action belongs to.
+          type: string
+          format: uuid
+        environmentId:
+          description: The environment this action targets. Null for org-level actions.
+          type:
+          - string
+          - 'null'
+          format: uuid
+        submittedById:
+          description: The admin who initiated this action.
+          type: string
+          format: uuid
+        submittedBy:
+          $ref: '#/components/schemas/AdminActionRequestUser'
+        responses:
+          description: Review responses from admins, one row per reviewer per request. Under quorum, multiple approve responses may accumulate before the request reaches requiredApprovals and transitions to approved.
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminActionResponseItem'
+        status:
+          $ref: '#/components/schemas/AdminActionRequestStatus'
+        actionType:
+          $ref: '#/components/schemas/AdminActionType'
+        displayName:
+          description: Human-readable action label shown in the Activity Queue, e.g. "Reset MFA for alice@example.com" or "Environment Lock".
+          type: string
+        category:
+          description: Grouping label for the Activity Queue table, e.g. "Security" or "User Management".
+          type: string
+        targetEntityType:
+          description: The type of entity this action targets, e.g. "user" or "provider". Null for settings changes.
+          type:
+          - string
+          - 'null'
+        targetEntityId:
+          description: The ID of the target entity. Null for settings changes.
+          type:
+          - string
+          - 'null'
+          format: uuid
+        previousState:
+          description: State before the change. Shape varies by actionType. Used for display and conflict detection.
+          type:
+          - object
+          - 'null'
+        actionPayload:
+          description: What to apply when approved. Shape varies by actionType — for settings_change includes fullSettingsSnapshot, for reset_user_mfa includes userId and resetAll flag, for delete_user includes userId and email.
           type: object
-          additionalProperties: true
+        requiredApprovals:
+          description: Number of distinct admin approvals needed to execute this request, snapshotted from the organization settings at creation time. Subsequent changes to the org setting do not affect in-flight requests.
+          type: integer
+        currentApprovals:
+          description: Number of approvals received so far. The request transitions to approved when this reaches requiredApprovals. A single deny at any point transitions the request to denied regardless of this counter.
+          type: integer
+        expiresAt:
+          description: When this request expires if still pending. Calculated as createdAt + TTL hours.
+          type: string
+          format: date-time
+        resolvedAt:
+          description: When the request was approved, denied, or expired. Null while pending.
+          type:
+          - string
+          - 'null'
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+    NotFound:
+      type: object
+      required:
+      - error
+      - code
+      properties:
+        error:
+          description: Human-readable error message
+          type: string
+          example: Not Found
+        code:
+          description: Machine-readable error code. Flow endpoints use exchange_not_configured when the requested exchange isn't set up for the environment.
+          type: string
+          example: not_found
+    CustomFieldType:
+      type: string
+      enum:
+      - text
+      - checkbox
+      - select
+    SupportedSecurityMethods:
+      type: object
+      properties:
+        passkey:
+          $ref: '#/components/schemas/SupportedSecurityMethod'
+        email:
+          $ref: '#/components/schemas/SupportedSecurityMethod'
+        password:
+          $ref: '#/components/schemas/SupportedSecurityMethod'
+    ProjectSettingsSdkWaasDelegatedAccess:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+          description: Whether delegated access is enabled for the environment. If enabled, developer can trigger user to accept delegated access.
+        promptUsersOnSignIn:
+          type: boolean
+          description: Prompt for delegated access when user logs in.
+        requiresDelegation:
+          type: boolean
+          description: If enabled, users will be required to delegate access.
+    SmsCountryCode:
+      type: object
+      required:
+      - isoCountryCode
+      - phoneCountryCode
+      properties:
+        isoCountryCode:
+          $ref: '#/components/schemas/NonEmptyIsoCountryCode'
+        phoneCountryCode:
+          $ref: '#/components/schemas/NonEmptyStringWith255MaxLength'
+    WaasVerifyApiKeyErrorResponse:
+      type: object
+      required:
+      - message
+      - verified
+      properties:
+        message:
+          type: string
+          description: Error message describing why verification failed
+        verified:
+          type: boolean
+          description: Always false for error responses
+    AdminActionRequestUser:
+      description: Minimal user info embedded in action request and response objects.
+      type: object
+      required:
+      - id
+      - email
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+        name:
+          description: Display name, if available.
+          type: string
+    NameServiceSdkSettings:
+      type: object
+      required:
+      - evm
+      properties:
+        evm:
+          description: EVM-specific name service settings
+          type: object
+          properties:
+            domain:
+              type: string
+              description: Top-level ENS domain for the environment for EVM embedded wallets in this environment
+    ProjectSettingsDesignButton:
+      type: object
+      properties:
+        background:
+          description: Background color of the button
+          type: string
+        fontColor:
+          description: Font color of the button text
+          type: string
+        paddingHeight:
+          description: Vertical padding of the button in pixels
+          type: integer
+        paddingWidth:
+          description: Horizontal padding of the button in pixels
+          type: integer
+        radius:
+          description: Border radius of the button in pixels
+          type: integer
+    ExternalWalletFundingDefaultSettings:
+      type: object
+      properties:
+        chain:
+          $ref: '#/components/schemas/ChainEnum'
+        token:
+          description: Token configuration for external wallet funding
+          type: object
+          properties:
+            value:
+              type: string
+            rule:
+              $ref: '#/components/schemas/ExternalWalletFundingTokenRule'
+    AddressScreeningSettings:
+      type: object
+      description: Address screening settings for the environment.
+      properties:
+        cacheTtlSeconds:
+          type: integer
+          minimum: 60
+          maximum: 86400
+          description: How long, in seconds, a screening result is reused before the address is screened again. Defaults to 86400 (24 hours).
+    MFADeviceType:
+      type: string
+      enum:
+      - totp
+      - passkey
+      - email
+    PasswordSourceTypeEnum:
+      type: string
+      enum:
+      - dynamic
+      - user
+    MinApiVersionEnum:
+      type: string
+      description: Minimum API version required for the environment
+      enum:
+      - 20260101
+      - 20260401
+      x-enum-varnames:
+      - Api20260101
+      - Api20260401
+    MergeUser:
+      type: object
+      description: Contains the current field value for the user.
+      required:
+      - userId
+      - value
+      properties:
+        userId:
+          $ref: '#/components/schemas/uuid'
+        value:
+          $ref: '#/components/schemas/NonEmptyStringWith255MaxLength'
+    ProjectSettingsCaptcha:
+      type: object
+      description: Active captcha configuration for the environment, regardless of provider. The SDK uses the provider and public site key to render the captcha widget. Replaces the deprecated `security.hCaptcha`.
+      properties:
+        enabled:
+          description: Whether captcha verification is enabled
+          type: boolean
+          x-security-impact:
+            path: security.captcha.enabled
+            weakenedWhen: when-false
+            message: captcha verification disabled
+        provider:
+          $ref: '#/components/schemas/CaptchaProviderEnum'
+        siteKey:
+          description: Public site key used to render the captcha widget
+          type: string
+    CountryCode:
+      type:
+      - string
+      - 'null'
+      description: Standard ISO 3166-1 alpha-2 two-letter country code
+      pattern: ^[A-Z]{2}$
+      example: US
+      maxLength: 255
+    EnvironmentsResponse:
+      type: object
+      properties:
+        environments:
+          description: Object containing the live and sandbox project environments
+          type: object
+          properties:
+            live:
+              $ref: '#/components/schemas/ProjectEnvironment'
+            sandbox:
+              $ref: '#/components/schemas/ProjectEnvironment'
+          required:
+          - live
+          - sandbox
+      required:
+      - environments
+    CustomFieldValidationRules:
+      type: object
+      properties:
+        unique:
+          type: boolean
+          description: If this field must be unique for every user in the environment
+        regex:
+          type: string
+          maxLength: 255
+          description: The regex pattern that the text field must match
+          example: ^0x
+        validOptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/CustomFieldValidValue'
+          description: The dropdown options for the select field
+          example:
+          - label: small
+          - label: medium
+          - label: large
+        checkboxText:
+          type: string
+          maxLength: 255
+          description: The text that will be displayed for the checkbox field
+          example: Agree to the terms and conditions
+      description: Optional validation rules for the custom field
+    ChainDestinationConfig:
+      type: object
+      required:
+      - chainName
+      - type
+      - identifier
+      properties:
+        chainName:
+          $ref: '#/components/schemas/ChainEnum'
+        type:
+          $ref: '#/components/schemas/DestinationTypeEnum'
+        identifier:
+          $ref: '#/components/schemas/NonEmptyStringWith255MaxLength'
+    MfaEnrollment:
+      type: string
+      description: "When users are required to enroll an MFA method.\n  - `none`: enrollment is not required.\n  - `signup`: enrollment is forced at signup; users must register a TOTP device\n    or passkey during onboarding.\n  - `action`: enrollment is deferred until the user attempts a protected action\n    that requires step-up verification.\n"
+      enum:
+      - none
+      - signup
+      - action
+    WaasShareSet:
+      type: object
+      required:
+      - shareSetId
+      - shareSetType
+      - thresholdSignatureScheme
+      - createdAt
+      properties:
+        shareSetId:
+          type: string
+          format: uuid
+          description: Identifier of the share set (WaasWallets row id).
+        shareSetType:
+          $ref: '#/components/schemas/WaasWalletShareSetType'
+        thresholdSignatureScheme:
+          $ref: '#/components/schemas/ThresholdSignatureScheme'
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when this share set was created.
+    OptionalNullableNonEmptyStringWith255MaxLength:
+      type:
+      - string
+      - 'null'
+      pattern: ^$|^(?=\S)[\p{L}\p{N} _.,:!?&%@\/+-]+(?<=\S)$
+      example: An example name
+      maxLength: 255
+    NonEmptyIsoCountryCode:
+      type: string
+      pattern: ^[a-zA-Z]{2,4}\d?$
+      maxLength: 4
+      example: US
+    JwtVerifiedCredentialFormatEnum:
+      type: string
+      enum:
+      - blockchain
+      - email
+      - oauth
+      - passkey
+      - phoneNumber
+      - externalUser
+      - totp
+    EnvironmentEnum:
+      type: string
+      enum:
+      - sandbox
+      - live
+    WaasWalletProperties:
+      type: object
+      properties:
+        keyShares:
+          description: List of key share information for the primary share set (the one this auth principal signs with).
+          type: array
+          items:
+            $ref: '#/components/schemas/WalletKeyShareInfo'
+        thresholdSignatureScheme:
+          $ref: '#/components/schemas/ThresholdSignatureScheme'
+        derivationPath:
+          type: string
+          description: The derivation path for the wallet
+        settings:
+          $ref: '#/components/schemas/WaasWalletSettings'
+        shareSetId:
+          type: string
+          format: uuid
+          description: 'Identifier of the primary share set (the one whose `keyShares`, `thresholdSignatureScheme`, `derivationPath`, and `settings` are inlined at the top level). Browser context: rootUser. Delegated-server context: delegated.'
+        shareSetType:
+          $ref: '#/components/schemas/WaasWalletShareSetType'
+        businessAccountId:
+          type: string
+          format: uuid
+          description: Identifier of the business account that owns this wallet, when it is a business-account wallet; absent for personal wallets.
+        otherShareSets:
+          type: array
+          description: All other active share sets that exist on this wallet (i.e., owned by other auth principals). Returned for awareness so consumers can see, e.g., that a delegated share set is set up alongside their rootUser. Server-typed share sets are never exposed.
+          items:
+            $ref: '#/components/schemas/WaasShareSet'
+        version:
+          $ref: '#/components/schemas/EmbeddedWalletVersionEnum'
+    WalletKeyShareInfo:
+      type: object
+      required:
+      - id
+      - backupLocation
+      - passwordEncrypted
+      properties:
+        id:
+          $ref: '#/components/schemas/uuid'
+        backupLocation:
+          description: Where this key share is stored (e.g. "user", "dynamic", "googleDrive", "iCloud")
+          type: string
+        passwordEncrypted:
+          description: Whether this key share is additionally encrypted with a user-provided password
+          type: boolean
+        walletShareDeveloperKeyEncrypted:
+          description: Whether this key share is encrypted with the developer's encryption public key
+          type: boolean
+        externalKeyShareId:
+          $ref: '#/components/schemas/uuid'
+        keygenId:
+          description: Identifier of the key generation ceremony that produced this share
+          type: string
+    EmbeddedWalletVersionEnum:
+      type: string
+      enum:
+      - V1
+      - V2
+      - V3
+    ChainSettlementConfig:
+      type: object
+      required:
+      - chainName
+      - tokenAddress
+      - chainId
+      - symbol
+      - tokenDecimals
+      properties:
+        chainName:
+          $ref: '#/components/schemas/ChainEnum'
+        tokenAddress:
+          $ref: '#/components/schemas/NonEmptyStringWith255MaxLength'
+        chainId:
+          $ref: '#/components/schemas/NonEmptyStringWith50MaxLength'
+        symbol:
+          $ref: '#/components/schemas/NonEmptyStringWith50MaxLength'
+        tokenDecimals:
+          type: integer
+          description: The number of decimals for the token
+          example: 18
+        isNative:
+          type: boolean
+          description: Whether the token is the native token for the chain
+          example: true
+          default: false
+    KeyResponse:
+      type: object
+      properties:
+        key:
+          $ref: '#/components/schemas/Key'
+    ExchangeKeyEnum:
+      type: string
+      description: Source exchange identifier
+      enum:
+      - coinbase
+      - kraken
+      - gemini
+      - binance
+    MergeUserConflict:
+      type: object
+      description: Contains a merge conflict between two users with different values for the same user field data
+      required:
+      - field
+      - fromUser
+      - currentUser
+      properties:
+        field:
+          $ref: '#/components/schemas/ProjectSettingsKyc'
+        fromUser:
+          $ref: '#/components/schemas/MergeUser'
+        currentUser:
+          $ref: '#/components/schemas/MergeUser'
+    WalletProviderEnum:
+      type: string
+      enum:
+      - browserExtension
+      - custodialService
+      - walletConnect
+      - qrCode
+      - deepLink
+      - embeddedWallet
+      - smartContractWallet
+    ProjectSettingsSdkWaasOfflineRecovery:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+          description: Whether offline recovery share delivery is enabled for the environment. When enabled, encrypted recovery shares are delivered to the configured share-delivery webhook so the developer can help users reconstruct their wallet offline. Recovery shares cannot be used to sign.
+    MfaBackupCodeAcknowledgement:
+      type:
+      - string
+      - 'null'
+      enum:
+      - pending
+      - complete
+    ExternalWalletFundingTokenRule:
+      type: string
+      enum:
+      - recommended
+      - exact
+    Forbidden:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message
+          type: string
+          example: Access Forbidden
+        code:
+          description: Machine-readable reason for the 403, set only by endpoints that distinguish rejections. Flow endpoints use sanctions_blocked, session_token_invalid and risk_blocked.
+          type: string
+          example: sanctions_blocked
+    WaasWalletSettings:
+      type: object
+      properties:
+        hasDeniedDelegatedAccess:
+          description: Whether the user has denied delegated access for this wallet
+          type: boolean
+        shouldRefreshOnNextSignOn:
+          description: Whether to refresh wallet key shares on the user's next sign-on
+          type: boolean
+        reshareOnNextSignOn:
+          $ref: '#/components/schemas/ThresholdSignatureScheme'
+        revokeOnNextSignOn:
+          description: Whether to revoke delegated access on the user's next sign-on
+          type: boolean
+        variant:
+          $ref: '#/components/schemas/Ed25519Variant'
+    ExchangeOption:
+      type: object
+      required:
+      - exchange
+      properties:
+        exchange:
+          $ref: '#/components/schemas/ExchangeKeyEnum'
+        socialProvider:
+          $ref: '#/components/schemas/ProviderEnum'
+        onRampProvider:
+          $ref: '#/components/schemas/ProviderEnum'
+    OnrampProviders:
+      type: string
+      enum:
+      - banxa
+      - coinbaseOnramp
+      - cryptoDotCom
+      - moonPay
+    NonEmptyStringWith255MaxLengthAndSpecialChars:
+      type: string
+      pattern: ^(?=\S)[\p{L}\p{N}a-zA-Z _.,:!?&%@\/+\-'()\[\]*]+(?<=\S)$
+      maxLength: 255
+      example: An example name
+  parameters:
+    screeningAmountUsd:
+      in: query
+      name: amountUsd
+      required: false
+      schema:
+        type: number
+        minimum: 0
+      description: USD value of the transaction being screened for; supply it only when the amount is genuinely USD-denominated.
+    projectId:
+      name: projectId
+      in: path
+      required: true
+      description: ID of project
+      schema:
+        $ref: '#/components/schemas/uuid'
+    screeningAsset:
+      in: query
+      name: asset
+      required: false
+      schema:
+        type: string
+        maxLength: 64
+      description: Asset the transaction is denominated in, evaluated on the same terms as amountUsd.
+    environmentId:
+      in: path
+      name: environmentId
+      required: true
+      description: ID of the environment
+      schema:
+        $ref: '#/components/schemas/uuid'
+    screeningScope:
+      in: query
+      name: scope
+      required: false
+      schema:
+        $ref: '#/components/schemas/ScreeningPolicyScopeEnum'
+      description: Which of the environment's policies to evaluate against; defaults to TRANSACTION.
+    screeningApplyPolicies:
+      in: query
+      name: applyPolicies
+      required: false
+      schema:
+        type: boolean
+      description: Defaults to true; false ignores the environment's screening rules and address entries, but not the cost rules deciding which providers are called.
   responses:
-    Unauthorized:
-      description: The bearer token is missing or invalid.
+    Forbidden:
+      description: Forbidden
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
-  parameters:
-    EnvironmentId:
-      name: environmentId
-      in: path
-      required: true
-      description: The ID of the Dynamic environment (project).
-      schema:
-        type: string
-        format: uuid
+            $ref: '#/components/schemas/Forbidden'
+    UnprocessableEntity:
+      description: Unprocessable Entity
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UnprocessableEntity'
+    NotFound:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/NotFound'
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/InternalServerError'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Unauthorized'
+    Conflict:
+      description: Conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Conflict'
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BadRequest'
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
-      bearerFormat: dyn_token
-      description: 'Environment-scoped API token with a dyn_ prefix for admin endpoints, or a user JWT from the client SDK for SDK endpoints. Sent as Authorization: Bearer <token>.'
+      bearerFormat: JWT

@@ -1,0 +1,641 @@
+openapi: 3.2.0
+info:
+  title: Dashboard Flow Analytics API
+  description: Dashboard API documentation
+  version: 1.0.0
+servers:
+- url: https://app.dynamicauth.com/api/v0
+- url: https://app.dynamic.xyz/api/v0
+- url: http://localhost:3333/api/v0
+tags:
+- name: FlowAnalytics
+  description: Query aggregated analytics and paginated transaction lists for the Flow product.
+paths:
+  /environments/{environmentId}/flow/analytics:
+    get:
+      operationId: getFlowAnalytics
+      tags:
+      - FlowAnalytics
+      summary: Get Flow analytics data
+      description: Returns aggregated analytics data for the Flow product in the specified environment.
+      parameters:
+      - $ref: '#/components/parameters/environmentId'
+      - in: query
+        name: start
+        required: true
+        schema:
+          type: string
+          format: date-time
+        description: ISO 8601 date-time for the start of the analytics window
+      - in: query
+        name: end
+        required: true
+        schema:
+          type: string
+          format: date-time
+        description: ISO 8601 date-time for the end of the analytics window
+      responses:
+        '200':
+          description: Flow analytics summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlowAnalyticsSummaryResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - bearerAuth: []
+  /environments/{environmentId}/flow/analytics/list:
+    get:
+      operationId: listFlowTransactions
+      tags:
+      - FlowAnalytics
+      summary: Get paginated list of flow transactions
+      description: Returns a paginated list of flows for the specified environment with optional filtering by execution state and mode.
+      parameters:
+      - $ref: '#/components/parameters/environmentId'
+      - $ref: '#/components/parameters/cursor'
+      - in: query
+        name: executionState
+        required: false
+        schema:
+          type: string
+        description: Filter by execution state (e.g. failed, expired, cancelled, source_confirmed)
+      - in: query
+        name: mode
+        required: false
+        schema:
+          type: string
+        description: Filter by flow mode (payment, deposit, withdraw)
+      - in: query
+        name: settlementState
+        required: false
+        schema:
+          type: string
+        description: Filter by settlement state (e.g. completed, settling)
+      - in: query
+        name: search
+        required: false
+        schema:
+          type: string
+        description: Search flows by ID (partial match)
+      responses:
+        '200':
+          description: Paginated flow list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlowListResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - bearerAuth: []
+components:
+  schemas:
+    FlowListItem:
+      type: object
+      required:
+      - amount
+      - createdAt
+      - currency
+      - executionState
+      - id
+      - mode
+      - settlementState
+      properties:
+        amount:
+          type: string
+        completedAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        currency:
+          type: string
+        executionState:
+          $ref: '#/components/schemas/FlowExecutionStateEnum'
+        failure:
+          type:
+          - object
+          - 'null'
+          required:
+          - category
+          - message
+          properties:
+            category:
+              type: string
+            message:
+              type: string
+        fromChain:
+          type:
+          - string
+          - 'null'
+        fromToken:
+          type:
+          - string
+          - 'null'
+        id:
+          type: string
+          format: uuid
+        mode:
+          $ref: '#/components/schemas/FlowModeEnum'
+        settlementState:
+          $ref: '#/components/schemas/FlowSettlementStateEnum'
+        settlementTxHash:
+          type:
+          - string
+          - 'null'
+          description: Transaction hash of the settlement on the destination chain
+        sourceType:
+          type:
+          - string
+          - 'null'
+          enum:
+          - wallet
+          - exchange
+          - deposit_address
+        toChain:
+          type:
+          - string
+          - 'null'
+        toToken:
+          type:
+          - string
+          - 'null'
+        txHash:
+          type:
+          - string
+          - 'null'
+          description: Transaction hash of the flow's transfer on the source chain
+    FlowSettlementStateEnum:
+      description: Settlement axis of a flow's state machine.
+      type: string
+      enum:
+      - none
+      - routing
+      - bridging
+      - swapping
+      - settling
+      - completed
+      - failed
+    uuid:
+      type: string
+      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+      minLength: 36
+      maxLength: 36
+      example: 95b11417-f18f-457f-8804-68e361f9164f
+    FlowExecutionStateEnum:
+      description: Execution axis of a flow's state machine.
+      type: string
+      enum:
+      - initiated
+      - source_attached
+      - quoted
+      - signing
+      - broadcasted
+      - source_detected
+      - source_confirmed
+      - cancelled
+      - expired
+      - failed
+    BadRequest:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message
+          type: string
+        code:
+          description: Machine-readable reason for the 400, set only by endpoints that distinguish rejections. Flow endpoints use exchange_not_supported and exchange_currency_unsupported.
+          type: string
+          example: exchange_currency_unsupported
+    FlowAnalyticsSummaryResponse:
+      type: object
+      required:
+      - avgAmountUsd
+      - avgCompletionTimeMs
+      - completedFlows
+      - completedVolume
+      - cumulativeVolume
+      - dailyVolume
+      - destChains
+      - destTokens
+      - failedFlows
+      - failureCategories
+      - failureRate
+      - healthStatus
+      - modeBreakdown
+      - recentErrors
+      - settledFlows
+      - settlementStateBreakdown
+      - sourceChains
+      - sourceTokens
+      - sourceTypeBreakdown
+      - stateBreakdown
+      - stepBreakdown
+      - totalFlows
+      - volumeByCurrency
+      - volumeByDirection
+      - volumeByMode
+      - waitingForSettlementFlows
+      properties:
+        avgAmountUsd:
+          type: number
+          description: Average transaction amount in USD
+        avgCompletionTimeMs:
+          type: number
+          description: Average time from flow creation to completion in milliseconds
+        completedFlows:
+          type: integer
+          description: Number of flows that reached settlement completed
+        completedVolume:
+          type: number
+          description: Total completed transaction volume
+        cumulativeVolume:
+          type: array
+          description: Cumulative volume over time (running total)
+          items:
+            type: object
+            required:
+            - cumulativeCount
+            - cumulativeVolume
+            - date
+            properties:
+              cumulativeCount:
+                type: integer
+              cumulativeVolume:
+                type: number
+              date:
+                type: string
+        dailyVolume:
+          type: array
+          description: Daily volume and count breakdown
+          items:
+            type: object
+            required:
+            - count
+            - date
+            - volume
+            properties:
+              count:
+                type: integer
+              date:
+                type: string
+              volume:
+                type: number
+        destChains:
+          type: array
+          description: Destination chains ranked by flow count
+          items:
+            type: object
+            required:
+            - count
+            - name
+            properties:
+              count:
+                type: integer
+              name:
+                type: string
+        destTokens:
+          type: array
+          description: Destination tokens ranked by flow count
+          items:
+            type: object
+            required:
+            - count
+            - token
+            properties:
+              count:
+                type: integer
+              token:
+                type: string
+        failureCategories:
+          type: array
+          description: Failure count grouped by failure category
+          items:
+            type: object
+            required:
+            - category
+            - count
+            properties:
+              category:
+                type: string
+              count:
+                type: integer
+        failedFlows:
+          type: integer
+          description: Number of flows with execution or settlement failed
+        failureRate:
+          type: number
+          description: Ratio of failed flows to terminal (completed + failed) flows
+        healthStatus:
+          type: string
+          enum:
+          - green
+          - yellow
+          - red
+          description: Overall health status based on success rate and error trends
+        modeBreakdown:
+          type: array
+          description: Flow count grouped by mode (payment, deposit, withdraw)
+          items:
+            type: object
+            required:
+            - count
+            - mode
+            properties:
+              count:
+                type: integer
+              mode:
+                type: string
+        recentErrors:
+          type: array
+          description: Most recent flow errors with details for drill-down
+          items:
+            type: object
+            required:
+            - category
+            - createdAt
+            - executionState
+            - id
+            properties:
+              category:
+                type: string
+              createdAt:
+                type: string
+                format: date-time
+              executionState:
+                type: string
+              fromChain:
+                type: string
+              id:
+                type: string
+                format: uuid
+              message:
+                type: string
+                description: A generic, user-safe error description. Must not contain raw exception messages, stack traces, or internal system details.
+              toChain:
+                type: string
+        settledFlows:
+          type: integer
+          description: Number of source-confirmed flows that reached settlement completed
+        settlementStateBreakdown:
+          type: array
+          description: Flow count grouped by settlement state
+          items:
+            type: object
+            required:
+            - count
+            - state
+            properties:
+              count:
+                type: integer
+              state:
+                type: string
+        sourceChains:
+          type: array
+          description: Source chains ranked by flow count
+          items:
+            type: object
+            required:
+            - count
+            - name
+            properties:
+              count:
+                type: integer
+              name:
+                type: string
+        sourceTokens:
+          type: array
+          description: Source tokens ranked by flow count
+          items:
+            type: object
+            required:
+            - count
+            - token
+            properties:
+              count:
+                type: integer
+              token:
+                type: string
+        sourceTypeBreakdown:
+          type: array
+          description: Flow count grouped by source type
+          items:
+            type: object
+            required:
+            - count
+            - sourceType
+            properties:
+              count:
+                type: integer
+              sourceType:
+                type: string
+        stateBreakdown:
+          type: array
+          description: Flow count grouped by execution state
+          items:
+            type: object
+            required:
+            - count
+            - state
+            properties:
+              count:
+                type: integer
+              state:
+                type: string
+        stepBreakdown:
+          type: array
+          description: Flow count per lifecycle stage showing reached, in-progress, completed, and drop-off reasons
+          items:
+            type: object
+            required:
+            - cancelled
+            - completed
+            - expired
+            - failed
+            - inProgress
+            - reached
+            - stage
+            - total
+            properties:
+              cancelled:
+                type: integer
+              completed:
+                type: integer
+              expired:
+                type: integer
+              failed:
+                type: integer
+              inProgress:
+                type: integer
+              reached:
+                type: integer
+              stage:
+                type: string
+              total:
+                type: integer
+        totalFlows:
+          type: integer
+          description: Total number of flows in the period
+        volumeByCurrency:
+          type: array
+          description: Completed volume and count grouped by pricing currency
+          items:
+            type: object
+            required:
+            - count
+            - currency
+            - volume
+            properties:
+              count:
+                type: integer
+              currency:
+                type: string
+              volume:
+                type: number
+        volumeByDirection:
+          type: array
+          description: Completed volume and count grouped by pay-in/pay-out direction
+          items:
+            type: object
+            required:
+            - count
+            - direction
+            - volume
+            properties:
+              count:
+                type: integer
+              direction:
+                type: string
+              volume:
+                type: number
+        volumeByMode:
+          type: array
+          description: Volume and count grouped by mode (payment, deposit, withdraw)
+          items:
+            type: object
+            required:
+            - count
+            - mode
+            - volume
+            properties:
+              count:
+                type: integer
+              mode:
+                type: string
+              volume:
+                type: number
+        waitingForSettlementFlows:
+          type: integer
+          description: Number of source-confirmed flows still waiting for settlement
+    Forbidden:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message
+          type: string
+          example: Access Forbidden
+        code:
+          description: Machine-readable reason for the 403, set only by endpoints that distinguish rejections. Flow endpoints use sanctions_blocked, session_token_invalid and risk_blocked.
+          type: string
+          example: sanctions_blocked
+    Unauthorized:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message describing the authentication failure
+          type: string
+          example: No jwt provided!
+    InternalServerError:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message
+          type: string
+          example: Internal Server Error
+    FlowModeEnum:
+      description: The lifecycle a flow follows — payment, deposit, or withdraw.
+      type: string
+      enum:
+      - payment
+      - deposit
+      - withdraw
+    FlowListResponse:
+      type: object
+      required:
+      - flows
+      - nextCursor
+      - total
+      properties:
+        flows:
+          type: array
+          items:
+            $ref: '#/components/schemas/FlowListItem'
+        nextCursor:
+          type:
+          - string
+          - 'null'
+          description: Cursor for fetching the next page, null if no more pages
+        total:
+          type: integer
+          description: Total number of flows matching the filters
+  responses:
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/InternalServerError'
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Forbidden'
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BadRequest'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Unauthorized'
+  parameters:
+    environmentId:
+      in: path
+      name: environmentId
+      required: true
+      description: ID of the environment
+      schema:
+        $ref: '#/components/schemas/uuid'
+    cursor:
+      in: query
+      name: cursor
+      schema:
+        type: string
+      required: false
+      description: Cursor for pagination
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

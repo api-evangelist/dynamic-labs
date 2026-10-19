@@ -1,0 +1,633 @@
+openapi: 3.2.0
+info:
+  title: Dashboard Screening Policies API
+  description: Dashboard API documentation
+  version: 1.0.0
+servers:
+- url: https://app.dynamicauth.com/api/v0
+- url: https://app.dynamic.xyz/api/v0
+- url: http://localhost:3333/api/v0
+tags:
+- name: ScreeningPolicies
+  description: 'Author per-provider address screening policies that map TRM and Chainalysis
+
+    signals to block, alert, or allow, plus per-address exceptions. The
+
+    sanctions floor sits underneath every policy and is not configurable.'
+paths:
+  /environments/{environmentId}/screeningPolicies/{providerType}/{scope}:
+    get:
+      operationId: getScreeningPolicy
+      tags:
+      - ScreeningPolicies
+      summary: Get the screening policy for a vendor
+      description: 'Returns the environment''s stored screening policy for the specified provider, including the `revision` an edit must echo back. The sanctions floor is not part of the response: it is generated from code on every screen.'
+      parameters:
+      - $ref: '#/components/parameters/environmentId'
+      - in: path
+        name: providerType
+        required: true
+        description: Screening provider the policy belongs to
+        schema:
+          $ref: '#/components/schemas/ScreeningPolicyProviderEnum'
+      - in: path
+        name: scope
+        required: true
+        description: Whether this is the sign-in policy or the transaction policy. An environment holds one policy per provider per scope, authored independently.
+        schema:
+          $ref: '#/components/schemas/ScreeningPolicyScopeEnum'
+      responses:
+        '200':
+          description: The screening policy for this environment and provider
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScreeningPolicy'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - bearerAuth: []
+    put:
+      operationId: replaceScreeningPolicy
+      tags:
+      - ScreeningPolicies
+      summary: Create or replace the screening policy for a vendor
+      description: Replaces the whole rule blob, storing it exactly as sent. Send the `revision` returned by the GET; a stale one is rejected with a 409 rather than overwriting an edit made elsewhere. Omit `revision` only to create the first policy for this provider. Edits take effect within the policy cache TTL.
+      parameters:
+      - $ref: '#/components/parameters/environmentId'
+      - in: path
+        name: providerType
+        required: true
+        description: Screening provider the policy belongs to
+        schema:
+          $ref: '#/components/schemas/ScreeningPolicyProviderEnum'
+      - in: path
+        name: scope
+        required: true
+        description: Whether this is the sign-in policy or the transaction policy. An environment holds one policy per provider per scope, authored independently.
+        schema:
+          $ref: '#/components/schemas/ScreeningPolicyScopeEnum'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScreeningPolicyUpdateRequest'
+      responses:
+        '200':
+          description: The stored screening policy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScreeningPolicy'
+        '201':
+          description: The newly created screening policy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScreeningPolicy'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - bearerAuth: []
+    delete:
+      operationId: deleteScreeningPolicy
+      tags:
+      - ScreeningPolicies
+      summary: Delete the screening policy for a vendor
+      description: Removes the environment's policy for this provider. Screening reverts to the sanctions floor alone, which is what an environment with no policy has always done.
+      parameters:
+      - $ref: '#/components/parameters/environmentId'
+      - in: path
+        name: providerType
+        required: true
+        description: Screening provider the policy belongs to
+        schema:
+          $ref: '#/components/schemas/ScreeningPolicyProviderEnum'
+      - in: path
+        name: scope
+        required: true
+        description: Whether this is the sign-in policy or the transaction policy. An environment holds one policy per provider per scope, authored independently.
+        schema:
+          $ref: '#/components/schemas/ScreeningPolicyScopeEnum'
+      responses:
+        '204':
+          description: The screening policy was deleted
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - bearerAuth: []
+  /environments/{environmentId}/screeningPolicyAddresses/{providerType}:
+    get:
+      operationId: getScreeningPolicyAddresses
+      tags:
+      - ScreeningPolicies
+      summary: List the address exceptions for a screening vendor
+      description: Returns the environment's address allow and deny entries for this provider. The list is shared by both of the provider's policies; each entry states which scopes it applies to.
+      parameters:
+      - $ref: '#/components/parameters/environmentId'
+      - in: path
+        name: providerType
+        required: true
+        description: Screening provider the entries belong to
+        schema:
+          $ref: '#/components/schemas/ScreeningPolicyProviderEnum'
+      - in: query
+        name: offset
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+        description: The number of items to skip before starting to collect the result set
+        required: false
+      - in: query
+        name: limit
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+        description: The number of items to return
+        required: false
+      responses:
+        '200':
+          description: The address entries for this environment and provider
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScreeningPolicyAddressesResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - bearerAuth: []
+    post:
+      operationId: createScreeningPolicyAddress
+      tags:
+      - ScreeningPolicies
+      summary: Add an address exception for a screening vendor
+      description: Adds one address allow or deny entry. An `ALLOW` entry exempts the address from the customer's own rules only — the sanctions floor evaluates above it, so a sanctioned address stays blocked.
+      parameters:
+      - $ref: '#/components/parameters/environmentId'
+      - in: path
+        name: providerType
+        required: true
+        description: Screening provider the policy belongs to
+        schema:
+          $ref: '#/components/schemas/ScreeningPolicyProviderEnum'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScreeningPolicyAddressCreateRequest'
+      responses:
+        '201':
+          description: The created address entry
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScreeningPolicyAddress'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - bearerAuth: []
+  /environments/{environmentId}/screeningPolicyAddresses/{providerType}/{screeningPolicyAddressId}:
+    delete:
+      operationId: deleteScreeningPolicyAddress
+      tags:
+      - ScreeningPolicies
+      summary: Remove an address exception for a screening vendor
+      description: Removes one address allow or deny entry.
+      parameters:
+      - $ref: '#/components/parameters/environmentId'
+      - in: path
+        name: providerType
+        required: true
+        description: Screening provider the policy belongs to
+        schema:
+          $ref: '#/components/schemas/ScreeningPolicyProviderEnum'
+      - $ref: '#/components/parameters/screeningPolicyAddressId'
+      responses:
+        '204':
+          description: The address entry was removed
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - bearerAuth: []
+components:
+  responses:
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/InternalServerError'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Unauthorized'
+    Conflict:
+      description: Conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Conflict'
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Forbidden'
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BadRequest'
+    NotFound:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/NotFound'
+  schemas:
+    NotFound:
+      type: object
+      required:
+      - error
+      - code
+      properties:
+        error:
+          description: Human-readable error message
+          type: string
+          example: Not Found
+        code:
+          description: Machine-readable error code. Flow endpoints use exchange_not_configured when the requested exchange isn't set up for the environment.
+          type: string
+          example: not_found
+    ScreeningPolicyAddress:
+      description: 'A customer address exception, belonging to the (environment, provider) pair
+
+        rather than to one policy — a denylist should have one answer to "is this
+
+        actor blocked?" whether the sign-in policy or the transaction policy is
+
+        being resolved. Matched by a
+
+        chain-aware fold of the address, not a plain lowercase, because base58 and
+
+        base32 chains are case-significant. An absent `chain` applies the entry to
+
+        every chain.
+
+        '
+      type: object
+      required:
+      - id
+      - address
+      - appliesToScope
+      - disposition
+      properties:
+        id:
+          $ref: '#/components/schemas/uuid'
+        address:
+          description: The address, in the casing it was submitted with.
+          type: string
+        chain:
+          $ref: '#/components/schemas/ChainEnum'
+        appliesToScope:
+          $ref: '#/components/schemas/ScreeningAddressScopeEnum'
+        disposition:
+          $ref: '#/components/schemas/ScreeningAddressDisposition'
+        note:
+          description: Human-readable label to identify this entry in the dashboard.
+          type: string
+          maxLength: 255
+        createdAt:
+          description: ISO 8601 timestamp of when the entry was added.
+          type: string
+          format: date-time
+    ScreeningPolicyScopeEnum:
+      description: 'Whether a policy is the sign-in policy or the transaction policy. An
+
+        environment holds one policy per provider per scope, authored independently —
+
+        a customer may alert at sign-in and block on transactions, or skip the paid
+
+        provider call at one and not the other. Two values, not three: an "applies to both" policy would make the
+
+        overlap with a single-scope row unrepresentable as a unique constraint.
+
+        '
+      type: string
+      enum:
+      - SIGN_IN
+      - TRANSACTION
+    ScreeningPolicyAddressesResponse:
+      type: object
+      required:
+      - count
+      - entries
+      properties:
+        count:
+          description: Total number of live address entries for this (environment, provider) pair, across every `appliesToScope`.
+          type: integer
+        entries:
+          description: List of address entry objects
+          type: array
+          items:
+            $ref: '#/components/schemas/ScreeningPolicyAddress'
+    BadRequest:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message
+          type: string
+        code:
+          description: Machine-readable reason for the 400, set only by endpoints that distinguish rejections. Flow endpoints use exchange_not_supported and exchange_currency_unsupported.
+          type: string
+          example: exchange_currency_unsupported
+    ScreeningAddressDisposition:
+      description: 'Whether the entry exempts the address from the customer''s own rules, or
+
+        blocks it. Both evaluate below the sanctions floor, so `ALLOW` can never
+
+        unblock a sanctioned address.
+
+        '
+      type: string
+      enum:
+      - ALLOW
+      - DENY
+    InternalServerError:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message
+          type: string
+          example: Internal Server Error
+    ScreeningPolicyUpdateRequest:
+      description: 'Replaces the whole rule blob. Rules are stored exactly as sent — order
+
+        preserved, nothing normalized, reshaped, or dropped — because evaluation is
+
+        first-match-wins and the array order is the policy.
+
+        '
+      type: object
+      additionalProperties: false
+      required:
+      - rules
+      properties:
+        revision:
+          description: 'The `revision` this edit was based on. Required to replace an existing
+
+            policy, and a stale value is rejected with a 409 rather than silently
+
+            applied. Omit it only when creating the first policy for this provider.
+
+            '
+          type: integer
+          minimum: 1
+        rules:
+          $ref: '#/components/schemas/ScreeningPolicyRules'
+    ScreeningPolicy:
+      description: One provider's screening policy in one environment, for one scope.
+      type: object
+      required:
+      - providerType
+      - scope
+      - revision
+      - schemaVersion
+      - rules
+      - addressEntryCount
+      - enabled
+      properties:
+        providerType:
+          $ref: '#/components/schemas/ScreeningPolicyProviderEnum'
+        scope:
+          $ref: '#/components/schemas/ScreeningPolicyScopeEnum'
+        revision:
+          description: Generation counter. Echo it back on update as the concurrency precondition.
+          type: integer
+        schemaVersion:
+          description: Rule-language version that governs how `rules` is parsed.
+          type: integer
+        rules:
+          $ref: '#/components/schemas/ScreeningPolicyRules'
+        addressEntryCount:
+          description: Number of live address entries applying to THIS scope — those marked `ALL` plus those narrowed to it. Entries themselves belong to the (environment, provider) pair, not to this policy.
+          type: integer
+        enabled:
+          description: Whether the policy is live.
+          type: boolean
+        updatedAt:
+          description: ISO 8601 timestamp of the last mutation.
+          type: string
+          format: date-time
+    uuid:
+      type: string
+      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+      minLength: 36
+      maxLength: 36
+      example: 95b11417-f18f-457f-8804-68e361f9164f
+    ScreeningAddressScopeEnum:
+      description: 'Which scopes an address entry applies to. Separate from
+
+        `ScreeningPolicyScopeEnum` because `ALL` is meaningful here and meaningless
+
+        on a policy row. `ALL` is the default and the overwhelmingly common intent —
+
+        a blocked actor is normally blocked everywhere — and narrowing is available
+
+        for the customer who wants it.
+
+        '
+      type: string
+      enum:
+      - ALL
+      - SIGN_IN
+      - TRANSACTION
+    ScreeningPolicyAddressCreateRequest:
+      description: Adds one address exception to the (environment, provider) list. Omit `chain` to apply it to every chain, and `appliesToScope` to apply it to both the sign-in policy and the transaction policy.
+      type: object
+      additionalProperties: false
+      required:
+      - address
+      - disposition
+      properties:
+        address:
+          description: The address to except, in its native casing.
+          type: string
+          minLength: 1
+          maxLength: 256
+        chain:
+          $ref: '#/components/schemas/ChainEnum'
+        appliesToScope:
+          $ref: '#/components/schemas/ScreeningAddressScopeEnum'
+        disposition:
+          $ref: '#/components/schemas/ScreeningAddressDisposition'
+        note:
+          description: Human-readable label to identify this entry in the dashboard.
+          type: string
+          maxLength: 255
+    ScreeningPolicyRules:
+      description: 'Customer rules, `{ preScreen, postScreen }`, per the provider''s own rule schema
+
+        (`TrmPolicyRules` or `ChainalysisPolicyRules`). Typed as a free-form object
+
+        rather than a `oneOf` over the two: the provider is a path parameter, no
+
+        OpenAPI construct selects a body schema from one, and `oneOf` generates SDK
+
+        models that do not compile. The server validates the blob against the
+
+        provider''s schema before writing, so a TRM policy naming a `chainalysis.*`
+
+        field is a 400. Clients should validate against those two schemas before
+
+        submitting.
+
+
+        Neither the sanctions floor nor the terminal ALLOW appears here. Both are
+
+        generated from code on every screen, so there is nothing to author, edit, or
+
+        read back, and no request body can weaken them.
+
+        '
+      type: object
+    ChainEnum:
+      type: string
+      enum:
+      - ETH
+      - EVM
+      - FLOW
+      - SOL
+      - ALGO
+      - STARK
+      - COSMOS
+      - BTC
+      - ECLIPSE
+      - SUI
+      - SPARK
+      - TRON
+      - APTOS
+      - TON
+      - STELLAR
+      - ALEO
+      - TEMPO
+      - MIDNIGHT
+    ScreeningPolicyProviderEnum:
+      description: 'Screening provider a policy belongs to. Deliberately not `ProviderEnum`, which
+
+        is a 44-value auth/social/onramp list of which only these two are screening
+
+        providers. The Dynamic sanctions provider is absent because the sanctions floor
+
+        is generated from code and is not configurable.
+
+        '
+      type: string
+      enum:
+      - trmWalletScreening
+      - chainalysisAddressScreening
+    Conflict:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message
+          type: string
+          example: 'Conflict: invalid state transition'
+    Forbidden:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message
+          type: string
+          example: Access Forbidden
+        code:
+          description: Machine-readable reason for the 403, set only by endpoints that distinguish rejections. Flow endpoints use sanctions_blocked, session_token_invalid and risk_blocked.
+          type: string
+          example: sanctions_blocked
+    Unauthorized:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message describing the authentication failure
+          type: string
+          example: No jwt provided!
+  parameters:
+    screeningPolicyAddressId:
+      in: path
+      name: screeningPolicyAddressId
+      required: true
+      description: ID of the screening policy address entry
+      schema:
+        $ref: '#/components/schemas/uuid'
+    environmentId:
+      in: path
+      name: environmentId
+      required: true
+      description: ID of the environment
+      schema:
+        $ref: '#/components/schemas/uuid'
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

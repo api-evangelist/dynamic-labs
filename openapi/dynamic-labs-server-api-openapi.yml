@@ -1,0 +1,3243 @@
+openapi: 3.2.0
+info:
+  title: Dashboard Server API
+  description: Dashboard API documentation
+  version: 1.0.0
+servers:
+- url: https://app.dynamicauth.com/api/v0
+- url: https://app.dynamic.xyz/api/v0
+- url: http://localhost:3333/api/v0
+tags:
+- name: Server
+  description: Server-side SDK endpoints authenticated by environment API tokens.
+paths:
+  /server/{environmentId}/flow/{mode}:
+    get:
+      operationId: getFlowServer
+      tags:
+      - Server
+      summary: Get a flow by ID
+      x-cli-ignore: true
+      parameters:
+      - $ref: '#/components/parameters/environmentId'
+      - in: path
+        name: mode
+        required: true
+        description: UUID of the flow to retrieve
+        schema:
+          $ref: '#/components/schemas/uuid'
+      responses:
+        '200':
+          description: Returns the flow
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Flow'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      operationId: createFlowServer
+      tags:
+      - Server
+      summary: Create a flow
+      description: Create a flow (payment, deposit, or withdraw) for the environment.
+      x-cli-ignore: true
+      parameters:
+      - $ref: '#/components/parameters/environmentId'
+      - $ref: '#/components/parameters/flowMode'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FlowCreateRequest'
+      responses:
+        '201':
+          description: Flow created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlowCreateResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /server/{environmentId}/payment-links:
+    post:
+      operationId: createPaymentLinkServer
+      tags:
+      - Server
+      summary: Create a payment link
+      description: Create a payment-mode flow and a shareable payer URL.
+      x-cli-ignore: true
+      parameters:
+      - $ref: '#/components/parameters/environmentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FlowPaymentLinkCreateRequest'
+      responses:
+        '201':
+          description: Payment link created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlowPaymentLinkCreateResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /server/{environmentId}/flow/fees/balances:
+    get:
+      operationId: getFlowFeeClaimBalancesServer
+      tags:
+      - Server
+      summary: Get claimable fee balances
+      description: Returns the recipient claimable fee balances across all providers.
+      x-cli-ignore: true
+      parameters:
+      - $ref: '#/components/parameters/environmentId'
+      - in: query
+        name: recipientAddress
+        required: true
+        description: Recipient EVM address to query balances for
+        schema:
+          $ref: '#/components/schemas/WalletPublicKey'
+      - in: query
+        name: chainId
+        required: false
+        description: Optional filter — only claim balances settled on this chain
+        schema:
+          type: string
+      - in: query
+        name: tokenAddress
+        required: false
+        description: Optional filter — only claim balances for this token contract address
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Fee balances
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlowFeeBalancesResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /server/{environmentId}/flow/fees/claim:
+    post:
+      operationId: initiateFlowFeeClaimServer
+      tags:
+      - Server
+      summary: Initiate a fee claim
+      description: Initiates a provider-agnostic fee claim for a recipient.
+      x-cli-ignore: true
+      parameters:
+      - $ref: '#/components/parameters/environmentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FlowFeeClaimRequest'
+      responses:
+        '200':
+          description: Claim initiation instructions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlowFeeClaimResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /server/{environmentId}/flow/fees/claim/submit:
+    post:
+      operationId: submitFlowFeeClaimServer
+      tags:
+      - Server
+      summary: Submit a fee claim
+      description: Submits signatures to complete a previously initiated fee claim.
+      x-cli-ignore: true
+      parameters:
+      - $ref: '#/components/parameters/environmentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FlowFeeClaimSubmitRequest'
+      responses:
+        '200':
+          description: Claim submission result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlowFeeClaimSubmitResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /server/{environmentId}/waas/softDelete:
+    post:
+      operationId: softDeleteWaasWalletsServer
+      tags:
+      - Server
+      summary: Soft-delete WaaS wallets (non-production only)
+      description: Soft-deletes the specified WaaS wallets by ID. Only available in non-production environments.
+      x-cli-ignore: true
+      parameters:
+      - $ref: '#/components/parameters/environmentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SoftDeleteWaasWalletsRequest'
+      responses:
+        '200':
+          description: Soft-delete result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SoftDeleteWaasWalletsResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /server/{environmentId}/serverIdentity:
+    get:
+      operationId: getServerIdentityServer
+      tags:
+      - Server
+      summary: Get the environment's server identity
+      description: Resolves the userId of a server identity. With `serverIdentifier`, that identity once confirmed to exist in the environment; otherwise the environment's default. Feed it into addMember's targetIdentity.userId to add the server as a business-account member.
+      x-cli-ignore: true
+      parameters:
+      - $ref: '#/components/parameters/environmentId'
+      - name: serverIdentifier
+        in: query
+        required: false
+        description: Id of a server identity of the environment, as returned when registering its Server Signing Key.
+        schema:
+          $ref: '#/components/schemas/uuid'
+      responses:
+        '200':
+          description: The server's identity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerIdentityResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /server/{environmentId}/businessAccounts:
+    post:
+      operationId: createBusinessAccountServer
+      tags:
+      - Server
+      summary: Server — create a business account
+      description: 'Create a business account from the server SDK. The authenticated
+
+        service user becomes the first `owner` member. Gated by the
+
+        `enable-business-accounts` feature flag.'
+      x-cli-ignore: true
+      parameters:
+      - $ref: '#/components/parameters/environmentId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBusinessAccountSdkRequest'
+      responses:
+        '201':
+          description: Business account created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessAccount'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    get:
+      operationId: listBusinessAccountsServer
+      tags:
+      - Server
+      summary: Server — list business accounts the caller is a member of
+      x-cli-ignore: true
+      parameters:
+      - $ref: '#/components/parameters/environmentId'
+      - in: query
+        name: externalRef
+        required: false
+        description: Filter to business accounts whose externalRef matches one of the given values. Repeat the param for multiple values (max 100). Only accounts the caller is a member of are ever returned.
+        schema:
+          type: array
+          maxItems: 100
+          items:
+            type: string
+            maxLength: 255
+        style: form
+        explode: true
+      responses:
+        '200':
+          description: Business accounts the caller is a member of
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessAccountList'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /server/{environmentId}/businessAccounts/{businessAccountId}:
+    get:
+      operationId: getBusinessAccountByIdServer
+      tags:
+      - Server
+      summary: Server — get a business account with embedded members and signers
+      description: 'Returns 404 if the caller is not a member of the business account
+
+        (404 not 403 so we don''t leak business-account existence).'
+      x-cli-ignore: true
+      parameters:
+      - $ref: '#/components/parameters/environmentId'
+      - $ref: '#/components/parameters/businessAccountId'
+      responses:
+        '200':
+          description: Business account with embedded members and signers
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessAccountDetail'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /server/{environmentId}/businessAccounts/{businessAccountId}/members:
+    post:
+      operationId: addBusinessAccountMemberServer
+      tags:
+      - Server
+      summary: Server — add a member to a business account
+      description: 'Owner or admin only. Target user is resolved by `userId` OR
+
+        `identifier + type` (email/externalUserId create-or-resolve; id direct
+
+        lookup). Idempotent: an already-active member returns the existing row
+
+        with 200.
+
+
+        When the account governs `addMember` the response is 202, not 201 —
+
+        first with the intent to sign, then with the proposal collecting
+
+        approvals. Neither is a failure.'
+      x-cli-ignore: true
+      parameters:
+      - $ref: '#/components/parameters/environmentId'
+      - $ref: '#/components/parameters/businessAccountId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddBusinessAccountMemberSdkRequest'
+      responses:
+        '200':
+          description: Target user was already a member; existing row returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessAccountMember'
+        '201':
+          description: Member added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessAccountMember'
+        '202':
+          $ref: '#/components/responses/BusinessAccountApprovalsPending'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/BusinessAccountForbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /server/{environmentId}/businessAccounts/{businessAccountId}/policy-layer:
+    get:
+      operationId: getBusinessAccountPolicyLayerServer
+      tags:
+      - Server
+      summary: Server — get the business account's account-Layer Rules
+      description: 'Returns the Composition account-Layer content for the business account,
+
+        the Rules that apply to every wallet in it. Business-account owner or
+
+        admin only.'
+      x-cli-ignore: true
+      parameters:
+      - $ref: '#/components/parameters/environmentId'
+      - $ref: '#/components/parameters/businessAccountId'
+      responses:
+        '200':
+          description: Account-Layer fetched successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WaasPolicyLayerResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    patch:
+      operationId: updateBusinessAccountPolicyLayerServer
+      tags:
+      - Server
+      summary: Server — update the business account's account-Layer Rules
+      description: 'Applies a per-Rule upsert or remove, a batch, or a replace of the whole
+
+        Rule list to the account-Layer, which applies to every wallet in the
+
+        business account. Business-account owner or admin only. Creates the
+
+        account-Layer if the account has none yet.'
+      x-cli-ignore: true
+      parameters:
+      - $ref: '#/components/parameters/environmentId'
+      - $ref: '#/components/parameters/businessAccountId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WaasPolicyLayerUpdateRequest'
+      responses:
+        '200':
+          description: Account-Layer updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WaasPolicyLayerResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /server/{environmentId}/businessAccounts/linkWallet:
+    post:
+      operationId: linkBusinessAccountWalletServer
+      tags:
+      - Server
+      summary: Server — add an existing wallet to a business account
+      description: 'Brings an existing wallet under a business account so signers can be
+
+        added to it. No MPC ceremony — the owner already holds a valid share
+
+        set, so this transfers the wallet''s ownership to the business account
+
+        and registers the caller as an owner member + signer bound to their
+
+        existing share set. When `businessAccountId` is omitted, the
+
+        per-wallet business account is found-or-created (unnamed). Idempotent.'
+      x-cli-ignore: true
+      parameters:
+      - $ref: '#/components/parameters/environmentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LinkBusinessAccountWalletSdkRequest'
+      responses:
+        '200':
+          description: Business account with embedded members, signers, and wallets
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessAccountDetail'
+        '202':
+          $ref: '#/components/responses/BusinessAccountApprovalsPending'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+components:
+  schemas:
+    NameServiceData:
+      type: object
+      properties:
+        avatar:
+          description: URL of the avatar associated with the name service record
+          type: string
+        name:
+          description: Resolved name from the name service (e.g. ENS name)
+          type: string
+    VerifiedCredentialId:
+      description: UUID v4 with an optional -zerodev suffix for ZeroDev EIP-7702 smart-wallet credentials
+      type: string
+      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(-zerodev)?$
+      minLength: 36
+      maxLength: 45
+      example: 95b11417-f18f-457f-8804-68e361f9164f-zerodev
+    WaasPolicyConstraintCondition:
+      type: string
+      enum:
+      - equal
+      - greater
+      - less
+      - greaterEqual
+      - lessEqual
+      - notEqual
+      description: Comparison operator for argument validation
+    FlowCurrencyEnum:
+      description: Currency the flow amount is denominated in. USD prices the amount against each settlement token. SETTLEMENT_TOKEN denominates the amount directly in the settlement token itself (e.g. "0.5" for 0.5 ETH, not wei); only valid for flows using `payment` mode AND with exactly one settlement token in the settlement config.
+      type: string
+      enum:
+      - USD
+      - SETTLEMENT_TOKEN
+    BusinessAccount:
+      type: object
+      description: A multi-operator wallet container (product name "Business Accounts")
+      properties:
+        id:
+          $ref: '#/components/schemas/uuid'
+        projectEnvironmentId:
+          $ref: '#/components/schemas/uuid'
+        name:
+          type:
+          - string
+          - 'null'
+          maxLength: 255
+        externalRef:
+          description: Developer-supplied stable ID inside the env
+          type:
+          - string
+          - 'null'
+          maxLength: 255
+        metadata:
+          type: object
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+      - id
+      - projectEnvironmentId
+    WaasPolicyRule:
+      type: object
+      required:
+      - name
+      - ruleType
+      - chain
+      properties:
+        ruleId:
+          $ref: '#/components/schemas/uuid'
+        name:
+          type: string
+          description: Human-readable name for the rule
+        ruleType:
+          $ref: '#/components/schemas/WaasPolicyRuleType'
+        address:
+          description: Target address EVM or SVM (legacy field)
+          anyOf:
+          - $ref: '#/components/schemas/WalletPublicKey'
+          - $ref: '#/components/schemas/SolanaPublicKey'
+          deprecated: true
+        addresses:
+          description: Target address(es) EVM or SVM
+          type: array
+          items:
+            anyOf:
+            - $ref: '#/components/schemas/WalletPublicKey'
+            - $ref: '#/components/schemas/SolanaPublicKey'
+        chain:
+          $ref: '#/components/schemas/WaasChainEnum'
+        chainId:
+          type: number
+          description: Chain ID for the policy rule (legacy field)
+        chainIds:
+          description: Chain IDs for the policy rule
+          type: array
+          items:
+            type: number
+        contractAbi:
+          type: array
+          description: Contract ABI interface
+          items:
+            type: object
+        functionName:
+          type: string
+          description: Specific function name to permit/deny
+        argumentConstraints:
+          type: array
+          items:
+            $ref: '#/components/schemas/WaasPolicyArgumentConstraint'
+          description: Validation rules for function arguments
+        valueLimit:
+          type: object
+          description: Value limits for the policy rule
+          properties:
+            asset:
+              description: Target asset address. If undefined, refers to native token (e.g., ETH)
+              anyOf:
+              - $ref: '#/components/schemas/WalletPublicKey'
+              - $ref: '#/components/schemas/SolanaPublicKey'
+            maxPerCall:
+              type: string
+              description: Maximum value per function call (as string to handle bigint)
+              pattern: ^[0-9]+$
+            totalLimit:
+              type: string
+              description: Cumulative value limit (as string to handle bigint)
+              pattern: ^[0-9]+$
+        operationRestrictions:
+          type: object
+          description: Operation-level restrictions for the wallet
+          properties:
+            blockExport:
+              type: boolean
+              description: Block private key export
+            blockRevocation:
+              type: boolean
+              description: Block end-user revocation of delegated access
+            blockClientSigning:
+              type: boolean
+              description: Block all end-user signing (not delegated)
+        disableBlockaidSecurityChecks:
+          type: boolean
+          description: When true, disables Blockaid security enforcement for this rule. Blockaid simulation will still run for policy evaluation, but security verdicts (e.g., malicious transactions) will not block execution. Transaction approval will be determined solely by customer-defined policy rules. Use with caution as this bypasses automated security protections.
+        modifiableBySigner:
+          type: boolean
+          description: When true, a Signer is permitted to modify this Rule. Cannot be combined with operationRestrictions or disableBlockaidSecurityChecks on the same Rule.
+        approvalRequirements:
+          type: array
+          description: Multi-party approval requirements for this Rule. Enforced only for accounts that support them; ignored for other accounts. when.initiatorRole and when.actionTypes are not yet resolved — until they are, a requirement that sets either field applies to all approvers, not just the named role.
+          items:
+            type: object
+            required:
+            - v
+            - id
+            - requiredApprovals
+            properties:
+              v:
+                type: number
+                description: Schema version for this requirement. An unknown value rejects the Composition.
+              id:
+                type: string
+                description: Stable handle for this requirement, carried as requirementId in the deny reason.
+              when:
+                type: object
+                description: All present conditions AND together. Omit for an unconditional requirement.
+                properties:
+                  minValue:
+                    type: object
+                    description: The amount at which this requirement starts to apply.
+                    properties:
+                      asset:
+                        description: Target asset address. If undefined, refers to native token (e.g., ETH)
+                        anyOf:
+                        - $ref: '#/components/schemas/WalletPublicKey'
+                        - $ref: '#/components/schemas/SolanaPublicKey'
+                      amount:
+                        type: string
+                        description: Threshold amount (as string to handle bigint)
+                        pattern: ^[0-9]+$
+                  initiatorRole:
+                    type: object
+                    description: Matches on the user who starts the action. Not yet resolved — until it is, a requirement that sets this field applies to all initiators.
+                    properties:
+                      roles:
+                        type: array
+                        items:
+                          type: string
+                      userIds:
+                        type: array
+                        items:
+                          type: string
+                  actionTypes:
+                    type: array
+                    description: Matches on the operation type. Not yet resolved — until it is, a requirement that sets this field applies to all operation types.
+                    items:
+                      type: string
+              eligibleApproverRoles:
+                type: array
+                items:
+                  type: string
+                description: Names of the roles whose holders may satisfy this requirement. A holder of any listed role may approve. An empty array means no restriction.
+              mandatoryApproverRoles:
+                type: array
+                items:
+                  type: string
+                description: Names of the roles that must each be represented among the approvers, regardless of eligibleApproverRoles. An empty array means none.
+              requiredApprovals:
+                type: number
+                description: Total approvals required. Never counts the Initiator.
+              completeWithinSeconds:
+                type: number
+                description: How long a collected-approvals proposal remains valid.
+    SdkUser:
+      allOf:
+      - $ref: '#/components/schemas/BaseUser'
+      - type: object
+        required:
+        - verifiedCredentials
+    WaasPolicyLayerRuleOperation:
+      type: object
+      required:
+      - op
+      properties:
+        op:
+          type: string
+          enum:
+          - upsert
+          - remove
+          description: The per-Rule operation to apply within a batch
+        rule:
+          $ref: '#/components/schemas/WaasPolicyRule'
+        declarativeRule:
+          $ref: '#/components/schemas/WaasPolicyDeclarativeRuleInput'
+        ruleId:
+          $ref: '#/components/schemas/uuid'
+    FlowFeeClaimSignature:
+      description: A signature over a single claim step's payload.
+      type: object
+      required:
+      - signature
+      - stepId
+      properties:
+        signature:
+          description: Signature the recipient produced over the step's payload
+          type: string
+        stepId:
+          description: The id of the FlowFeeClaimStep this signature corresponds to
+          type: string
+    NonEmptyStringWith255MaxLength:
+      type: string
+      pattern: ^(?=\S)[\p{L}\p{N}a-zA-Z _.,:!?&%@\/+\-'|]+(?<=\S)$
+      maxLength: 255
+      example: An example name
+    BusinessAccountMemberSelection:
+      type: object
+      description: 'Names a user. Pass `userId` directly OR `identifier + type` (any UserIdentifierTypeEnum value), mirroring the pregen flow. `smsCountryCode` is required when `type` is `phoneNumber`; `socialProvider` is required when `type` is `socialUsername` or `socialAccountId`.
+
+        '
+      properties:
+        userId:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        identifier:
+          type:
+          - string
+          - 'null'
+        type:
+          $ref: '#/components/schemas/UserIdentifierTypeEnum'
+        smsCountryCode:
+          $ref: '#/components/schemas/SmsCountryCode'
+        socialProvider:
+          $ref: '#/components/schemas/ProviderEnum'
+    BusinessAccountWallet:
+      type: object
+      description: Minimal business-account-wallet projection used by `BusinessAccountDetail`.
+      required:
+      - id
+      - publicKey
+      - chain
+      - createdAt
+      properties:
+        id:
+          description: Wallet ID (matches `signers[].walletId` for wallets that already have a signer).
+          type: string
+          format: uuid
+        publicKey:
+          description: Wallet address (already-formatted public address, not raw key material).
+          type: string
+        chain:
+          $ref: '#/components/schemas/ChainEnum'
+        createdAt:
+          type: string
+          format: date-time
+    FlowGasEstimate:
+      description: Estimated gas cost for executing a flow's source transaction.
+      type: object
+      properties:
+        usdValue:
+          type: string
+          description: Estimated gas cost in USD
+        nativeValue:
+          type: string
+          description: Estimated gas cost in native-token base units (wei, lamports, etc.)
+        nativeSymbol:
+          type: string
+          description: Symbol of the native token (e.g. "ETH", "SOL")
+    BusinessAccountAutoExecute:
+      type: boolean
+      default: true
+      description: 'Whether the change applies the moment its quorum is met, or waits for an explicit execute. Read only on the first call, where it is stamped into the intent you sign; after that the signed intent is the authority. Defaults to true, because a change holding all its consent while waiting for a button press tends to be forgotten, and the deadline covers execution too.
+
+        '
+    BusinessAccountApprovalsPending:
+      type: object
+      description: 'The action is governed, signed, and short of quorum — not a refusal: the caller may perform it, they have simply not collected every approval it requires. `proposalId` is the proposal collecting approvals, and `approvalRequirements` says what each rule still needs.
+
+        A missing signed intent is a different case entirely and is reported as `422 intent_required` (see `UnprocessableEntity`), not this response — the caller made a mistake (nothing to sign yet was supplied) rather than something outstanding.
+
+        '
+      required:
+      - approvalRequirements
+      - intent
+      - proposalId
+      - reason
+      properties:
+        reason:
+          type: string
+          enum:
+          - APPROVALS_REQUIRED
+        intent:
+          $ref: '#/components/schemas/BusinessAccountMutationIntent'
+        message:
+          type: string
+          description: 'Why the action did not apply, ready to show a user. A 202 carries no `error`, so a client rendering only that field would show nothing for the commonest case — executing before the approvals are in.
+
+            '
+          example: 'This proposal cannot be executed yet: addMember needs 1 more approval (1 of 2).'
+        proposalId:
+          type: string
+          format: uuid
+          description: The proposal collecting approvals.
+        approvalRequirements:
+          type: array
+          description: 'Every matching requirement, met or not, so a client can render progress per rule.
+
+            '
+          items:
+            $ref: '#/components/schemas/BusinessAccountApprovalRequirementStatus'
+    UnprocessableEntity:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message describing the validation failure
+          type: string
+          example: Resources already exists for this Object
+        code:
+          $ref: '#/components/schemas/UnprocessableEntityErrorCode'
+        payload:
+          $ref: '#/components/schemas/UnprocessableEntityErrorPayload'
+        retryAfterSeconds:
+          description: Seconds the client should wait before retrying, present on rate-limit errors
+          type: integer
+          example: 600
+      required:
+      - error
+    CreateBusinessAccountSdkRequest:
+      type: object
+      description: SDK-side create-business-account request. Caller becomes the first owner.
+      properties:
+        name:
+          type:
+          - string
+          - 'null'
+          maxLength: 255
+        externalRef:
+          description: Developer-supplied stable ID inside the env
+          type:
+          - string
+          - 'null'
+          maxLength: 255
+        metadata:
+          type: object
+    HeldBusinessAccountMemberRole:
+      type: string
+      description: 'The role a member actually holds: a built-in (`owner`, `admin`, `viewer`) or a customer-defined role the account has defined. Wider than AssignableBusinessAccountRoleName because a held role can be `owner`, which cannot be assigned directly.
+
+        '
+      pattern: ^[a-z0-9](?:[a-z0-9_-]{0,30}[a-z0-9])?$
+      example: cfo
+    Flow:
+      description: A single payment, deposit, or withdraw flow. Collapses the former Checkout and CheckoutTransaction into one resource.
+      type: object
+      required:
+      - id
+      - mode
+      - amount
+      - currency
+      - executionState
+      - settlementState
+      - riskState
+      - quoteVersion
+      - createdAt
+      - updatedAt
+      properties:
+        id:
+          $ref: '#/components/schemas/uuid'
+        mode:
+          $ref: '#/components/schemas/FlowModeEnum'
+        amount:
+          description: Amount in the specified currency. Set once at create by the API-key caller and immutable thereafter.
+          type: string
+        amountUsd:
+          description: Amount in USD. Equals `amount` when `currency` is USD. For token-denominated currencies it is `amount` multiplied by the settlement token's USD price, calculated when a quote is generated. Absent until then, or if no price is available.
+          type: string
+        currency:
+          $ref: '#/components/schemas/NonEmptyStringWith50MaxLength'
+        currencyTokenInfo:
+          $ref: '#/components/schemas/FlowTokenInfo'
+        memo:
+          description: Arbitrary metadata attached to the flow
+          type: object
+        userId:
+          $ref: '#/components/schemas/uuid'
+        executionState:
+          $ref: '#/components/schemas/FlowExecutionStateEnum'
+        settlementState:
+          $ref: '#/components/schemas/FlowSettlementStateEnum'
+        riskState:
+          $ref: '#/components/schemas/FlowRiskStateEnum'
+        sourceType:
+          $ref: '#/components/schemas/FlowSourceTypeEnum'
+        fromAddress:
+          $ref: '#/components/schemas/WalletPublicKey'
+        fromChainId:
+          $ref: '#/components/schemas/NonEmptyStringWith50MaxLength'
+        fromChainName:
+          $ref: '#/components/schemas/ChainEnum'
+        fromToken:
+          $ref: '#/components/schemas/NonEmptyStringWith255MaxLength'
+        toAddress:
+          $ref: '#/components/schemas/WalletPublicKey'
+        toChainId:
+          $ref: '#/components/schemas/NonEmptyStringWith50MaxLength'
+        toChainName:
+          $ref: '#/components/schemas/ChainEnum'
+        toToken:
+          $ref: '#/components/schemas/NonEmptyStringWith255MaxLength'
+        quoteVersion:
+          description: Version number of the quote used for this flow
+          type: integer
+        quote:
+          $ref: '#/components/schemas/FlowQuote'
+        txHash:
+          $ref: '#/components/schemas/NonEmptyStringWith4096MaxLength'
+        settlementTxHash:
+          allOf:
+          - $ref: '#/components/schemas/NonEmptyStringWith4096MaxLength'
+          - description: Transaction hash on the destination chain
+        broadcastedAt:
+          description: ISO 8601 timestamp of when the flow was broadcast to the network
+          type: string
+          format: date-time
+        sourceConfirmedAt:
+          description: ISO 8601 timestamp of when the source chain confirmed the transaction
+          type: string
+          format: date-time
+        confirmations:
+          description: Number of blockchain confirmations received
+          type: integer
+        settlement:
+          $ref: '#/components/schemas/FlowSettlementData'
+        completedAt:
+          description: ISO 8601 timestamp of when the flow was completed
+          type: string
+          format: date-time
+        failure:
+          $ref: '#/components/schemas/FlowFailure'
+        expiresAt:
+          description: ISO 8601 timestamp of when the flow expires
+          type: string
+          format: date-time
+        createdAt:
+          description: ISO 8601 timestamp of when the flow was created
+          type: string
+          format: date-time
+        updatedAt:
+          description: ISO 8601 timestamp of when the flow was last updated
+          type: string
+          format: date-time
+        depositAddress:
+          $ref: '#/components/schemas/WalletPublicKey'
+        exchangeSource:
+          $ref: '#/components/schemas/FlowExchangeSource'
+        pegStablecoins:
+          description: When true, known stablecoins (USDC, USDT, DAI, etc.) in the settlement config are pegged 1:1 to the flow currency, skipping market-price lookup. Non-stablecoin settlements still use live pricing.
+          type: boolean
+        disableSwaps:
+          description: When true, the flow will not be quoted through swap providers; the payer must supply a token/chain already accepted by the settlement config. Defaults to false.
+          type: boolean
+        uiConfig:
+          $ref: '#/components/schemas/FlowUIConfig'
+        settlementConfig:
+          allOf:
+          - $ref: '#/components/schemas/SettlementConfigInput'
+          - description: Settlement configuration (tokens/chains accepted for payment). Only returned on the server (API-key) endpoint.
+        destinationConfig:
+          allOf:
+          - $ref: '#/components/schemas/DestinationConfigInput'
+          - description: Destination configuration (where settled funds are sent). Only returned on the server (API-key) endpoint.
+    uuid:
+      type: string
+      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+      minLength: 36
+      maxLength: 36
+      example: 95b11417-f18f-457f-8804-68e361f9164f
+    FlowPaymentLinkCreateResponse:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/FlowCreateResponse'
+      - $ref: '#/components/schemas/FlowPaymentLinkCreateResponseExtraFields'
+    TurnkeyWalletProperties:
+      deprecated: true
+      type: object
+      properties:
+        turnkeySubOrganizationId:
+          allOf:
+          - $ref: '#/components/schemas/uuid'
+          deprecated: true
+        turnkeyPrivateKeyId:
+          allOf:
+          - $ref: '#/components/schemas/uuid'
+          deprecated: true
+        turnkeyHDWalletId:
+          allOf:
+          - $ref: '#/components/schemas/uuid'
+          deprecated: true
+        isAuthenticatorAttached:
+          type: boolean
+          description: Whether or not the wallet has an authenticator (passkey, api key, etc) attached to it.
+        turnkeyUserId:
+          allOf:
+          - $ref: '#/components/schemas/uuid'
+          deprecated: true
+        isSessionKeyCompatible:
+          description: Whether this wallet supports session key operations
+          type: boolean
+        version:
+          $ref: '#/components/schemas/EmbeddedWalletVersionEnum'
+        ecdsaProviderType:
+          $ref: '#/components/schemas/ecdsaValidatorOptions'
+        entryPointVersion:
+          $ref: '#/components/schemas/ProviderEntryPointVersionEnum'
+        kernelVersion:
+          $ref: '#/components/schemas/ProviderKernelVersionEnum'
+    DestinationConfigInput:
+      type: object
+      required:
+      - destinations
+      properties:
+        destinations:
+          description: List of chain-specific destination wallet configurations
+          type: array
+          items:
+            $ref: '#/components/schemas/ChainDestinationConfig'
+    BusinessAccountSigner:
+      type: object
+      description: Signing-reach assignment (per signer-wallet pair)
+      properties:
+        id:
+          $ref: '#/components/schemas/uuid'
+        businessAccountId:
+          $ref: '#/components/schemas/uuid'
+        userId:
+          type:
+          - string
+          - 'null'
+          format: uuid
+          description: Required when type=endUser; null for type=server
+        walletId:
+          $ref: '#/components/schemas/uuid'
+        shareSetId:
+          type:
+          - string
+          - 'null'
+          format: uuid
+          description: Set after reshare ceremony completes
+        derivedFromUserId:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        type:
+          $ref: '#/components/schemas/BusinessAccountSignerType'
+        apiKeyIdentityRef:
+          type:
+          - string
+          - 'null'
+          description: Required when type=server
+        expiresAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        revokedAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+      required:
+      - id
+      - businessAccountId
+      - walletId
+      - type
+    WalletPublicKey:
+      type: string
+      pattern: ^[A-Za-z0-9_-]{18,100}$
+      description: Valid blockchain wallet address, must be an alphanumeric string (underscores allowed for chains like Midnight, hyphens allowed for chains using base64url-encoded addresses like TON)
+      example: '0xbF394748301603f18d953C90F0b087CBEC0E1834'
+      maxLength: 255
+    MergeConflicts:
+      type: object
+      description: Contains information needed for the SDK to surface merge conflicts when attempting to merge information from one user to another
+      required:
+      - fromUser
+      - conflicts
+      properties:
+        fromUser:
+          $ref: '#/components/schemas/SdkUser'
+        conflicts:
+          description: List of field-level merge conflicts between users
+          type: array
+          items:
+            $ref: '#/components/schemas/MergeUserConflict'
+    ThresholdSignatureScheme:
+      type: string
+      enum:
+      - TWO_OF_TWO
+      - TWO_OF_THREE
+      - THREE_OF_FIVE
+    WaasPolicyLayerUpdateRequest:
+      type: object
+      required:
+      - op
+      properties:
+        op:
+          type: string
+          enum:
+          - upsert
+          - remove
+          - batch
+          - replace
+          description: The per-Rule operation to apply to the wallet-Layer, batch to apply multiple operations atomically in one enclave cycle, or replace to set the Layer's full Rule list
+        rule:
+          $ref: '#/components/schemas/WaasPolicyRule'
+        declarativeRule:
+          $ref: '#/components/schemas/WaasPolicyDeclarativeRuleInput'
+        ruleId:
+          $ref: '#/components/schemas/uuid'
+        operations:
+          type: array
+          minItems: 1
+          maxItems: 100
+          description: Only used when op is batch — applied atomically in one enclave cycle
+          items:
+            $ref: '#/components/schemas/WaasPolicyLayerRuleOperation'
+        rules:
+          type: array
+          maxItems: 200
+          description: Only used when op is replace — the Layer's full Rule list, in either syntax. A declarative Rule sent without a ruleId is given one. Only admins and business-account admins may replace.
+          items:
+            $ref: '#/components/schemas/WaasPolicyLayerRuleInput'
+    FlowFeeBreakdown:
+      description: Fee breakdown for a flow's quote.
+      type: object
+      properties:
+        totalFeeUsd:
+          description: Total fees for the flow in USD
+          type: string
+        gasEstimate:
+          $ref: '#/components/schemas/FlowGasEstimate'
+    HardwareWalletProperties:
+      type: object
+      properties:
+        hardwareWallet:
+          $ref: '#/components/schemas/HardwareWalletEnum'
+    WaasPolicyDeclarativeApprovalRequirement:
+      type: object
+      description: 'One approval requirement on a Rule in the policy rule language. It has no condition of its own: the Rule''s own condition decides when it applies.'
+      required:
+      - v
+      - id
+      - requiredApprovals
+      properties:
+        v:
+          type: number
+          description: Schema version for this requirement. An unknown value rejects the Composition.
+        id:
+          type: string
+          description: Stable handle for this requirement, carried as requirementId in the deny reason.
+        eligibleApproverRoles:
+          type: array
+          items:
+            type: string
+          description: Names of the roles whose holders may satisfy this requirement. A holder of any listed role may approve. An empty array means no restriction.
+        mandatoryApproverRoles:
+          type: array
+          items:
+            type: string
+          description: Names of the roles that must each be represented among the approvers, regardless of eligibleApproverRoles. An empty array means none.
+        eligibleApproverRole:
+          type: string
+          deprecated: true
+          description: Deprecated. Use eligibleApproverRoles. Do not send both.
+        mandatoryApproverRole:
+          type: string
+          deprecated: true
+          description: Deprecated. Use mandatoryApproverRoles. Do not send both.
+        requiredApprovals:
+          type: number
+          description: Total approvals required. Never counts the Initiator.
+        completeWithinSeconds:
+          type: number
+          description: How long a collected-approvals proposal remains valid.
+    FlowFeeClaimResponse:
+      description: Instructions to complete a fee claim. Contains an opaque requestId that correlates the initiated claim on submit, and the steps the recipient must complete (one per claimable balance across all providers).
+      type: object
+      required:
+      - requestId
+      - steps
+      properties:
+        requestId:
+          description: Opaque identifier correlating this initiated claim; echoed back on submit so the backend can resolve the provider(s) internally
+          type: string
+        steps:
+          type: array
+          items:
+            $ref: '#/components/schemas/FlowFeeClaimStep'
+    Unauthorized:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message describing the authentication failure
+          type: string
+          example: No jwt provided!
+    UserIdentifierTypeEnum:
+      type: string
+      enum:
+      - email
+      - id
+      - externalUserId
+      - phoneNumber
+      - socialUsername
+      - socialAccountId
+    FlowCreateResponse:
+      description: Response returned when a flow is created.
+      type: object
+      required:
+      - flow
+      properties:
+        flow:
+          $ref: '#/components/schemas/Flow'
+    NonEmptyStringWith50MaxLength:
+      type: string
+      pattern: ^(?=\S)[\p{L}\p{N}a-zA-Z _.,:!?&%@\/+\-'|]+(?<=\S)$
+      example: An example name
+      maxLength: 50
+    WaasPolicyRuleType:
+      type: string
+      enum:
+      - allow
+      - deny
+      description: Whether the rule permits or denies the specified action
+    LinkBusinessAccountWalletSdkRequest:
+      type: object
+      required:
+      - walletId
+      properties:
+        walletId:
+          type: string
+          format: uuid
+          description: The existing wallet (Wallets.id) to add.
+        businessAccountId:
+          type: string
+          format: uuid
+          description: Target business account. Omit to find-or-create the per-wallet business account.
+        autoExecute:
+          $ref: '#/components/schemas/BusinessAccountAutoExecute'
+        intent:
+          $ref: '#/components/schemas/BusinessAccountMutationIntent'
+        intentSignature:
+          $ref: '#/components/schemas/BusinessAccountIntentSignature'
+    WalletAddressType:
+      type: string
+      enum:
+      - ordinals
+      - payment
+      - cosmos
+      - evm
+      - stellar
+      - ton
+      - midnight_unshielded
+      - midnight_dust
+      - midnight_shielded
+    ProviderKernelVersionEnum:
+      type: string
+      enum:
+      - v2_4
+      - v3_0
+      - v3_1
+      - v3_2
+      - v3_3
+    FlowFeeBalance:
+      description: 'A single claimable fee balance accrued for a recipient, broken down by token and chain. Provider-agnostic: which provider accrued the balance is an internal detail and is not surfaced to the caller.'
+      type: object
+      required:
+      - amount
+      - chainId
+      - tokenAddress
+      properties:
+        amount:
+          description: The claimable amount, as a string in the token's smallest unit
+          type: string
+        amountUSD:
+          description: Approximate value of the claimable amount in USD, when available
+          type: string
+        chainId:
+          description: The chain the balance can be claimed and settled on
+          type: string
+        tokenAddress:
+          description: The token contract address the balance is denominated in
+          type: string
+        tokenSymbol:
+          description: Human-readable token symbol, when available
+          type: string
+    SoftDeleteWaasWalletsResponse:
+      type: object
+      properties:
+        count:
+          type: integer
+        walletIds:
+          type: array
+          items:
+            $ref: '#/components/schemas/uuid'
+    SmartWalletProperties:
+      type: object
+      properties:
+        entryPointVersion:
+          $ref: '#/components/schemas/ProviderEntryPointVersionEnum'
+        kernelVersion:
+          $ref: '#/components/schemas/ProviderKernelVersionEnum'
+        ecdsaProviderType:
+          $ref: '#/components/schemas/ecdsaValidatorOptions'
+    JwtVerifiedCredential:
+      type: object
+      required:
+      - id
+      - format
+      - signInEnabled
+      properties:
+        address:
+          $ref: '#/components/schemas/WalletPublicKey'
+        chain:
+          description: Blockchain network for this credential
+          type: string
+        refId:
+          $ref: '#/components/schemas/uuid'
+        signerRefId:
+          $ref: '#/components/schemas/uuid'
+        email:
+          description: Email address for email-based credentials
+          type: string
+          format: email
+        id:
+          $ref: '#/components/schemas/VerifiedCredentialId'
+        name_service:
+          $ref: '#/components/schemas/NameServiceData'
+        public_identifier:
+          description: This is used to publicly identify a verified credential in a human-friendly way. For example, this will be the email address if credential format=email.
+          type: string
+        wallet_name:
+          description: Name of the wallet provider
+          type: string
+        wallet_provider:
+          $ref: '#/components/schemas/WalletProviderEnum'
+        wallet_properties:
+          $ref: '#/components/schemas/WalletProperties'
+        business_account_properties:
+          $ref: '#/components/schemas/BusinessAccountProperties'
+        format:
+          $ref: '#/components/schemas/JwtVerifiedCredentialFormatEnum'
+        oauth_provider:
+          $ref: '#/components/schemas/ProviderEnum'
+        oauth_username:
+          description: Username from the OAuth provider
+          type: string
+        oauth_display_name:
+          description: Display name from the OAuth provider
+          type:
+          - string
+          - 'null'
+        oauth_account_id:
+          description: Unique account identifier from the OAuth provider
+          type:
+          - string
+          - 'null'
+        phoneNumber:
+          description: This field contains the phone number in the country. This could also contain the area code within a country.
+          example: '9171113333'
+          type: string
+        phoneCountryCode:
+          description: This field contains the phone international country code. See https://countrycode.org/
+          example: '1'
+          type: string
+        isoCountryCode:
+          description: ISO-3166 two-character country code. See https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes
+          example: US
+          type: string
+        oauth_account_photos:
+          description: List of profile photo URLs from the OAuth provider
+          type: array
+          items:
+            type: string
+        oauth_emails:
+          description: List of email addresses from the OAuth provider
+          type: array
+          items:
+            type: string
+        oauth_metadata:
+          type: object
+          description: This object contains JSON metadata for a social-based verified credential. It may contain data about the user that does not fit into the other structured fields, and could include arbitrary fields about the user from the oauth provider's API.
+        previous_users:
+          description: This will only be provided in the responses for GET /users/{userId}.Previous user IDs that owned this verified credential and was tranfered to the current user ID.
+          type: array
+          items:
+            $ref: '#/components/schemas/uuid'
+        embedded_wallet_id:
+          description: Identifier of the linked embedded wallet
+          type:
+          - string
+          - 'null'
+        wallet_additional_addresses:
+          description: List of additional addresses derived from this wallet
+          type: array
+          items:
+            $ref: '#/components/schemas/WalletAdditionalAddress'
+        lastSelectedAt:
+          description: This timestamp indicates the last time this verified wallet was either connected to the user account or selected to become the primary wallet on the account.
+          type: string
+          format: date-time
+        signInEnabled:
+          type: boolean
+          description: This indicates if the user can sign in with this credential
+        verifiedAt:
+          type: string
+          format: date-time
+          description: This timestamp indicates the last time this verified credential was verified.
+    CoinbaseMpcWalletProperties:
+      deprecated: true
+      type: object
+      properties:
+        claimed:
+          type: boolean
+          description: Dynamic pregenerated this wallet and stored the passcode
+        source:
+          $ref: '#/components/schemas/PasswordSourceTypeEnum'
+    UnprocessableEntityErrorCode:
+      type: string
+      enum:
+      - email_cannot_be_null
+      - exchange_cannot_be_enabled
+      - transfer_amount_too_small
+      - transfer_address_not_whitelisted
+      - invalid_scopes
+      - unknown_transfer_error
+      - transfer_mfa_required
+      - transfer_mfa_failed
+      - intent_required
+      - invalid_transfer_funds
+      - invalid_transfer_currency
+      - invalid_exchange_provider
+      - invalid_transfer_network
+      - invalid_email
+      - email_already_exists
+      - allowlist_already_exists
+      - allowlist_entry_already_exists
+      - reassign_wallet_error
+      - reassign_wallet_confirm
+      - members_cannot_delete_themself
+      - username_already_exists
+      - wrong_email_verification_token
+      - wrong_sms_verification_token
+      - invalid_email_verification
+      - invalid_sms_verification
+      - invalid_verification
+      - invalid_position
+      - too_many_sms_verification_attempts
+      - too_many_email_verification_attempts
+      - too_many_verification_attempts
+      - organization_name_already_exists
+      - project_name_already_exists
+      - wallet_not_deployed
+      - email_verification_required
+      - phone_verification_required
+      - invite_address_required
+      - provider_not_available
+      - forbidden_unlink_request
+      - invalid_unlink_request
+      - too_many_api_tokens
+      - lock_timeout
+      - lock_too_many_attempts
+      - nft_token_gating_not_supported_for_chain
+      - empty_chain_name
+      - no_enabled_email_provider
+      - no_enabled_sms_provider
+      - invalid_key_export_url
+      - invalid_dynamic_props
+      - too_many_requests
+      - too_many_organizations_for_user
+      - too_many_projects_for_organization
+      - email_associated_with_different_provider
+      - user_has_already_account_with_email
+      - user_has_already_account_with_phone_number
+      - other_verify_failure
+      - email_tied_to_embedded_wallet
+      - invalid_invite
+      - social_account_already_exists
+      - invalid_email_address
+      - invalid_gate
+      - conflicting_embedded_wallet_providers
+      - invalid_user
+      - invalid_cors_origins
+      - invalid_mobile_deeplink_urls
+      - unauthorized_mobile_deeplink_url
+      - invalid_private_key_format
+      - invalid_embedded_wallet_settings
+      - wallet_not_support_passkey
+      - recovery_email_unavailable_or_invalid
+      - connect_error
+      - invalid_wallet_name
+      - invalid_wallet_address
+      - email_recovery_disabled
+      - no_compatible_wallet_service_enabled
+      - missing_aa_project_id
+      - linked_embedded_wallet
+      - invalid_mpc_environment
+      - invalid_regex
+      - repeated_options
+      - missing_phone_number_or_email
+      - duplicate_exists
+      - mfa_device_not_found
+      - mfa_invalid_code
+      - mfa_invalid_request
+      - invalid_phone
+      - gate_exists
+      - invalid_embedded_wallet_chains_configuration
+      - merge_accounts_confirmation
+      - merge_accounts_invalid
+      - invalid_wallet_id
+      - unable_to_fetch_balances
+      - cannot_switch_to_unique
+      - custom_field_data_not_unique
+      - metadata_size_exceeded
+      - invalid_custom_hostname
+      - blocked_user_cannot_transfer_wallet
+      - feature_not_enabled_in_suborg
+      - invalid_username
+      - invalid_external_auth
+      - invalid_chain_address_match
+      - invalid_update
+      - cannot_delete_last_project
+      - no_hd_wallet_found
+      - wallet_account_exists_for_chain
+      - too_many_embedded_wallets_for_user
+      - too_many_embedded_wallets_per_chain_for_user
+      - invalid_session_public_key
+      - custom_field_not_unique
+      - invalid_aa_project_configuration
+      - no_v1_embedded_wallet_found
+      - embedded_wallet_address_already_linked
+      - key_share_already_backed_up
+      - invalid_key_shares_length
+      - wallet_not_active
+      - wallet_service_connection_error
+      - no_global_wallet_found
+      - invalid_metadata_value
+      - max_passkeys_per_user
+      - passkey_not_found
+      - cannot_delete_passkey_linked_to_embedded_wallet
+      - cannot_delete_last_sign_in_verified_credential
+      - credential_not_enabled_for_sign_in
+      - unsupported_chain
+      - share_set_id_required
+      - address_screening_byok_auth
+      - address_screening_byok_quota
+      - address_screening_byok_shape
+      - address_screening_byok_upstream
+      - captcha_settings_incomplete_key_pair
+      - invalid_signed_transaction
+      - signed_transaction_wallet_mismatch
+      - unsupported_waas_chain
+      - network_not_enabled
+      - broadcast_rejected
+      - broadcast_requires_resign
+      - broadcast_outcome_unknown
+      - broadcast_rate_limited
+      - broadcast_unavailable
+      - broadcast_idempotency_conflict
+      - broadcast_wallet_ineligible
+      - broadcast_not_submitted
+      - chain_mismatch
+      - network_disabled
+      - missing_fee
+      - missing_nonce
+      - missing_gas_limit
+      - ambiguous_fee_style
+      - unsupported_shape
+      - contract_creation_unsupported
+      - multiple_transactions
+      - durable_nonce_unsupported
+      - missing_cosigner
+      - blockhash_too_old
+      - certainty_unreachable
+      - ambiguous_broadcast_identifier
+      - offline_recovery_cloud_backup_conflict
+      - quote_expired
+      - insufficient_balance
+      - exchange_settlement_unsupported
+    SwapEvmTransactionData:
+      type: object
+      required:
+      - to
+      - data
+      - value
+      properties:
+        to:
+          type: string
+          description: Contract address to call
+        data:
+          type: string
+          description: Encoded calldata (hex)
+        value:
+          type: string
+          description: Native asset amount in wei (hex string, "0x0" if token-only)
+        gasLimit:
+          type: string
+          description: Suggested gas limit (hex string)
+        gasPrice:
+          type: string
+          description: Gas price in wei (hex string, legacy transactions)
+        maxFeePerGas:
+          type: string
+          description: Max fee per gas (EIP-1559)
+        maxPriorityFeePerGas:
+          type: string
+          description: Max priority fee per gas (EIP-1559)
+        nonce:
+          type: integer
+          description: Transaction nonce
+    InternalServerError:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message
+          type: string
+          example: Internal Server Error
+    FlowModeEnum:
+      description: The lifecycle a flow follows — payment, deposit, or withdraw.
+      type: string
+      enum:
+      - payment
+      - deposit
+      - withdraw
+    BusinessAccountMutationIntent:
+      type: object
+      description: 'The initiator''s proposal, signed with their session key. Built by the API, not the client — sign these exact bytes verbatim, because re-serializing can change them and invalidate the signature.
+
+        `autoExecute` is inside the signed bytes, so an approver consents to it and nothing can flip it afterwards.
+
+        '
+      additionalProperties: true
+    FlowPaymentLinkCreateResponseExtraFields:
+      type: object
+      required:
+      - paymentUrl
+      properties:
+        paymentUrl:
+          type: string
+          description: Shareable payer URL
+    UnprocessableEntityErrorPayload:
+      type: object
+      description: Contains information which the integrating client of this API can use to tailor an experience to a customer to fix the underlying issue that triggered this error.
+      properties:
+        email:
+          description: Email address that caused the validation error
+          type: string
+          format: email
+          example: joe@email.com
+        loginProvider:
+          $ref: '#/components/schemas/ProviderEnum'
+        embeddedWalletName:
+          description: Embedded wallet name that caused the validation error
+          type: string
+        embeddedSocialSigninProvider:
+          $ref: '#/components/schemas/ProviderEnum'
+        mergeConflicts:
+          $ref: '#/components/schemas/MergeConflicts'
+        intent:
+          $ref: '#/components/schemas/BusinessAccountMutationIntent'
+        additionalMessages:
+          description: List of additional validation error messages
+          type: array
+          items:
+            type: string
+    WaasPolicyDeclarativeRuleInput:
+      type: object
+      description: 'A Rule authored in the policy rule language, evaluated by the engine as stored rather than compiled from WaasPolicyRule. Shares identity and authorship with a legacy Rule so the Layer machinery — deletion markers, authorship stamping, the edit guard — keys on the same fields and needs no second code path for anything but evaluation. A Layer holds one syntax or the other: a write that would leave both in one Layer is refused.'
+      required:
+      - phase
+      - when
+      - then
+      properties:
+        ruleId:
+          $ref: '#/components/schemas/uuid'
+        name:
+          type: string
+          description: Human-readable name for the rule
+        phase:
+          type: string
+          description: Which question this Rule answers. A Layer is one flat list, so the phase travels on the Rule rather than being implied by its position.
+          enum:
+          - transaction
+          - operation
+        when:
+          type: object
+          description: Condition in the policy rule language, validated against the field catalog on write and again on read
+        then:
+          $ref: '#/components/schemas/WaasPolicyAction'
+        approvalRequirements:
+          type: array
+          description: The approvals a matching transaction needs. Required when then is REQUIRE_APPROVAL and refused on any other action. A deny in the same Layer wins first; otherwise every REQUIRE_APPROVAL Rule whose when holds, or cannot be decided, applies. A message or raw sign has no transaction to test, so every such Rule applies. Enforced only for business-account wallets. Valid on business-account, wallet and signer Layers and refused on the environment Layer. Only admins and business-account admins may author one. May not read spendWindows.
+          items:
+            $ref: '#/components/schemas/WaasPolicyDeclarativeApprovalRequirement'
+        modifiableBySigner:
+          type: boolean
+          description: When true, a Signer may adjust this Rule within its recognised shape
+    SwapEvmApprovalData:
+      type: object
+      required:
+      - tokenAddress
+      - spenderAddress
+      - amount
+      properties:
+        tokenAddress:
+          type: string
+          description: ERC-20 contract to approve
+        spenderAddress:
+          type: string
+          description: Contract that needs the allowance (e.g. LiFi Diamond)
+        amount:
+          type: string
+          description: Amount to approve in token's smallest unit
+    SolanaPublicKey:
+      type: string
+      pattern: ^[1-9A-HJ-NP-Za-km-z]{43,44}$
+      description: Valid Solana wallet address, must be a 44-character string using base58 characters
+      example: vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg
+    FlowSourceTypeEnum:
+      description: How a flow is funded — a connected wallet, a CEX, or a deposit address.
+      type: string
+      enum:
+      - wallet
+      - exchange
+      - deposit_address
+    FlowUIConfig:
+      type: object
+      description: Payer-facing UI config for a flow, set once at creation. Not part of the execution/settlement record.
+      properties:
+        returnUrl:
+          description: Payer app URL to redirect to once the flow reaches a specific state. Origin must be a registered CORS origin for the environment. Redirected to as `returnUrl?status=success|failure&flowId=...`.
+          type: string
+        termsOfServicesUrl:
+          $ref: '#/components/schemas/OptionalNonEmptyUrlWithLocalhostAndDeepLink'
+        merchantName:
+          $ref: '#/components/schemas/OptionalNonEmptyStringWith255MaxLength'
+        merchantLogoUrl:
+          $ref: '#/components/schemas/OptionalNonEmptyImageUrl'
+        externalPaymentId:
+          $ref: '#/components/schemas/OptionalNonEmptyStringWith255MaxLength'
+        enabledPaymentMethods:
+          description: Source types the payer UI should offer. Omit to offer every method. Display-only — not enforced when a source is attached. Duplicates are ignored.
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/FlowSourceTypeEnum'
+    BusinessAccountProperties:
+      type: object
+      description: 'Business-account context attached to a verified credential that belongs to a business account. Present whenever `wallet_properties.shareSetType` is `businessAccountUser`; absent otherwise. Each field is namespaced by its source table so a caller reading the response sees exactly which entity the value came from (no ambiguity between member role and signer type, between business-account name and signer-derived names, etc.).
+
+        '
+      required:
+      - businessAccountId
+      - businessAccountCreatedAt
+      - businessAccountSignerId
+      - businessAccountSignerType
+      - businessAccountMemberRole
+      properties:
+        businessAccountId:
+          $ref: '#/components/schemas/uuid'
+        businessAccountName:
+          type:
+          - string
+          - 'null'
+          description: Display name; user-supplied at create time. Nullable.
+        businessAccountExternalRef:
+          type:
+          - string
+          - 'null'
+          description: Developer-supplied stable ID inside the env. Nullable.
+        businessAccountCreatedAt:
+          type: string
+          format: date-time
+        businessAccountSignerId:
+          $ref: '#/components/schemas/uuid'
+        businessAccountSignerType:
+          $ref: '#/components/schemas/BusinessAccountSignerType'
+        businessAccountMemberRole:
+          $ref: '#/components/schemas/HeldBusinessAccountMemberRole'
+    BusinessAccountIntentSignature:
+      type: string
+      pattern: ^[0-9a-fA-F]{128}$
+      description: 'Hex-encoded ECDSA P-256 signature over the canonicalized payload, produced by the signer''s session key — which never leaves their device, so consent cannot be given on their behalf.
+
+        Exactly 128 hex characters. WebCrypto emits the raw r‖s form with both halves padded to 32 bytes, so unlike DER the length never varies. Constrained here so a malformed value is a 400 at the edge rather than an enclave round trip that returns INTENT_SIGNATURE_INVALID, and so an unbounded string cannot be persisted against a proposal.
+
+        '
+    WaasWalletShareSetType:
+      type: string
+      enum:
+      - delegated
+      - rootUser
+      - server
+      - businessAccountUser
+      - offlineRecovery
+      description: The role this share set plays for the wallet
+    DestinationTypeEnum:
+      type: string
+      enum:
+      - address
+    WalletAdditionalAddress:
+      type: object
+      description: An additional address associated with a wallet.
+      required:
+      - address
+      - type
+      properties:
+        address:
+          type: string
+          description: An address associated with a wallet.
+        publicKey:
+          type: string
+          description: The public key associated with the address.
+        type:
+          $ref: '#/components/schemas/WalletAddressType'
+        network:
+          type: string
+          description: Network this address is encoded for (e.g. 'mainnet' | 'testnet' | 'preview'). Present when a wallet exposes an address per network.
+    ecdsaValidatorOptions:
+      type: string
+      enum:
+      - zerodev_signer_to_ecdsa
+      - zerodev_multi_chain
+    BusinessAccountMember:
+      type: object
+      description: Admin-reach membership in a business account
+      properties:
+        id:
+          $ref: '#/components/schemas/uuid'
+        businessAccountId:
+          $ref: '#/components/schemas/uuid'
+        userId:
+          $ref: '#/components/schemas/uuid'
+        email:
+          description: Member's verified email; null when they have none
+          type:
+          - string
+          - 'null'
+        role:
+          $ref: '#/components/schemas/HeldBusinessAccountMemberRole'
+        customRole:
+          description: The member's actual customer-defined role, when role names one; null for a built-in role
+          type:
+          - object
+          - 'null'
+          properties:
+            name:
+              $ref: '#/components/schemas/HeldBusinessAccountMemberRole'
+            inherits:
+              $ref: '#/components/schemas/HeldBusinessAccountMemberRole'
+          required:
+          - name
+          - inherits
+        addedByUserId:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        lastSeenAt:
+          description: 'Dashboard-only: this member''s most recent session creation time. Null when they have never completed authentication (e.g. still mid-invite).'
+          type:
+          - string
+          - 'null'
+          format: date-time
+      required:
+      - id
+      - businessAccountId
+      - userId
+      - role
+    SoftDeleteWaasWalletsRequest:
+      type: object
+      required:
+      - walletIds
+      properties:
+        walletIds:
+          type: array
+          items:
+            $ref: '#/components/schemas/uuid'
+    SettlementConfigInput:
+      type: object
+      required:
+      - strategy
+      - settlements
+      properties:
+        strategy:
+          $ref: '#/components/schemas/SettlementStrategyEnum'
+        settlements:
+          description: List of settlement strategy configurations
+          type: array
+          items:
+            $ref: '#/components/schemas/ChainSettlementConfig'
+    AssignableBusinessAccountRoleName:
+      type: string
+      description: 'A role that can be directly assigned to a member: a built-in (`admin`, `viewer`) or a customer-defined role the account has defined. `owner` is excluded — ownership moves only via transferOwnership.
+
+        Not an enum, because the set is per-account: a caller can grant any role from GET /roles. Whether the role exists is the enclave''s to answer, not this schema''s — the pattern only rejects names that could never be one. A role the account has not defined is refused with UNKNOWN_ROLE.
+
+        A customer-defined role grants exactly what it inherits, so `cfo inherits admin` is an admin with a distinguishable name.
+
+        Case-insensitive on input — `CFO` and `cfo` name the same role. The server normalizes to lowercase before comparing or storing, so the pattern accepts both cases here even though a held/stored role name (HeldBusinessAccountMemberRole) is always lowercase.
+
+        '
+      pattern: ^[a-zA-Z0-9](?:[a-zA-Z0-9_-]{0,30}[a-zA-Z0-9])?$
+      example: cfo
+    FlowFeeClaimRequest:
+      description: 'Request to initiate a fee claim. Provider-agnostic: the caller only supplies the recipient address and the backend looks up unclaimed fee balances across every provider, returning a signing step for each. chainId and tokenAddress are optional filters to narrow the claim to a specific balance.'
+      type: object
+      required:
+      - recipientAddress
+      properties:
+        chainId:
+          description: Optional filter — only claim balances settled on this chain
+          type: string
+        recipientAddress:
+          $ref: '#/components/schemas/WalletPublicKey'
+        tokenAddress:
+          description: Optional filter — only claim balances for this token contract address
+          type: string
+    BusinessAccountSignerType:
+      type: string
+      description: Type of a business account signer
+      enum:
+      - endUser
+      - server
+    FlowExchangeSource:
+      description: Exchange source for a flow. Present when sourceType is 'exchange'. Contains the exchange reference and provider-specific metadata (e.g. buyUrl for Coinbase).
+      type: object
+      required:
+      - exchangeId
+      - metadata
+      properties:
+        exchangeId:
+          $ref: '#/components/schemas/uuid'
+        metadata:
+          type: object
+          description: Provider-specific data. Shape varies by exchange.
+    WaasPolicyLayerResponse:
+      type: object
+      required:
+      - layerId
+      - layerContent
+      - updatedAt
+      properties:
+        message:
+          type: string
+          description: Message describing the operation result
+        layerId:
+          type: string
+          description: Unique identifier for the wallet-Layer
+        layerContent:
+          type: object
+          description: The decrypted, mutated wallet-Layer document
+          properties:
+            rules:
+              type: array
+              description: 'The Layer''s Rules, in whichever syntax it holds — legacy (WaasPolicyLayerResponseRule) or the policy rule language (WaasPolicyDeclarativeRule). Free-form for the same reason the request side is: which syntax a Layer may hold, and that it holds only one, are the enclave''s checks, not this contract''s. Pinning the legacy shape here would make a successful write of a declarative Layer return a body that violates its own response schema.'
+              items:
+                type: object
+        updatedAt:
+          description: ISO 8601 timestamp of when the wallet-Layer was last updated
+          type: string
+          format: date-time
+    SettlementStrategyEnum:
+      type: string
+      enum:
+      - cheapest
+      - fastest
+      - preferred_order
+    BaseUser:
+      type: object
+      required:
+      - id
+      - projectEnvironmentId
+      properties:
+        id:
+          $ref: '#/components/schemas/uuid'
+        projectEnvironmentId:
+          $ref: '#/components/schemas/uuid'
+        verifiedCredentials:
+          description: List of verified credentials (wallets, emails, social accounts) linked to the user
+          type: array
+          items:
+            $ref: '#/components/schemas/JwtVerifiedCredential'
+        lastVerifiedCredentialId:
+          $ref: '#/components/schemas/LastVerifiedCredentialId'
+        sessionId:
+          $ref: '#/components/schemas/uuid'
+        alias:
+          $ref: '#/components/schemas/OptionalNullableNonEmptyStringWith255MaxLength'
+        country:
+          $ref: '#/components/schemas/CountryCode'
+        email:
+          description: Primary email address of the user
+          type:
+          - string
+          - 'null'
+          format: email
+          maxLength: 255
+        firstName:
+          $ref: '#/components/schemas/OptionalNullableNonEmptyStringWith255MaxLength'
+        jobTitle:
+          $ref: '#/components/schemas/OptionalNullableNonEmptyStringWith255MaxLength'
+        lastName:
+          $ref: '#/components/schemas/OptionalNullableNonEmptyStringWith255MaxLength'
+        phoneNumber:
+          description: Phone number of the user
+          type:
+          - string
+          - 'null'
+          maxLength: 255
+        policiesConsent:
+          description: Whether the user has accepted the terms of service and privacy policy
+          type:
+          - boolean
+          - 'null'
+        tShirtSize:
+          $ref: '#/components/schemas/OptionalNullableNonEmptyStringWith255MaxLength'
+        team:
+          $ref: '#/components/schemas/OptionalNullableNonEmptyStringWith255MaxLength'
+        username:
+          $ref: '#/components/schemas/OptionalNullableNonEmptyStringWith255MaxLength'
+        firstVisit:
+          description: ISO 8601 timestamp of when the user first visited
+          type: string
+          format: date-time
+        lastVisit:
+          description: ISO 8601 timestamp of when the user last visited
+          type: string
+          format: date-time
+        newUser:
+          description: Whether this is a newly created user
+          type: boolean
+        metadata:
+          description: Arbitrary key-value metadata associated with the user
+          type: object
+        mfaBackupCodeAcknowledgement:
+          $ref: '#/components/schemas/MfaBackupCodeAcknowledgement'
+        btcWallet:
+          description: Bitcoin wallet address of the user
+          type:
+          - string
+          - 'null'
+        kdaWallet:
+          description: Kadena wallet address of the user
+          type:
+          - string
+          - 'null'
+        ltcWallet:
+          description: Litecoin wallet address of the user
+          type:
+          - string
+          - 'null'
+        ckbWallet:
+          description: Nervos CKB wallet address of the user
+          type:
+          - string
+          - 'null'
+        kasWallet:
+          description: Kaspa wallet address of the user
+          type:
+          - string
+          - 'null'
+        dogeWallet:
+          description: Dogecoin wallet address of the user
+          type:
+          - string
+          - 'null'
+        emailNotification:
+          description: Whether the user has opted in to email notifications
+          type:
+          - boolean
+          - 'null'
+        discordNotification:
+          description: Whether the user has opted in to Discord notifications
+          type:
+          - boolean
+          - 'null'
+        newsletterNotification:
+          description: Whether the user has opted in to newsletter notifications
+          type:
+          - boolean
+          - 'null'
+        lists:
+          type: array
+          description: Access lists evaluated by Dynamic when considering access for the user.
+          items:
+            type: string
+        scope:
+          type: string
+          description: 'A whitespace-separate list of permissions associated with the JWT token issued. This conforms to the JWT standard for scope claims: https://datatracker.ietf.org/doc/html/rfc8693#section-4.2'
+          example: superuser marketing operations
+        missingFields:
+          description: List of required user fields that have not yet been provided
+          type: array
+          items:
+            $ref: '#/components/schemas/ProjectSettingsKyc'
+    FlowSettlementStateEnum:
+      description: Settlement axis of a flow's state machine.
+      type: string
+      enum:
+      - none
+      - routing
+      - bridging
+      - swapping
+      - settling
+      - completed
+      - failed
+    ProviderEnum:
+      type: string
+      description: The 'turnkey' value is deprecated and will be removed in a future version.
+      enum:
+      - emailOnly
+      - magicLink
+      - apple
+      - bitbucket
+      - coinbasesocial
+      - discord
+      - epicgames
+      - facebook
+      - farcaster
+      - github
+      - gitlab
+      - google
+      - instagram
+      - linkedin
+      - microsoft
+      - twitch
+      - twitter
+      - blocto
+      - banxa
+      - coinbaseOnramp
+      - binanceOnramp
+      - cryptoDotCom
+      - moonPay
+      - dynamic
+      - alchemy
+      - zerodev
+      - telegram
+      - turnkey
+      - coinbaseWaas
+      - sms
+      - spotify
+      - tiktok
+      - line
+      - steam
+      - shopify
+      - zksync
+      - kraken
+      - blockaid
+      - passkey
+      - okta
+      - sendgrid
+      - resend
+      - trmWalletScreening
+      - chainalysisAddressScreening
+      - gemini
+    FlowTokenInfo:
+      description: Token metadata returned alongside a flow or flow quote.
+      type: object
+      required:
+      - symbol
+      - decimals
+      properties:
+        symbol:
+          description: Token symbol (e.g. USDC, ETH)
+          type: string
+        decimals:
+          description: Number of decimal places for this token
+          type: integer
+        name:
+          description: Human-readable token name (e.g. USD Coin, Ether)
+          type: string
+        logoURI:
+          description: URL to the token logo image
+          type: string
+    BusinessAccountForbidden:
+      allOf:
+      - $ref: '#/components/schemas/Forbidden'
+      - type: object
+        description: 'Carries the requirement tallies when the caller is authorized but consent is outstanding, which is a different thing from being refused outright.
+
+          '
+        properties:
+          approvalRequirements:
+            type: array
+            items:
+              $ref: '#/components/schemas/BusinessAccountApprovalRequirementStatus'
+    FlowExecutionStateEnum:
+      description: Execution axis of a flow's state machine.
+      type: string
+      enum:
+      - initiated
+      - source_attached
+      - quoted
+      - signing
+      - broadcasted
+      - source_detected
+      - source_confirmed
+      - cancelled
+      - expired
+      - failed
+    FlowPaymentLinkCreateRequest:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/FlowCreateRequest'
+      - $ref: '#/components/schemas/FlowPaymentLinkCreateRequestBaseFields'
+    BadRequest:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message
+          type: string
+        code:
+          description: Machine-readable reason for the 400, set only by endpoints that distinguish rejections. Flow endpoints use exchange_not_supported and exchange_currency_unsupported.
+          type: string
+          example: exchange_currency_unsupported
+    LastVerifiedCredentialId:
+      description: ID of the most recently used verified credential. This would refer to a value in the verified credentials list
+      type: string
+      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(-zerodev)?$
+      minLength: 36
+      maxLength: 45
+      example: 95b11417-f18f-457f-8804-68e361f9164f-zerodev
+    BusinessAccountDetail:
+      type: object
+      description: 'SDK-side business account response with embedded members, signers, and wallets. Origin 2 callers (low member count) get everything in one fetch; if a business account ever needs pagination we add a separate paginated list endpoint without changing this shape.
+
+        '
+      allOf:
+      - $ref: '#/components/schemas/BusinessAccount'
+      - type: object
+        required:
+        - members
+        - signers
+        properties:
+          members:
+            type: array
+            items:
+              $ref: '#/components/schemas/BusinessAccountMember'
+          signers:
+            type: array
+            items:
+              $ref: '#/components/schemas/BusinessAccountSigner'
+          wallets:
+            description: 'Wallets bound to this business account via `Wallets.business_account_id`. Superset of `signers[].walletId` — a wallet exists before any signer row is minted on it (staged-then-resolved lifecycle).
+
+              '
+            type: array
+            items:
+              $ref: '#/components/schemas/BusinessAccountWallet'
+    FlowFeeClaimStep:
+      description: A single step the recipient completes to authorize a claim, typically a request to sign an opaque payload. Steps are executed against whichever provider holds the balance; that provider is an internal detail and is not surfaced to the caller.
+      type: object
+      required:
+      - action
+      - data
+      - id
+      - type
+      properties:
+        action:
+          description: Human-readable description of the step
+          type: string
+        data:
+          description: Opaque payload the recipient must act on (e.g. sign)
+          type: object
+        id:
+          description: Identifier for the step, echoed back when submitting its signature
+          type: string
+        type:
+          description: The type of step, such as a signature request
+          type: string
+    CustomFieldValidValue:
+      type: object
+      required:
+      - label
+      properties:
+        label:
+          $ref: '#/components/schemas/NonEmptyStringWith255MaxLengthAndSpecialChars'
+        key:
+          $ref: '#/components/schemas/NonEmptyStringWith255MaxLengthAndSpecialChars'
+    ProviderEntryPointVersionEnum:
+      type: string
+      enum:
+      - v6
+      - v7
+    OptionalNonEmptyUrlWithLocalhostAndDeepLink:
+      type: string
+      pattern: ^$|^((https?:\/\/)?([a-z0-9]+([-.]+[a-z0-9]+)*\.[a-z]{2,10}|localhost)(:[0-9]{1,5})?(\/.*)?|([a-zA-Z+-]{2,20}):\/\/(?!.*\*.*\*.*)[-*a-zA-Z0-9.-\/]{0,255}(:[*0-9]{1,5})?((\/|\?).*)?)$
+      example: https://website-sample.com
+    ServerIdentityResponse:
+      type: object
+      required:
+      - userId
+      properties:
+        userId:
+          allOf:
+          - $ref: '#/components/schemas/uuid'
+          description: 'The environment''s server identity. Pass this as targetIdentity.userId
+
+            to addMember to add the server as a business-account member.
+
+            '
+    ProjectSettingsKyc:
+      type: object
+      properties:
+        name:
+          description: Internal name identifier of the KYC field
+          type: string
+        required:
+          description: Whether this KYC field is required for user onboarding
+          type: boolean
+        enabled:
+          description: Whether this KYC field is enabled for collection
+          type: boolean
+        unique:
+          description: Whether this KYC field value must be unique across all users
+          type: boolean
+        verify:
+          description: Whether this KYC field requires verification
+          type: boolean
+        type:
+          $ref: '#/components/schemas/KycFieldType'
+        validationRules:
+          $ref: '#/components/schemas/CustomFieldValidationRules'
+        validationType:
+          $ref: '#/components/schemas/CustomFieldType'
+        label:
+          description: Display label for the KYC field shown to users
+          type: string
+        position:
+          description: Display position order of the KYC field in the form
+          type: number
+      required:
+      - name
+      - required
+      - enabled
+      - unique
+      - verify
+    SwapTronTransactionData:
+      type: object
+      required:
+      - rawDataHex
+      - to
+      - value
+      properties:
+        rawDataHex:
+          type: string
+          description: 'Hex-encoded serialized Tron raw_data protobuf (a TriggerSmartContract call to the swap router). This is the full signable transaction; the Tron signer derives the txID (sha256 of raw_data) and signs it.
+
+            '
+        to:
+          type: string
+          description: Router contract address (base58), for display only
+        value:
+          type: string
+          description: Native TRX amount in sun (hex string, "0x0" if token-only)
+    FlowFailure:
+      description: Structured failure detail recorded on a flow when an operation fails.
+      type: object
+      required:
+      - code
+      - message
+      - category
+      - stage
+      - retryable
+      properties:
+        code:
+          $ref: '#/components/schemas/NonEmptyStringWith50MaxLength'
+        message:
+          description: Human-readable error message describing the failure
+          type: string
+        category:
+          $ref: '#/components/schemas/NonEmptyStringWith50MaxLength'
+        stage:
+          $ref: '#/components/schemas/NonEmptyStringWith50MaxLength'
+        retryable:
+          description: Whether the failed operation can be retried
+          type: boolean
+        details:
+          description: Additional structured details about the failure
+          type: object
+    WaasPolicyAction:
+      type: string
+      description: What a rule in the policy rule language decides when it matches. REQUIRE_APPROVAL neither allows nor denies; it applies the Rule's approvalRequirements to a matching transaction, and is valid in the transaction phase only.
+      enum:
+      - ALLOW
+      - DENY
+      - REQUIRE_APPROVAL
+    FlowQuote:
+      description: A versioned quote snapshot stored on a flow.
+      type: object
+      required:
+      - version
+      - fromAmount
+      - toAmount
+      - expiresAt
+      - createdAt
+      properties:
+        version:
+          description: Monotonically increasing version number for this quote
+          type: integer
+        fromAmount:
+          description: Amount being sent in source-token base units
+          type: string
+        toAmount:
+          description: Amount to be received in destination-token base units
+          type: string
+        fees:
+          $ref: '#/components/schemas/FlowFeeBreakdown'
+        estimatedTimeSec:
+          description: Estimated time in seconds for the swap to complete
+          type: integer
+        signingPayload:
+          $ref: '#/components/schemas/SwapSigningPayload'
+        createdAt:
+          description: ISO 8601 timestamp of when the quote was created
+          type: string
+          format: date-time
+        expiresAt:
+          description: ISO 8601 timestamp of when the quote expires
+          type: string
+          format: date-time
+        fromChainName:
+          $ref: '#/components/schemas/ChainEnum'
+        fromChainId:
+          $ref: '#/components/schemas/NonEmptyStringWith50MaxLength'
+        fromToken:
+          $ref: '#/components/schemas/NonEmptyStringWith255MaxLength'
+        toChainName:
+          $ref: '#/components/schemas/ChainEnum'
+        toChainId:
+          $ref: '#/components/schemas/NonEmptyStringWith50MaxLength'
+        toToken:
+          $ref: '#/components/schemas/NonEmptyStringWith255MaxLength'
+        fromTokenInfo:
+          $ref: '#/components/schemas/FlowTokenInfo'
+        toTokenInfo:
+          $ref: '#/components/schemas/FlowTokenInfo'
+    Ed25519Variant:
+      type: string
+      description: Protocol variant for the wallet. `ed25519Standard` = non-exportable Ed25519, used for raw-scalar import where the 32-byte input is the signing scalar itself (not an RFC-8032 seed). Omitted/`ed25519Exportable` = the default seed-based Ed25519. Only meaningful for ed25519 chains (e.g. Solana).
+      enum:
+      - ed25519Exportable
+      - ed25519Standard
+    FlowPaymentLinkCreateRequestBaseFields:
+      type: object
+      required:
+      - baseUrl
+      properties:
+        baseUrl:
+          type: string
+          description: Merchant-hosted payer app URL
+    FlowFeeBalancesResponse:
+      description: The recipient's claimable fee balances aggregated across every provider. An empty balances list means there is nothing to claim; hasClaimableFees is a convenience flag that is true when balances is non-empty.
+      type: object
+      required:
+      - balances
+      - hasClaimableFees
+      properties:
+        balances:
+          description: One entry per claimable token and chain balance; empty when there is nothing to claim
+          type: array
+          items:
+            $ref: '#/components/schemas/FlowFeeBalance'
+        hasClaimableFees:
+          description: True when the recipient has at least one claimable balance
+          type: boolean
+    ChainEnum:
+      type: string
+      enum:
+      - ETH
+      - EVM
+      - FLOW
+      - SOL
+      - ALGO
+      - STARK
+      - COSMOS
+      - BTC
+      - ECLIPSE
+      - SUI
+      - SPARK
+      - TRON
+      - APTOS
+      - TON
+      - STELLAR
+      - ALEO
+      - TEMPO
+      - MIDNIGHT
+    FlowFeeConfig:
+      description: Fee collection configuration specifying recipients and their shares.
+      type: object
+      required:
+      - recipients
+      properties:
+        recipients:
+          description: Fee recipients who each receive a share of the source amount on swaps — at most 1 per address family. Each recipient address must be a valid EVM (`0x`) or Solana (base58) address; families may be mixed on one flow since each swap provider collects only the recipients it can pay on the quote's source chain.
+          type: array
+          items:
+            $ref: '#/components/schemas/FeeRecipientConfig'
+          minItems: 1
+          maxItems: 2
+    FlowFeeClaimSubmitResponse:
+      description: Result of submitting a fee claim.
+      type: object
+      required:
+      - status
+      properties:
+        status:
+          description: Status of the submitted claim
+          type: string
+        txHashes:
+          description: On-chain transaction hashes for any claims that settled on-chain
+          type: array
+          items:
+            type: string
+    Conflict:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message
+          type: string
+          example: 'Conflict: invalid state transition'
+    WaasPolicyArgumentConstraint:
+      type: object
+      required:
+      - operator
+      - value
+      - index
+      properties:
+        operator:
+          $ref: '#/components/schemas/WaasPolicyConstraintCondition'
+        value:
+          description: Reference value for comparison
+        index:
+          type: integer
+          minimum: 0
+          description: Index of the function argument to validate
+    KycFieldType:
+      type: string
+      enum:
+      - standard
+      - custom
+    FlowCreateRequest:
+      description: Create-time payload for a flow. amount, currency, settlementConfig and destinationConfig are written once here (by a trusted API-key caller) and are accepted by no later endpoint. mode is supplied in the URL path.
+      type: object
+      required:
+      - amount
+      - currency
+      - settlementConfig
+      - destinationConfig
+      properties:
+        amount:
+          description: Amount in the specified currency
+          type: string
+        currency:
+          $ref: '#/components/schemas/FlowCurrencyEnum'
+        settlementConfig:
+          $ref: '#/components/schemas/SettlementConfigInput'
+        destinationConfig:
+          $ref: '#/components/schemas/DestinationConfigInput'
+        memo:
+          description: Arbitrary metadata attached to the flow
+          type: object
+        feeConfig:
+          $ref: '#/components/schemas/FlowFeeConfig'
+        expiresIn:
+          type: integer
+          description: Seconds until the flow expires (default 3600, clamped server-side)
+        pegStablecoins:
+          description: When true, known stablecoins (USDC, USDT, DAI, etc.) in the settlement config are pegged 1:1 to the flow currency at quote time, skipping market-price lookup. Defaults to false.
+          type: boolean
+        disableSwaps:
+          description: When true, this flow will not be quoted through swap providers; the payer must supply a token/chain already accepted by the settlement config. Defaults to false.
+          type: boolean
+        uiConfig:
+          $ref: '#/components/schemas/FlowUIConfig'
+    FeeRecipientConfig:
+      description: A single fee recipient with a percentage and wallet address.
+      type: object
+      required:
+      - percentage
+      - walletAddress
+      properties:
+        percentage:
+          type: number
+          description: Fraction of the source amount to collect as a fee (0–1)
+          minimum: 0
+          maximum: 1
+          example: 0.01
+        walletAddress:
+          $ref: '#/components/schemas/WalletPublicKey'
+    HardwareWalletEnum:
+      type: string
+      enum:
+      - ledger
+    NotFound:
+      type: object
+      required:
+      - error
+      - code
+      properties:
+        error:
+          description: Human-readable error message
+          type: string
+          example: Not Found
+        code:
+          description: Machine-readable error code. Flow endpoints use exchange_not_configured when the requested exchange isn't set up for the environment.
+          type: string
+          example: not_found
+    CustomFieldType:
+      type: string
+      enum:
+      - text
+      - checkbox
+      - select
+    FlowFeeClaimSubmitRequest:
+      description: Submit the signatures for a previously initiated claim. The backend resolves the provider(s) from the requestId and executes the claim(s).
+      type: object
+      required:
+      - requestId
+      - signatures
+      properties:
+        requestId:
+          description: The requestId returned when the claim was initiated
+          type: string
+        signatures:
+          description: One signature per step returned by the claim initiation
+          type: array
+          items:
+            $ref: '#/components/schemas/FlowFeeClaimSignature'
+    SmsCountryCode:
+      type: object
+      required:
+      - isoCountryCode
+      - phoneCountryCode
+      properties:
+        isoCountryCode:
+          $ref: '#/components/schemas/NonEmptyIsoCountryCode'
+        phoneCountryCode:
+          $ref: '#/components/schemas/NonEmptyStringWith255MaxLength'
+    WaasChainEnum:
+      type: string
+      enum:
+      - EVM
+      - MIDNIGHT
+      - SVM
+      - SUI
+      - BTC
+      - TON
+      - STELLAR
+      - TEMPO
+      - ALEO
+      - TRON
+    OptionalNonEmptyStringWith255MaxLength:
+      type: string
+      pattern: ^$|^(?=\S)[\p{L}\p{N}a-zA-Z _.,:!?&%@\/+\-'|]+(?<=\S)$
+      example: An example name
+      maxLength: 255
+    NonEmptyStringWith4096MaxLength:
+      type: string
+      maxLength: 4096
+      description: A string with a max length of 4096 characters
+    PasswordSourceTypeEnum:
+      type: string
+      enum:
+      - dynamic
+      - user
+    WaasPolicyLayerRuleInput:
+      anyOf:
+      - $ref: '#/components/schemas/WaasPolicyRule'
+      - $ref: '#/components/schemas/WaasPolicyDeclarativeRuleInput'
+    MergeUser:
+      type: object
+      description: Contains the current field value for the user.
+      required:
+      - userId
+      - value
+      properties:
+        userId:
+          $ref: '#/components/schemas/uuid'
+        value:
+          $ref: '#/components/schemas/NonEmptyStringWith255MaxLength'
+    CountryCode:
+      type:
+      - string
+      - 'null'
+      description: Standard ISO 3166-1 alpha-2 two-letter country code
+      pattern: ^[A-Z]{2}$
+      example: US
+      maxLength: 255
+    AddBusinessAccountMemberRequest:
+      description: The user to add as a member and the role to grant them.
+      allOf:
+      - $ref: '#/components/schemas/BusinessAccountMemberSelection'
+      - type: object
+        required:
+        - role
+        properties:
+          role:
+            $ref: '#/components/schemas/AssignableBusinessAccountRoleName'
+    ChainDestinationConfig:
+      type: object
+      required:
+      - chainName
+      - type
+      - identifier
+      properties:
+        chainName:
+          $ref: '#/components/schemas/ChainEnum'
+        type:
+          $ref: '#/components/schemas/DestinationTypeEnum'
+        identifier:
+          $ref: '#/components/schemas/NonEmptyStringWith255MaxLength'
+    BusinessAccountApprovalRequirementStatus:
+      type: object
+      description: 'One governance requirement and how close it is to being met. Every matching requirement is reported, not only the unmet ones, so a client can show per-rule progress rather than a rule appearing only once it is short.
+
+        Computed inside the enclave: eligibility resolves from the signed document, so whether a given approval counts depends on roles that are not readable outside it. A client cannot derive these numbers from the approval list.
+
+        '
+      required:
+      - action
+      - approved
+      - required
+      - requirementId
+      - satisfied
+      properties:
+        action:
+          type: string
+          description: 'The change type this rule governs. Requirement ids are unique per action only, so a change set spanning two actions can report the same id twice.
+
+            '
+          example: addMember
+        requirementId:
+          type: string
+        required:
+          type: integer
+        approved:
+          type: integer
+          description: 'Approvals that COUNT toward this requirement — not the raw approval count. An approver outside the eligible pool, or one demoted since they approved, is not included.
+
+            '
+        satisfied:
+          type: boolean
+          description: 'Authoritative. `approved >= required` is not sufficient: a mandatory approver role with nobody''s approval leaves this false with the count already met.
+
+            '
+        unmetMandatoryRoles:
+          type: array
+          description: 'Mandatory approver roles still lacking an approval, present only when they are what is holding the requirement back.
+
+            '
+          items:
+            type: string
+    CustomFieldValidationRules:
+      type: object
+      properties:
+        unique:
+          type: boolean
+          description: If this field must be unique for every user in the environment
+        regex:
+          type: string
+          maxLength: 255
+          description: The regex pattern that the text field must match
+          example: ^0x
+        validOptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/CustomFieldValidValue'
+          description: The dropdown options for the select field
+          example:
+          - label: small
+          - label: medium
+          - label: large
+        checkboxText:
+          type: string
+          maxLength: 255
+          description: The text that will be displayed for the checkbox field
+          example: Agree to the terms and conditions
+      description: Optional validation rules for the custom field
+    WaasShareSet:
+      type: object
+      required:
+      - shareSetId
+      - shareSetType
+      - thresholdSignatureScheme
+      - createdAt
+      properties:
+        shareSetId:
+          type: string
+          format: uuid
+          description: Identifier of the share set (WaasWallets row id).
+        shareSetType:
+          $ref: '#/components/schemas/WaasWalletShareSetType'
+        thresholdSignatureScheme:
+          $ref: '#/components/schemas/ThresholdSignatureScheme'
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when this share set was created.
+    OptionalNullableNonEmptyStringWith255MaxLength:
+      type:
+      - string
+      - 'null'
+      pattern: ^$|^(?=\S)[\p{L}\p{N} _.,:!?&%@\/+-]+(?<=\S)$
+      example: An example name
+      maxLength: 255
+    JwtVerifiedCredentialFormatEnum:
+      type: string
+      enum:
+      - blockchain
+      - email
+      - oauth
+      - passkey
+      - phoneNumber
+      - externalUser
+      - totp
+    NonEmptyIsoCountryCode:
+      type: string
+      pattern: ^[a-zA-Z]{2,4}\d?$
+      maxLength: 4
+      example: US
+    OptionalNonEmptyImageUrl:
+      type: string
+      pattern: ^$|^https?:\/\/[a-z0-9]+([-.]+[a-z0-9]+)*\.[a-z]{2,10}([0-9]{1,5})?(\/.*)?$|^data:image\/(png|jpe?g|gif|webp|svg\+xml);base64,[a-zA-Z0-9+\/=\s]+$
+      example: https://website-sample.com/logo.png
+      maxLength: 8192
+    WaasWalletProperties:
+      type: object
+      properties:
+        keyShares:
+          description: List of key share information for the primary share set (the one this auth principal signs with).
+          type: array
+          items:
+            $ref: '#/components/schemas/WalletKeyShareInfo'
+        thresholdSignatureScheme:
+          $ref: '#/components/schemas/ThresholdSignatureScheme'
+        derivationPath:
+          type: string
+          description: The derivation path for the wallet
+        settings:
+          $ref: '#/components/schemas/WaasWalletSettings'
+        shareSetId:
+          type: string
+          format: uuid
+          description: 'Identifier of the primary share set (the one whose `keyShares`, `thresholdSignatureScheme`, `derivationPath`, and `settings` are inlined at the top level). Browser context: rootUser. Delegated-server context: delegated.'
+        shareSetType:
+          $ref: '#/components/schemas/WaasWalletShareSetType'
+        businessAccountId:
+          type: string
+          format: uuid
+          description: Identifier of the business account that owns this wallet, when it is a business-account wallet; absent for personal wallets.
+        otherShareSets:
+          type: array
+          description: All other active share sets that exist on this wallet (i.e., owned by other auth principals). Returned for awareness so consumers can see, e.g., that a delegated share set is set up alongside their rootUser. Server-typed share sets are never exposed.
+          items:
+            $ref: '#/components/schemas/WaasShareSet'
+        version:
+          $ref: '#/components/schemas/EmbeddedWalletVersionEnum'
+    BusinessAccountList:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/BusinessAccount'
+        nextCursor:
+          type: string
+    WalletKeyShareInfo:
+      type: object
+      required:
+      - id
+      - backupLocation
+      - passwordEncrypted
+      properties:
+        id:
+          $ref: '#/components/schemas/uuid'
+        backupLocation:
+          description: Where this key share is stored (e.g. "user", "dynamic", "googleDrive", "iCloud")
+          type: string
+        passwordEncrypted:
+          description: Whether this key share is additionally encrypted with a user-provided password
+          type: boolean
+        walletShareDeveloperKeyEncrypted:
+          description: Whether this key share is encrypted with the developer's encryption public key
+          type: boolean
+        externalKeyShareId:
+          $ref: '#/components/schemas/uuid'
+        keygenId:
+          description: Identifier of the key generation ceremony that produced this share
+          type: string
+    FlowRiskStateEnum:
+      description: Risk-screening axis of a flow's state machine.
+      type: string
+      enum:
+      - unknown
+      - pending
+      - cleared
+      - blocked
+      - review
+    EmbeddedWalletVersionEnum:
+      type: string
+      enum:
+      - V1
+      - V2
+      - V3
+    ChainSettlementConfig:
+      type: object
+      required:
+      - chainName
+      - tokenAddress
+      - chainId
+      - symbol
+      - tokenDecimals
+      properties:
+        chainName:
+          $ref: '#/components/schemas/ChainEnum'
+        tokenAddress:
+          $ref: '#/components/schemas/NonEmptyStringWith255MaxLength'
+        chainId:
+          $ref: '#/components/schemas/NonEmptyStringWith50MaxLength'
+        symbol:
+          $ref: '#/components/schemas/NonEmptyStringWith50MaxLength'
+        tokenDecimals:
+          type: integer
+          description: The number of decimals for the token
+          example: 18
+        isNative:
+          type: boolean
+          description: Whether the token is the native token for the chain
+          example: true
+          default: false
+    MergeUserConflict:
+      type: object
+      description: Contains a merge conflict between two users with different values for the same user field data
+      required:
+      - field
+      - fromUser
+      - currentUser
+      properties:
+        field:
+          $ref: '#/components/schemas/ProjectSettingsKyc'
+        fromUser:
+          $ref: '#/components/schemas/MergeUser'
+        currentUser:
+          $ref: '#/components/schemas/MergeUser'
+    FlowSettlementData:
+      description: Resolved settlement destination and completion time for a flow.
+      type: object
+      required:
+      - toChainId
+      - toToken
+      - toAddress
+      properties:
+        toChainId:
+          $ref: '#/components/schemas/NonEmptyStringWith50MaxLength'
+        toToken:
+          $ref: '#/components/schemas/NonEmptyStringWith255MaxLength'
+        toAddress:
+          $ref: '#/components/schemas/WalletPublicKey'
+        completedAt:
+          description: ISO 8601 timestamp of when the settlement was completed
+          type: string
+          format: date-time
+        amount:
+          description: Amount actually delivered to the destination, in the smallest unit of toToken. Can differ from the quoted amount when a deposit-address flow settles short. Absent when the provider did not report it.
+          type: string
+        amountUsd:
+          description: USD equivalent of the delivered amount
+          type: string
+        toTokenInfo:
+          $ref: '#/components/schemas/FlowTokenInfo'
+    WalletProviderEnum:
+      type: string
+      enum:
+      - browserExtension
+      - custodialService
+      - walletConnect
+      - qrCode
+      - deepLink
+      - embeddedWallet
+      - smartContractWallet
+    SwapSigningPayload:
+      type: object
+      required:
+      - chainName
+      - chainId
+      properties:
+        chainName:
+          $ref: '#/components/schemas/ChainEnum'
+        chainId:
+          type: string
+          description: Source chain identifier
+        evmTransaction:
+          $ref: '#/components/schemas/SwapEvmTransactionData'
+        evmApproval:
+          $ref: '#/components/schemas/SwapEvmApprovalData'
+        serializedTransaction:
+          type: string
+          description: Base64-encoded serialized transaction
+        psbt:
+          type: string
+          description: Base64-encoded unsigned PSBT
+        tronTransaction:
+          $ref: '#/components/schemas/SwapTronTransactionData'
+      description: 'Chain-aware signing payload. Which fields are populated depends on chainName: EVM uses evmTransaction + optional evmApproval. SOL and SUI use serializedTransaction. BTC uses psbt. TRON uses tronTransaction.
+
+        '
+    MfaBackupCodeAcknowledgement:
+      type:
+      - string
+      - 'null'
+      enum:
+      - pending
+      - complete
+    Forbidden:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message
+          type: string
+          example: Access Forbidden
+        code:
+          description: Machine-readable reason for the 403, set only by endpoints that distinguish rejections. Flow endpoints use sanctions_blocked, session_token_invalid and risk_blocked.
+          type: string
+          example: sanctions_blocked
+    WaasWalletSettings:
+      type: object
+      properties:
+        hasDeniedDelegatedAccess:
+          description: Whether the user has denied delegated access for this wallet
+          type: boolean
+        shouldRefreshOnNextSignOn:
+          description: Whether to refresh wallet key shares on the user's next sign-on
+          type: boolean
+        reshareOnNextSignOn:
+          $ref: '#/components/schemas/ThresholdSignatureScheme'
+        revokeOnNextSignOn:
+          description: Whether to revoke delegated access on the user's next sign-on
+          type: boolean
+        variant:
+          $ref: '#/components/schemas/Ed25519Variant'
+    WalletProperties:
+      anyOf:
+      - $ref: '#/components/schemas/TurnkeyWalletProperties'
+      - $ref: '#/components/schemas/HardwareWalletProperties'
+      - $ref: '#/components/schemas/CoinbaseMpcWalletProperties'
+      - $ref: '#/components/schemas/SmartWalletProperties'
+      - $ref: '#/components/schemas/WaasWalletProperties'
+    AddBusinessAccountMemberSdkRequest:
+      description: SDK addMember body — the member to add plus the approval artifacts.
+      allOf:
+      - $ref: '#/components/schemas/AddBusinessAccountMemberRequest'
+      - type: object
+        properties:
+          autoExecute:
+            $ref: '#/components/schemas/BusinessAccountAutoExecute'
+          intent:
+            $ref: '#/components/schemas/BusinessAccountMutationIntent'
+          intentSignature:
+            $ref: '#/components/schemas/BusinessAccountIntentSignature'
+    NonEmptyStringWith255MaxLengthAndSpecialChars:
+      type: string
+      pattern: ^(?=\S)[\p{L}\p{N}a-zA-Z _.,:!?&%@\/+\-'()\[\]*]+(?<=\S)$
+      maxLength: 255
+      example: An example name
+  responses:
+    BusinessAccountForbidden:
+      description: 'Forbidden. Carries the outstanding approval requirements when the caller is authorized but consent is incomplete.
+
+        '
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BusinessAccountForbidden'
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Forbidden'
+    UnprocessableEntity:
+      description: Unprocessable Entity
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UnprocessableEntity'
+    BusinessAccountApprovalsPending:
+      description: 'Governed and not yet authorized — sign the intent, or collect the approvals `approvalRequirements` names, then resend. Not a failure.
+
+        '
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BusinessAccountApprovalsPending'
+    NotFound:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/NotFound'
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/InternalServerError'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Unauthorized'
+    Conflict:
+      description: Conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Conflict'
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BadRequest'
+  parameters:
+    environmentId:
+      in: path
+      name: environmentId
+      required: true
+      description: ID of the environment
+      schema:
+        $ref: '#/components/schemas/uuid'
+    flowMode:
+      in: path
+      name: mode
+      required: true
+      description: The flow mode — determines which lifecycle the flow follows.
+      schema:
+        $ref: '#/components/schemas/FlowModeEnum'
+    businessAccountId:
+      in: path
+      name: businessAccountId
+      required: true
+      description: ID of the business account
+      schema:
+        $ref: '#/components/schemas/uuid'
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

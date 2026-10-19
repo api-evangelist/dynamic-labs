@@ -1,0 +1,355 @@
+openapi: 3.2.0
+info:
+  title: Dashboard Gasless API
+  description: Dashboard API documentation
+  version: 1.0.0
+servers:
+- url: https://app.dynamicauth.com/api/v0
+- url: https://app.dynamic.xyz/api/v0
+- url: http://localhost:3333/api/v0
+tags:
+- name: Gasless
+  description: Query billing summaries and paginated transaction lists for sponsored (gasless) transactions.
+paths:
+  /environments/{environmentId}/gasless/billing:
+    get:
+      operationId: getGaslessBilling
+      tags:
+      - Gasless
+      summary: Get gasless billing summary
+      description: Returns per-month sponsored-gas and service-fee totals for the specified environment.
+      parameters:
+      - $ref: '#/components/parameters/environmentId'
+      - in: query
+        name: start
+        required: true
+        schema:
+          type: string
+          format: date-time
+        description: ISO 8601 date-time for the start of the billing window
+      - in: query
+        name: end
+        required: true
+        schema:
+          type: string
+          format: date-time
+        description: ISO 8601 date-time for the exclusive end of the billing window
+      responses:
+        '200':
+          description: Gasless billing summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GaslessBillingSummaryResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - bearerAuth: []
+  /environments/{environmentId}/gasless/transactions:
+    get:
+      operationId: listGaslessTransactions
+      tags:
+      - Gasless
+      summary: Get paginated list of gasless transactions
+      description: Returns a paginated activity list of sponsored transactions for the specified environment, with optional filtering by status, chain, date range, and search.
+      parameters:
+      - $ref: '#/components/parameters/environmentId'
+      - $ref: '#/components/parameters/cursor'
+      - in: query
+        name: status
+        required: false
+        schema:
+          type: string
+        description: Filter by transaction status (pending, submitted, success, failure)
+      - in: query
+        name: chainType
+        required: false
+        schema:
+          type: string
+        description: Filter by chain type (evm)
+      - in: query
+        name: chainId
+        required: false
+        schema:
+          type: string
+        description: Filter by chain id (exact match)
+      - in: query
+        name: search
+        required: false
+        schema:
+          type: string
+        description: Search by wallet address, transaction hash, user id, or request id
+      - in: query
+        name: start
+        required: false
+        schema:
+          type: string
+          format: date-time
+        description: ISO 8601 date-time lower bound (inclusive) on createdAt
+      - in: query
+        name: end
+        required: false
+        schema:
+          type: string
+          format: date-time
+        description: ISO 8601 date-time upper bound (exclusive) on createdAt
+      responses:
+        '200':
+          description: Paginated gasless transaction list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GaslessTransactionsListResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - bearerAuth: []
+components:
+  schemas:
+    uuid:
+      type: string
+      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+      minLength: 36
+      maxLength: 36
+      example: 95b11417-f18f-457f-8804-68e361f9164f
+    GaslessBillingPeriod:
+      type: object
+      required:
+      - chains
+      - month
+      - networkFeeUsd
+      - serviceFeeUsd
+      - totalUsd
+      - transactionCount
+      properties:
+        chains:
+          type: array
+          description: Per-chain breakdown of the month's billable amounts
+          items:
+            $ref: '#/components/schemas/GaslessBillingChainBreakdown'
+        month:
+          type: string
+          description: UTC calendar month, formatted YYYY-MM
+        networkFeeUsd:
+          type: string
+          description: Decimal string, summed sponsored gas cost in USD
+        serviceFeeUsd:
+          type: string
+          description: Decimal string, summed Dynamic service fee in USD
+        totalUsd:
+          type: string
+          description: Decimal string, networkFeeUsd plus serviceFeeUsd
+        transactionCount:
+          type: integer
+          description: Number of billable transactions in the month
+    GaslessBillingTotals:
+      type: object
+      required:
+      - networkFeeUsd
+      - serviceFeeUsd
+      - totalUsd
+      - transactionCount
+      properties:
+        networkFeeUsd:
+          type: string
+        serviceFeeUsd:
+          type: string
+        totalUsd:
+          type: string
+        transactionCount:
+          type: integer
+    BadRequest:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message
+          type: string
+        code:
+          description: Machine-readable reason for the 400, set only by endpoints that distinguish rejections. Flow endpoints use exchange_not_supported and exchange_currency_unsupported.
+          type: string
+          example: exchange_currency_unsupported
+    Forbidden:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message
+          type: string
+          example: Access Forbidden
+        code:
+          description: Machine-readable reason for the 403, set only by endpoints that distinguish rejections. Flow endpoints use sanctions_blocked, session_token_invalid and risk_blocked.
+          type: string
+          example: sanctions_blocked
+    GaslessBillingSummaryResponse:
+      type: object
+      required:
+      - periods
+      - totals
+      properties:
+        periods:
+          type: array
+          items:
+            $ref: '#/components/schemas/GaslessBillingPeriod'
+        totals:
+          $ref: '#/components/schemas/GaslessBillingTotals'
+    GaslessBillingChainBreakdown:
+      type: object
+      required:
+      - chainId
+      - networkFeeUsd
+      - serviceFeeUsd
+      - totalUsd
+      - transactionCount
+      properties:
+        chainId:
+          type: string
+          description: EVM chain id the amounts belong to
+        networkFeeUsd:
+          type: string
+          description: Decimal string, summed sponsored gas cost in USD for the chain
+        serviceFeeUsd:
+          type: string
+          description: Decimal string, summed Dynamic service fee in USD for the chain
+        totalUsd:
+          type: string
+          description: Decimal string, networkFeeUsd plus serviceFeeUsd for the chain
+        transactionCount:
+          type: integer
+          description: Number of billable transactions on the chain in the month
+    Unauthorized:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message describing the authentication failure
+          type: string
+          example: No jwt provided!
+    InternalServerError:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message
+          type: string
+          example: Internal Server Error
+    GaslessTransactionItem:
+      type: object
+      required:
+      - chainId
+      - chainType
+      - createdAt
+      - id
+      - status
+      - userId
+      - walletAddress
+      properties:
+        chainId:
+          type: string
+        chainType:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        errorMessage:
+          type:
+          - string
+          - 'null'
+        id:
+          type: string
+          format: uuid
+        networkFeeUsd:
+          type:
+          - string
+          - 'null'
+        serviceFeeUsd:
+          type:
+          - string
+          - 'null'
+        sponsorAddress:
+          type:
+          - string
+          - 'null'
+        status:
+          type: string
+        transactionHash:
+          type:
+          - string
+          - 'null'
+        userId:
+          type: string
+          format: uuid
+        walletAddress:
+          type: string
+    GaslessTransactionsListResponse:
+      type: object
+      required:
+      - nextCursor
+      - totalCount
+      - transactions
+      properties:
+        nextCursor:
+          type:
+          - string
+          - 'null'
+          description: Cursor for fetching the next page, null if no more pages
+        totalCount:
+          type: integer
+          description: Total number of transactions matching the filters
+        transactions:
+          type: array
+          items:
+            $ref: '#/components/schemas/GaslessTransactionItem'
+  responses:
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/InternalServerError'
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Forbidden'
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BadRequest'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Unauthorized'
+  parameters:
+    environmentId:
+      in: path
+      name: environmentId
+      required: true
+      description: ID of the environment
+      schema:
+        $ref: '#/components/schemas/uuid'
+    cursor:
+      in: query
+      name: cursor
+      schema:
+        type: string
+      required: false
+      description: Cursor for pagination
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

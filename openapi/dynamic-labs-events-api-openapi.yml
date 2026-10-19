@@ -1,6 +1,6 @@
 openapi: 3.2.0
 info:
-  title: Dashboard Allowlists Events API
+  title: Dashboard Events API
   description: Dashboard API documentation
   version: 1.0.0
 servers:
@@ -9,6 +9,7 @@ servers:
 - url: http://localhost:3333/api/v0
 tags:
 - name: Events
+  description: Browse the event log of actions performed within your environment.
 paths:
   /eventTypes:
     get:
@@ -16,6 +17,7 @@ paths:
       tags:
       - Events
       summary: Get event types
+      description: Returns all available event types.
       responses:
         '200':
           description: List of event types
@@ -35,6 +37,7 @@ paths:
       tags:
       - Events
       summary: Get environment events
+      description: Returns the events for the specified environment.
       parameters:
       - $ref: '#/components/parameters/environmentId'
       - $ref: '#/components/parameters/cursor'
@@ -43,7 +46,7 @@ paths:
       - $ref: '#/components/parameters/endDate'
       responses:
         '200':
-          description: List of envrionment events
+          description: List of environment events
           content:
             application/json:
               schema:
@@ -59,7 +62,8 @@ paths:
       operationId: getEventById
       tags:
       - Events
-      summary: Get environment event by id
+      summary: Get an environment event by ID
+      description: Returns a single event by its unique identifier.
       parameters:
       - $ref: '#/components/parameters/environmentId'
       - $ref: '#/components/parameters/eventId'
@@ -77,14 +81,134 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 components:
+  responses:
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/InternalServerError'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Unauthorized'
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Forbidden'
+  schemas:
+    Event:
+      type: object
+      required:
+      - eventId
+      - environmentId
+      - environmentName
+      - eventName
+      - timestamp
+      - data
+      - context
+      properties:
+        eventId:
+          $ref: '#/components/schemas/uuid'
+        environmentId:
+          $ref: '#/components/schemas/uuid'
+        environmentName:
+          $ref: '#/components/schemas/EnvironmentEnum'
+        eventAction:
+          description: The action that occurred (e.g. "created", "updated", "deleted")
+          type: string
+        eventName:
+          description: Dotted event name identifier (e.g. "admin.user.created")
+          type: string
+        resourceType:
+          description: Type of resource affected by the event (e.g. "user", "wallet", "webhook")
+          type: string
+        timestamp:
+          description: ISO 8601 timestamp of when the event occurred
+          type: string
+          format: date-time
+        data:
+          description: Event payload containing the resource data at the time of the event
+          type: object
+        context:
+          $ref: '#/components/schemas/EventContext'
+    EventTypesResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/EventType'
+    EventType:
+      type: object
+      required:
+      - name
+      - description
+      properties:
+        name:
+          description: Dotted event type identifier (e.g. "admin.user.created")
+          type: string
+        description:
+          description: Human-readable explanation of what triggers this event type
+          type: string
+    EventContext:
+      type: object
+      properties:
+        userId:
+          description: ID of the user who triggered the event
+          type: string
+        version:
+          description: Event schema version for backward-compatible payload parsing
+          type: string
+    InternalServerError:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message
+          type: string
+          example: Internal Server Error
+    uuid:
+      type: string
+      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+      minLength: 36
+      maxLength: 36
+      example: 95b11417-f18f-457f-8804-68e361f9164f
+    EnvironmentEnum:
+      type: string
+      enum:
+      - sandbox
+      - live
+    EventsResponse:
+      type: object
+      properties:
+        cursor:
+          description: Opaque pagination cursor for fetching the next page of events
+          type: string
+        data:
+          description: List of event objects
+          type: array
+          items:
+            $ref: '#/components/schemas/Event'
+    Forbidden:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message
+          type: string
+          example: Access Forbidden
+        code:
+          description: Machine-readable reason for the 403, set only by endpoints that distinguish rejections. Flow endpoints use sanctions_blocked, session_token_invalid and risk_blocked.
+          type: string
+          example: sanctions_blocked
+    Unauthorized:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message describing the authentication failure
+          type: string
+          example: No jwt provided!
   parameters:
-    eventId:
-      in: path
-      name: eventId
-      required: true
-      description: ID of the event
-      schema:
-        $ref: '#/components/schemas/uuid'
     endDate:
       in: query
       name: endDate
@@ -92,13 +216,6 @@ components:
       schema:
         type: string
       description: End date of the event query
-    cursor:
-      in: query
-      name: cursor
-      schema:
-        type: string
-      required: false
-      description: Cursor for pagination
     resourceType:
       in: query
       name: resourceType
@@ -120,115 +237,20 @@ components:
       description: ID of the environment
       schema:
         $ref: '#/components/schemas/uuid'
-  schemas:
-    uuid:
-      type: string
-      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
-      minLength: 36
-      maxLength: 36
-      example: 95b11417-f18f-457f-8804-68e361f9164f
-    InternalServerError:
-      type: object
-      properties:
-        error:
-          type: string
-          example: Internal Server Error
-    EventTypesResponse:
-      type: array
-      items:
-        $ref: '#/components/schemas/EventType'
-    EventsResponse:
-      type: object
-      properties:
-        cursor:
-          type: string
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/Event'
-    Event:
-      type: object
-      required:
-      - eventId
-      - environmentId
-      - environmentName
-      - eventName
-      - timestamp
-      - data
-      - context
-      properties:
-        eventId:
-          $ref: '#/components/schemas/uuid'
-        environmentId:
-          $ref: '#/components/schemas/uuid'
-        environmentName:
-          $ref: '#/components/schemas/EnvironmentEnum'
-        eventAction:
-          type: string
-        eventName:
-          type: string
-        resourceType:
-          type: string
-        timestamp:
-          type: string
-          format: date-time
-        data:
-          type: object
-        context:
-          $ref: '#/components/schemas/EventContext'
-    EventContext:
-      type: object
-      properties:
-        userId:
-          type: string
-        version:
-          type: string
-    Unauthorized:
-      type: object
-      properties:
-        error:
-          type: string
-          example: No jwt provided!
-    EventType:
-      type: object
-      required:
-      - name
-      - description
-      properties:
-        name:
-          type: string
-        description:
-          type: string
-    EnvironmentEnum:
-      type: string
-      enum:
-      - sandbox
-      - live
-    Forbidden:
-      type: object
-      properties:
-        error:
-          type: string
-          example: Access Forbidden
-  responses:
-    Forbidden:
-      description: Forbidden
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Forbidden'
-    InternalServerError:
-      description: Internal Server Error
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/InternalServerError'
-    Unauthorized:
-      description: Unauthorized
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Unauthorized'
+    eventId:
+      in: path
+      name: eventId
+      required: true
+      description: ID of the event
+      schema:
+        $ref: '#/components/schemas/uuid'
+    cursor:
+      in: query
+      name: cursor
+      schema:
+        type: string
+      required: false
+      description: Cursor for pagination
   securitySchemes:
     bearerAuth:
       type: http

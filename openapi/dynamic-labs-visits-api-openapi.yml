@@ -1,6 +1,6 @@
 openapi: 3.2.0
 info:
-  title: Dashboard Allowlists Visits API
+  title: Dashboard Visits API
   description: Dashboard API documentation
   version: 1.0.0
 servers:
@@ -9,6 +9,7 @@ servers:
 - url: http://localhost:3333/api/v0
 tags:
 - name: Visits
+  description: Track and query user visit activity within your environment.
 paths:
   /environments/{environmentId}/visitors:
     get:
@@ -16,16 +17,19 @@ paths:
       tags:
       - Visits
       summary: Get all visitors for an environment
+      description: Returns all visitors for the specified environment.
       parameters:
       - $ref: '#/components/parameters/environmentId'
       - in: query
         name: filter
+        description: JSON-encoded filter object with filterColumn (id, walletPublicKey, or all) and filterValue
         required: false
         style: form
         schema:
           $ref: '#/components/schemas/VisitorSearchFilterParams'
       - in: query
         name: orderBy
+        description: Sort order as "column-direction" (e.g. createdAt-desc) — defaults to createdAt-desc
         required: false
         schema:
           $ref: '#/components/schemas/orderBy'
@@ -44,7 +48,7 @@ paths:
           minimum: 1
           maximum: 100
           default: 20
-        description: The numbers of items to return
+        description: The number of items to return
         required: false
       responses:
         '200':
@@ -65,26 +69,18 @@ paths:
       - bearerAuth: []
 components:
   schemas:
-    VisitorsResponse:
-      type: object
-      properties:
-        count:
-          type: integer
-        visitors:
-          type: array
-          items:
-            $ref: '#/components/schemas/Visitor'
-    Unauthorized:
-      type: object
-      properties:
-        error:
-          type: string
-          example: No jwt provided!
-    BadRequest:
-      type: object
-      properties:
-        error:
-          type: string
+    uuid:
+      type: string
+      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+      minLength: 36
+      maxLength: 36
+      example: 95b11417-f18f-457f-8804-68e361f9164f
+    VisitorFilterableFieldsEnum:
+      type: string
+      enum:
+      - all
+      - id
+      - walletPublicKey
     ChainEnum:
       type: string
       enum:
@@ -103,23 +99,9 @@ components:
       - APTOS
       - TON
       - STELLAR
-    uuid:
-      type: string
-      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
-      minLength: 36
-      maxLength: 36
-      example: 95b11417-f18f-457f-8804-68e361f9164f
-    InternalServerError:
-      type: object
-      properties:
-        error:
-          type: string
-          example: Internal Server Error
-    orderBy:
-      type: string
-      description: $COLUMN_NAME-asc|desc
-      pattern: ^[A-Za-z]*-(asc|desc)$
-      example: something-asc
+      - ALEO
+      - TEMPO
+      - MIDNIGHT
     WalletProviderEnum:
       type: string
       enum:
@@ -130,22 +112,69 @@ components:
       - deepLink
       - embeddedWallet
       - smartContractWallet
+    BadRequest:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message
+          type: string
+        code:
+          description: Machine-readable reason for the 400, set only by endpoints that distinguish rejections. Flow endpoints use exchange_not_supported and exchange_currency_unsupported.
+          type: string
+          example: exchange_currency_unsupported
+    Forbidden:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message
+          type: string
+          example: Access Forbidden
+        code:
+          description: Machine-readable reason for the 403, set only by endpoints that distinguish rejections. Flow endpoints use sanctions_blocked, session_token_invalid and risk_blocked.
+          type: string
+          example: sanctions_blocked
+    VisitorsResponse:
+      type: object
+      properties:
+        count:
+          description: Total number of visitors matching the query
+          type: integer
+        visitors:
+          description: List of visitor objects
+          type: array
+          items:
+            $ref: '#/components/schemas/Visitor'
+    orderBy:
+      type: string
+      description: $COLUMN_NAME-asc|desc
+      pattern: ^[A-Za-z]*-(asc|desc)$
+      example: something-asc
+    Unauthorized:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message describing the authentication failure
+          type: string
+          example: No jwt provided!
     Visitor:
       type: object
       properties:
         id:
           $ref: '#/components/schemas/uuid'
         address:
+          description: Wallet public address of the visitor
           type: string
           maxLength: 255
         chain:
           $ref: '#/components/schemas/ChainEnum'
         walletName:
+          description: Name of the wallet provider used by the visitor
           type: string
           maxLength: 255
         provider:
           $ref: '#/components/schemas/WalletProviderEnum'
         createdAt:
+          description: ISO 8601 timestamp of when the visitor was first seen
           type: string
           format: date-time
         projectEnvironmentId:
@@ -157,35 +186,23 @@ components:
       - walletName
       - provider
       - createdAt
-    VisitorFilterableFieldsEnum:
-      type: string
-      enum:
-      - all
-      - id
-      - walletPublicKey
-    Forbidden:
+    InternalServerError:
       type: object
       properties:
         error:
+          description: Human-readable error message
           type: string
-          example: Access Forbidden
+          example: Internal Server Error
     VisitorSearchFilterParams:
       type: object
       properties:
         filterValue:
+          description: Search term to match against the selected filter column
           type: string
         filterColumn:
           $ref: '#/components/schemas/VisitorFilterableFieldsEnum'
         chain:
           $ref: '#/components/schemas/ChainEnum'
-  parameters:
-    environmentId:
-      in: path
-      name: environmentId
-      required: true
-      description: ID of the environment
-      schema:
-        $ref: '#/components/schemas/uuid'
   responses:
     InternalServerError:
       description: Internal Server Error
@@ -211,6 +228,14 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/Unauthorized'
+  parameters:
+    environmentId:
+      in: path
+      name: environmentId
+      required: true
+      description: ID of the environment
+      schema:
+        $ref: '#/components/schemas/uuid'
   securitySchemes:
     bearerAuth:
       type: http

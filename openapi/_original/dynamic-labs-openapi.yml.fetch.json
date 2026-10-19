@@ -1,0 +1,12 @@
+{
+ "url": "https://app.dynamic.xyz/api-docs/public-api.yaml",
+ "final": "https://app.dynamic.xyz/api-docs/public-api.yaml",
+ "status": 200,
+ "content_type": "text/yaml; charset=utf-8",
+ "bytes": 1265089,
+ "sha256": "9176b83e4d661942af560f83224227948726acec568d114b7906c8c02a456301",
+ "fetched_at": "2026-10-19",
+ "fetched_by": "APIEvangelist-Harvest/1.0 (+https://apievangelist.com)",
+ "match": "byte-identical",
+ "note": "re-archived: the provider's current document replaced a stale archive (roadmap#793); the old files are in openapi/_superseded/2026-10-19-stale"
+}

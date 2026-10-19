@@ -1,6 +1,6 @@
 openapi: 3.2.0
 info:
-  title: Dashboard Allowlists Mfa Settings API
+  title: Dashboard Mfa Settings API
   description: Dashboard API documentation
   version: 1.0.0
 servers:
@@ -9,6 +9,7 @@ servers:
 - url: http://localhost:3333/api/v0
 tags:
 - name: MFA Settings
+  description: Configure multi-factor authentication (MFA) policies for your organization.
 paths:
   /organizations/{organizationId}/mfaSettings:
     get:
@@ -16,6 +17,7 @@ paths:
       tags:
       - MFA Settings
       summary: Get all mfa settings for an organization
+      description: Returns the MFA settings for the specified organization.
       parameters:
       - $ref: '#/components/parameters/organizationId'
       responses:
@@ -37,6 +39,7 @@ paths:
     put:
       operationId: enableMfaDeviceForOrganization
       summary: Enable the given mfa device for the organization
+      description: Enables the specified MFA device type for the organization.
       tags:
       - MFA Settings
       parameters:
@@ -60,7 +63,9 @@ paths:
   /organizations/{organizationId}/mfaSettings/{mfaDeviceType}/disable:
     put:
       operationId: disableMfaDeviceForOrganization
+      x-destructive: true
       summary: Disable the given mfa device for the organization
+      description: Disables the specified MFA device type for the organization.
       tags:
       - MFA Settings
       parameters:
@@ -82,56 +87,6 @@ paths:
       security:
       - bearerAuth: []
 components:
-  schemas:
-    OrganizationMfaSettings:
-      type: object
-      required:
-      - mfaDeviceType
-      properties:
-        enabledAt:
-          type:
-          - string
-          - 'null'
-          format: date-time
-        mfaDeviceType:
-          $ref: '#/components/schemas/MFADeviceType'
-    Unauthorized:
-      type: object
-      properties:
-        error:
-          type: string
-          example: No jwt provided!
-    uuid:
-      type: string
-      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
-      minLength: 36
-      maxLength: 36
-      example: 95b11417-f18f-457f-8804-68e361f9164f
-    InternalServerError:
-      type: object
-      properties:
-        error:
-          type: string
-          example: Internal Server Error
-    MFADeviceType:
-      type: string
-      enum:
-      - totp
-      - passkey
-      - email
-    OrganizationMfaSettingsResponse:
-      type: object
-      properties:
-        mfaSettings:
-          type: array
-          items:
-            $ref: '#/components/schemas/OrganizationMfaSettings'
-    Forbidden:
-      type: object
-      properties:
-        error:
-          type: string
-          example: Access Forbidden
   parameters:
     organizationId:
       in: path
@@ -147,6 +102,65 @@ components:
       description: MFA device type
       schema:
         $ref: '#/components/schemas/MFADeviceType'
+  schemas:
+    uuid:
+      type: string
+      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+      minLength: 36
+      maxLength: 36
+      example: 95b11417-f18f-457f-8804-68e361f9164f
+    OrganizationMfaSettingsResponse:
+      type: object
+      properties:
+        mfaSettings:
+          description: List of MFA device type settings for the organization
+          type: array
+          items:
+            $ref: '#/components/schemas/OrganizationMfaSettings'
+    MFADeviceType:
+      type: string
+      enum:
+      - totp
+      - passkey
+      - email
+    Forbidden:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message
+          type: string
+          example: Access Forbidden
+        code:
+          description: Machine-readable reason for the 403, set only by endpoints that distinguish rejections. Flow endpoints use sanctions_blocked, session_token_invalid and risk_blocked.
+          type: string
+          example: sanctions_blocked
+    OrganizationMfaSettings:
+      type: object
+      required:
+      - mfaDeviceType
+      properties:
+        enabledAt:
+          description: ISO 8601 timestamp of when this MFA method was enabled, or null if disabled
+          type:
+          - string
+          - 'null'
+          format: date-time
+        mfaDeviceType:
+          $ref: '#/components/schemas/MFADeviceType'
+    Unauthorized:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message describing the authentication failure
+          type: string
+          example: No jwt provided!
+    InternalServerError:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message
+          type: string
+          example: Internal Server Error
   responses:
     InternalServerError:
       description: Internal Server Error

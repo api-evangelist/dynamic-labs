@@ -1,6 +1,6 @@
 openapi: 3.2.0
 info:
-  title: Dashboard Allowlists Waas API
+  title: Dashboard Waas API
   description: Dashboard API documentation
   version: 1.0.0
 servers:
@@ -9,12 +9,13 @@ servers:
 - url: http://localhost:3333/api/v0
 tags:
 - name: Waas
+  description: Wallet-as-a-Service endpoints for creating and managing embedded wallets.
 paths:
   /environments/{environmentId}/waas/create:
     post:
       operationId: createWaasWallet
       description: Creates a new WAAS wallet for a user given an email or userId. If an email is provided and it is not associated with an existing user this call will also create a new user.
-      summary: Create a new WAAS for a user given an identifier
+      summary: Create a WAAS wallet for a user
       tags:
       - Waas
       security:
@@ -56,7 +57,8 @@ paths:
       operationId: authenticateWaas
       tags:
       - Waas
-      summary: Authenticate for WAAS using api key
+      summary: Authenticate for WAAS using an API key
+      description: 'For legacy server SDKs: authenticates for WaaS using an API key, as the environment''s default server identity. Server signers do not use this endpoint; they sign each request with their registered key. A `serverIdentifier` in the JSON body is refused with 401. The body is not declared in this contract, so that clients that send none keep working.'
       security:
       - bearerAuth: []
       parameters:
@@ -68,6 +70,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/WaasAuthenticateResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -78,7 +82,8 @@ paths:
           $ref: '#/components/responses/InternalServerError'
   /environments/{environmentId}/waas/verifyApiKey:
     post:
-      operationId: verifyApiKey
+      deprecated: true
+      operationId: waasVerifyApiKey
       tags:
       - Waas
       summary: Verify if an API key is valid for a specific environment
@@ -116,6 +121,7 @@ paths:
       tags:
       - Waas
       summary: Sign a message with a delegated waas account
+      description: Signs a message using a delegated WaaS account.
       parameters:
       - $ref: '#/components/parameters/environmentId'
       - $ref: '#/components/parameters/walletId'
@@ -165,6 +171,7 @@ paths:
   /environments/{environmentId}/waas/delegatedAccess/revoke:
     post:
       operationId: revokeDelegatedAccess
+      x-destructive: true
       tags:
       - Waas
       summary: Revoke delegated access for one or more wallets
@@ -191,6 +198,109 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /environments/{environmentId}/serverSigning/keys:
+    post:
+      operationId: registerServerSigningKey
+      tags:
+      - Waas
+      summary: Register a Server Signing Key for a server identity
+      description: Registers a P-256 public key for the server signer named by the admin's signed `consent`, creating the signer if needed. auth-service verifies the consent, so a key the admin did not consent to cannot be registered. Dashboard admin JWT only. Registering the same key again returns it. An identifier used by another environment's signer is a 409, and revoked keys cannot be re-registered. An invalid consent (malformed, older than 5 minutes, unverified or mismatched) is a 400, with the reason in `code`.
+      x-cli-ignore: true
+      parameters:
+      - $ref: '#/components/parameters/environmentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterServerSigningKeyRequest'
+      responses:
+        '201':
+          description: The registered key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerSigningKeySummary'
+        '400':
+          description: Bad Request; `code` names the reason
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerSigningRegistrationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '410':
+          description: This key was registered before and has been revoked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          description: auth-service could not register the key; nothing was stored, so retry
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerSigningRegistrationError'
+    get:
+      operationId: listServerSigningKeys
+      tags:
+      - Waas
+      summary: List the environment's Server Signing Keys
+      x-cli-ignore: true
+      parameters:
+      - $ref: '#/components/parameters/environmentId'
+      responses:
+        '200':
+          description: The environment's keys, newest first
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerSigningKeySummaryList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /environments/{environmentId}/serverSigning/keys/{keyId}:
+    delete:
+      operationId: revokeServerSigningKey
+      tags:
+      - Waas
+      summary: Revoke one of the environment's Server Signing Keys
+      description: Revocation is terminal and idempotent.
+      x-cli-ignore: true
+      parameters:
+      - $ref: '#/components/parameters/environmentId'
+      - in: path
+        name: keyId
+        required: true
+        description: Registry id of the key (not its `kid`)
+        schema:
+          $ref: '#/components/schemas/uuid'
+      responses:
+        '200':
+          description: The revoked key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RevokedServerSigningKeyResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /environments/{environmentId}/waas/delegatedAccess/encryptionPublicKeys:
@@ -231,6 +341,7 @@ paths:
       tags:
       - Waas
       summary: Create credentials for waas wallet delegation
+      description: Creates new encryption public key credentials for WaaS wallet delegation.
       parameters:
       - $ref: '#/components/parameters/environmentId'
       requestBody:
@@ -262,6 +373,7 @@ paths:
       tags:
       - Waas
       summary: Get a specific delegated access encryption public key by ID
+      description: Returns a delegated access encryption public key by its ID.
       parameters:
       - $ref: '#/components/parameters/environmentId'
       - name: keyId
@@ -292,6 +404,7 @@ paths:
       tags:
       - Waas
       summary: Get a specific WAAS wallet by walletId
+      description: Returns a WaaS wallet by its wallet ID.
       parameters:
       - $ref: '#/components/parameters/environmentId'
       - name: walletId
@@ -348,16 +461,176 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
         '500':
           $ref: '#/components/responses/InternalServerError'
       security:
       - bearerAuth: []
+  /environments/{environmentId}/waas/transactionReviewConfig:
+    get:
+      operationId: getWaasTransactionReviewConfig
+      tags:
+      - Waas
+      summary: Get the transaction review config for an environment
+      description: Returns the webhook configuration used to review transactions before signing.
+      parameters:
+      - $ref: '#/components/parameters/environmentId'
+      responses:
+        '200':
+          description: Transaction review config
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WaasTransactionReviewConfigResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      operationId: upsertWaasTransactionReviewConfig
+      tags:
+      - Waas
+      summary: Create or update the transaction review config for an environment
+      description: 'Configures a webhook that is called before every transaction signing request. The webhook must respond with { "proceed": true } to allow signing, or { "proceed": false, "reason": "..." } to block it.'
+      parameters:
+      - $ref: '#/components/parameters/environmentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WaasTransactionReviewConfigRequest'
+      responses:
+        '200':
+          description: Transaction review config saved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WaasTransactionReviewConfigResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      operationId: deleteWaasTransactionReviewConfig
+      tags:
+      - Waas
+      summary: Delete the transaction review config for an environment
+      description: Removes transaction review enforcement. All transactions will proceed without review.
+      parameters:
+      - $ref: '#/components/parameters/environmentId'
+      responses:
+        '204':
+          description: Config deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /environments/{environmentId}/waas/transactionReviewConfig/test:
+    post:
+      operationId: testWaasTransactionReviewConfig
+      tags:
+      - Waas
+      summary: Send a synthetic transaction review request to the configured webhook
+      description: Drives a dry-run request through the same crypto and timeout machinery as the production signing path, against either the saved config or an override supplied in the body. No events are emitted and no signing is affected. Useful for verifying the customer's webhook responds correctly to each transaction shape before enabling enforcement.
+      parameters:
+      - $ref: '#/components/parameters/environmentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WaasTransactionReviewTestRequest'
+      responses:
+        '200':
+          description: Test webhook decision and diagnostic detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WaasTransactionReviewTestResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /environments/{environmentId}/waas/policies/env-layer:
+    get:
+      operationId: getEnvWaasPolicyLayerForDashboard
+      tags:
+      - Waas
+      summary: Read the environment-Layer's Rules
+      description: The dashboard counterpart to the SDK's env-Layer read, so the rule-language editor can open on what is actually stored.
+      parameters:
+      - $ref: '#/components/parameters/environmentId'
+      responses:
+        '200':
+          description: The environment-Layer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WaasPolicyLayerResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      operationId: updateWaasEnvPolicyLayer
+      tags:
+      - Waas
+      summary: Write the environment-Layer's Rules
+      description: 'Writes the environment-scoped Composition Layer directly. The only way to author Rules in the policy rule language at environment scope: the Layer is otherwise mirrored from the legacy environment policy, and a Rule in the rule language has no legacy form to be mirrored from.'
+      parameters:
+      - $ref: '#/components/parameters/environmentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WaasEnvPolicyLayerUpdateRequest'
+      responses:
+        '200':
+          description: Environment-Layer updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WaasPolicyLayerResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /environments/{environmentId}/waas/policies:
     post:
       operationId: createWaasPolicy
       tags:
       - Waas
       summary: Create a new WAAS policy for an environment or add new rules to an existing…
+      description: Creates a new WaaS policy for the specified environment.
       parameters:
       - $ref: '#/components/parameters/environmentId'
       requestBody:
@@ -388,6 +661,7 @@ paths:
       tags:
       - Waas
       summary: Get the WAAS policy for an environment
+      description: Returns the WaaS policy for the specified environment.
       parameters:
       - $ref: '#/components/parameters/environmentId'
       responses:
@@ -410,6 +684,7 @@ paths:
       tags:
       - Waas
       summary: Update the WAAS policy for an environment by ruleId
+      description: Updates the WaaS policy for the specified environment.
       parameters:
       - $ref: '#/components/parameters/environmentId'
       requestBody:
@@ -440,6 +715,7 @@ paths:
       tags:
       - Waas
       summary: Delete a WAAS policy rule by ruleId
+      description: Permanently removes the specified WaaS policy rule.
       parameters:
       - $ref: '#/components/parameters/environmentId'
       requestBody:
@@ -465,12 +741,37 @@ paths:
           $ref: '#/components/responses/UnprocessableEntity'
         '500':
           $ref: '#/components/responses/InternalServerError'
-  /environments/{environmentId}/waas/{walletId}/signaturePolicy:
-    post:
-      operationId: createWaasSignaturePolicy
+  /environments/{environmentId}/waas/wallets/{walletId}/policy-layer:
+    get:
+      operationId: getWaasPolicyLayer
       tags:
       - Waas
-      summary: Create a new WAAS signature policy for a wallet
+      summary: Get a wallet-Layer's current Rules
+      description: Returns the specified wallet's Composition Layer content without mutating it.
+      parameters:
+      - $ref: '#/components/parameters/environmentId'
+      - $ref: '#/components/parameters/walletId'
+      responses:
+        '200':
+          description: Wallet-Layer fetched successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WaasPolicyLayerResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    patch:
+      operationId: updateWaasPolicyLayer
+      tags:
+      - Waas
+      summary: Update a wallet-Layer's Rules by ruleId
+      description: Applies a single per-Rule upsert or remove operation — or, with op set to batch, an operations array of 1-100 upsert/remove entries applied atomically in one enclave cycle (all-or-nothing — a rejection applies none of them) — or, with op set to replace, a full rules list that replaces the Layer's Rules (either syntax; an empty list clears it) — to the specified wallet's Composition Layer. ruleId may be omitted on an upsert; the enclave then mints one and returns it in the response's layerContent.rules.
       parameters:
       - $ref: '#/components/parameters/environmentId'
       - $ref: '#/components/parameters/walletId'
@@ -479,68 +780,43 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/WaasWalletSignaturePolicyTmpCreateRequest'
+              $ref: '#/components/schemas/WaasPolicyLayerUpdateRequest'
       responses:
-        '201':
-          description: WAAS signature policy created successfully
+        '200':
+          description: Wallet-Layer updated successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/WaasWalletSignaturePolicyTmpResponse'
+                $ref: '#/components/schemas/WaasPolicyLayerResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
         '500':
           $ref: '#/components/responses/InternalServerError'
+  /environments/{environmentId}/waas/wallets/{walletId}/signer-policy-layer:
     get:
-      operationId: getWaasSignaturePolicies
+      operationId: getWaasSignerPolicyLayer
       tags:
       - Waas
-      summary: Get all active WAAS signature policies for a wallet
+      summary: Get a signer-Layer's current Rules
+      description: Returns the Composition Layer content for the specified wallet's active Signer without mutating it.
       parameters:
       - $ref: '#/components/parameters/environmentId'
       - $ref: '#/components/parameters/walletId'
       responses:
         '200':
-          description: WAAS signature policies fetched successfully
+          description: Signer-Layer fetched successfully
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/WaasWalletSignaturePolicyTmpResponse'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-  /environments/{environmentId}/waas/{walletId}/signaturePolicy/{policyId}:
-    get:
-      operationId: getWaasSignaturePolicyByWalletIdAndPolicyId
-      tags:
-      - Waas
-      summary: Get a WAAS signature policy by walletId and policyId
-      parameters:
-      - $ref: '#/components/parameters/environmentId'
-      - $ref: '#/components/parameters/walletId'
-      - name: policyId
-        in: path
-        description: The ID of the signature policy for the wallet
-        required: true
-        schema:
-          type: string
-          format: uuid
-      responses:
-        '200':
-          description: WAAS signature policy fetched successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/WaasWalletSignaturePolicyTmpResponse'
+                $ref: '#/components/schemas/WaasPolicyLayerResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -549,34 +825,28 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
-    put:
-      operationId: updateWaasSignaturePolicyByWalletIdAndPolicyId
+    patch:
+      operationId: updateWaasSignerPolicyLayer
       tags:
       - Waas
-      summary: Update a WAAS signature policy by walletId and policyId
+      summary: Update a signer-Layer's Rules by ruleId
+      description: Applies a single per-Rule upsert or remove operation — or, with op set to batch, an operations array of 1-100 upsert/remove entries applied atomically in one enclave cycle (all-or-nothing — a rejection applies none of them) — or, with op set to replace, a full rules list that replaces the Layer's Rules (either syntax; an empty list clears it) — to the Composition Layer of the specified wallet's active Signer. ruleId may be omitted on an upsert; the enclave then mints one and returns it in the response's layerContent.rules.
       parameters:
       - $ref: '#/components/parameters/environmentId'
       - $ref: '#/components/parameters/walletId'
-      - name: policyId
-        in: path
-        description: The ID of the signature policy for the wallet
-        required: true
-        schema:
-          type: string
-          format: uuid
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/WaasWalletSignaturePolicyTmpCreateRequest'
+              $ref: '#/components/schemas/WaasPolicyLayerUpdateRequest'
       responses:
         '200':
-          description: WAAS signature policy updated successfully
+          description: Signer-Layer updated successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/WaasWalletSignaturePolicyTmpResponse'
+                $ref: '#/components/schemas/WaasPolicyLayerResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -585,36 +855,8 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-    delete:
-      operationId: deleteWaasSignaturePolicyByWalletIdAndPolicyId
-      tags:
-      - Waas
-      summary: Delete a WAAS signature policy by walletId and policyId
-      parameters:
-      - $ref: '#/components/parameters/environmentId'
-      - $ref: '#/components/parameters/walletId'
-      - name: policyId
-        in: path
-        description: The ID of the signature policy for the wallet
-        required: true
-        schema:
-          type: string
-          format: uuid
-      responses:
-        '200':
-          description: WAAS signature policy deleted successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/WaasWalletSignaturePolicyTmpResponse'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /sdk/{environmentId}/waas/delegatedAccess/encryptionPublicKey:
@@ -645,53 +887,87 @@ paths:
           $ref: '#/components/responses/InternalServerError'
 components:
   schemas:
-    uuid:
-      type: string
-      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
-      minLength: 36
-      maxLength: 36
-      example: 95b11417-f18f-457f-8804-68e361f9164f
-    NotFound:
+    WaasTransactionReviewConfigResponse:
       type: object
       required:
-      - error
-      - code
+      - enabled
+      - environmentId
+      - webhookFailurePolicy
+      - webhookSecretSet
+      - webhookTimeoutMs
+      - webhookUrl
       properties:
-        error:
+        enabled:
+          type: boolean
+        environmentId:
+          $ref: '#/components/schemas/uuid'
+        webhookFailurePolicy:
+          $ref: '#/components/schemas/WaasTransactionReviewFailurePolicy'
+        webhookPublicKey:
           type: string
-          example: Not Found
-        code:
+          description: Ed25519 public key (PEM format) configured for response signature verification, if any.
+        webhookSecretSet:
+          type: boolean
+          description: True iff a webhook secret is stored. The secret itself is never returned.
+        webhookTimeoutMs:
+          type: integer
+        webhookUrl:
           type: string
-          example: not_found
-    ChainEnum:
-      type: string
-      enum:
-      - ETH
-      - EVM
-      - FLOW
-      - SOL
-      - ALGO
-      - STARK
-      - COSMOS
-      - BTC
-      - ECLIPSE
-      - SUI
-      - SPARK
-      - TRON
-      - APTOS
-      - TON
-      - STELLAR
-    InternalServerError:
+          format: uri
+    NameServiceData:
       type: object
       properties:
-        error:
+        avatar:
+          description: URL of the avatar associated with the name service record
           type: string
-          example: Internal Server Error
-    KycFieldType:
+        name:
+          description: Resolved name from the name service (e.g. ENS name)
+          type: string
+    VerifiedCredentialId:
+      description: UUID v4 with an optional -zerodev suffix for ZeroDev EIP-7702 smart-wallet credentials
+      type: string
+      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(-zerodev)?$
+      minLength: 36
+      maxLength: 45
+      example: 95b11417-f18f-457f-8804-68e361f9164f-zerodev
+    WaasTransactionReviewFailurePolicy:
       type: string
       enum:
-      - standard
-      - custom
+      - ALLOW
+      - DENY
+      description: 'Determines what happens when the review webhook is unreachable or times out. ALLOW proceeds with signing; DENY blocks the transaction. Defaults to DENY when omitted from a configuration request.
+
+        '
+    WaasPolicyConstraintCondition:
+      type: string
+      enum:
+      - equal
+      - greater
+      - less
+      - greaterEqual
+      - lessEqual
+      - notEqual
+      description: Comparison operator for argument validation
+    SignMessageEvmMessage:
+      description: EVM message that can be either a plain string or an object with raw hex data
+      anyOf:
+      - type: string
+      - type: object
+        required:
+        - raw
+        properties:
+          raw:
+            type: string
+            description: Raw hex data
+    WaasBackupOptionsEnum:
+      type: string
+      enum:
+      - googleDrive
+      - iCloud
+      - dynamic
+      - external
+      - delegated
+      - offlineRecovery
     WaasPolicyRule:
       type: object
       required:
@@ -772,12 +1048,141 @@ components:
             blockClientSigning:
               type: boolean
               description: Block all end-user signing (not delegated)
+        disableBlockaidSecurityChecks:
+          type: boolean
+          description: When true, disables Blockaid security enforcement for this rule. Blockaid simulation will still run for policy evaluation, but security verdicts (e.g., malicious transactions) will not block execution. Transaction approval will be determined solely by customer-defined policy rules. Use with caution as this bypasses automated security protections.
+        modifiableBySigner:
+          type: boolean
+          description: When true, a Signer is permitted to modify this Rule. Cannot be combined with operationRestrictions or disableBlockaidSecurityChecks on the same Rule.
+        approvalRequirements:
+          type: array
+          description: Multi-party approval requirements for this Rule. Enforced only for accounts that support them; ignored for other accounts. when.initiatorRole and when.actionTypes are not yet resolved — until they are, a requirement that sets either field applies to all approvers, not just the named role.
+          items:
+            type: object
+            required:
+            - v
+            - id
+            - requiredApprovals
+            properties:
+              v:
+                type: number
+                description: Schema version for this requirement. An unknown value rejects the Composition.
+              id:
+                type: string
+                description: Stable handle for this requirement, carried as requirementId in the deny reason.
+              when:
+                type: object
+                description: All present conditions AND together. Omit for an unconditional requirement.
+                properties:
+                  minValue:
+                    type: object
+                    description: The amount at which this requirement starts to apply.
+                    properties:
+                      asset:
+                        description: Target asset address. If undefined, refers to native token (e.g., ETH)
+                        anyOf:
+                        - $ref: '#/components/schemas/WalletPublicKey'
+                        - $ref: '#/components/schemas/SolanaPublicKey'
+                      amount:
+                        type: string
+                        description: Threshold amount (as string to handle bigint)
+                        pattern: ^[0-9]+$
+                  initiatorRole:
+                    type: object
+                    description: Matches on the user who starts the action. Not yet resolved — until it is, a requirement that sets this field applies to all initiators.
+                    properties:
+                      roles:
+                        type: array
+                        items:
+                          type: string
+                      userIds:
+                        type: array
+                        items:
+                          type: string
+                  actionTypes:
+                    type: array
+                    description: Matches on the operation type. Not yet resolved — until it is, a requirement that sets this field applies to all operation types.
+                    items:
+                      type: string
+              eligibleApproverRoles:
+                type: array
+                items:
+                  type: string
+                description: Names of the roles whose holders may satisfy this requirement. A holder of any listed role may approve. An empty array means no restriction.
+              mandatoryApproverRoles:
+                type: array
+                items:
+                  type: string
+                description: Names of the roles that must each be represented among the approvers, regardless of eligibleApproverRoles. An empty array means none.
+              requiredApprovals:
+                type: number
+                description: Total approvals required. Never counts the Initiator.
+              completeWithinSeconds:
+                type: number
+                description: How long a collected-approvals proposal remains valid.
+    WaasEnvPolicyLayerUpdateRequest:
+      type: object
+      required:
+      - rules
+      properties:
+        rules:
+          type: array
+          maxItems: 200
+          description: The environment-Layer's full Rule list, in either syntax; a PUT always replaces it whole rather than patching one Rule at a time. Each Rule must structurally be one syntax or the other, so a malformed Rule is refused here rather than deep in the enclave.
+          items:
+            $ref: '#/components/schemas/WaasPolicyLayerRule'
     SdkUser:
       allOf:
       - $ref: '#/components/schemas/BaseUser'
       - type: object
         required:
         - verifiedCredentials
+    WaasPolicyLayerRuleOperation:
+      type: object
+      required:
+      - op
+      properties:
+        op:
+          type: string
+          enum:
+          - upsert
+          - remove
+          description: The per-Rule operation to apply within a batch
+        rule:
+          $ref: '#/components/schemas/WaasPolicyRule'
+        declarativeRule:
+          $ref: '#/components/schemas/WaasPolicyDeclarativeRuleInput'
+        ruleId:
+          $ref: '#/components/schemas/uuid'
+    NonEmptyStringWith255MaxLength:
+      type: string
+      pattern: ^(?=\S)[\p{L}\p{N}a-zA-Z _.,:!?&%@\/+\-'|]+(?<=\S)$
+      maxLength: 255
+      example: An example name
+    RegisterServerSigningKeyRequest:
+      type: object
+      description: '`publicSigningKey` and `serverIdentifier` must equal the ones in the signed `consent`.'
+      additionalProperties: false
+      required:
+      - consent
+      - consentSignature
+      - publicSigningKey
+      properties:
+        consent:
+          $ref: '#/components/schemas/ServerSigningRegistrationConsent'
+        consentSignature:
+          type: string
+          minLength: 1
+          description: The admin's signature over `consent`
+        serverIdentifier:
+          $ref: '#/components/schemas/uuid'
+        publicSigningKey:
+          $ref: '#/components/schemas/ServerSigningKeyPublicKey'
+        label:
+          type:
+          - string
+          - 'null'
+          maxLength: 255
     WaasWalletResponse:
       type: object
       required:
@@ -785,320 +1190,97 @@ components:
       properties:
         wallet:
           $ref: '#/components/schemas/WaasWallet'
-    ProviderKernelVersionEnum:
-      type: string
-      enum:
-      - v2_4
-      - v3_0
-      - v3_1
-      - v3_2
-      - v3_3
-    WaasWalletSettings:
+    SignMessageEip7702Auth:
       type: object
+      description: EIP-7702 auth
       properties:
-        hasDeniedDelegatedAccess:
-          type: boolean
-        shouldRefreshOnNextSignOn:
-          type: boolean
-        reshareOnNextSignOn:
-          $ref: '#/components/schemas/ThresholdSignatureScheme'
-        revokeOnNextSignOn:
-          type: boolean
-    WalletProperties:
-      anyOf:
-      - $ref: '#/components/schemas/TurnkeyWalletProperties'
-      - $ref: '#/components/schemas/HardwareWalletProperties'
-      - $ref: '#/components/schemas/CoinbaseMpcWalletProperties'
-      - $ref: '#/components/schemas/SmartWalletProperties'
-      - $ref: '#/components/schemas/WaasWalletProperties'
-    OptionalNullableNonEmptyStringWith255MaxLength:
-      type:
-      - string
-      - 'null'
-      pattern: ^$|^(?=\S)[\p{L}\p{N} _.,:!?&%@\/+-]+(?<=\S)$
-      example: An example name
-      maxLength: 255
-    WalletProviderEnum:
-      type: string
-      enum:
-      - browserExtension
-      - custodialService
-      - walletConnect
-      - qrCode
-      - deepLink
-      - embeddedWallet
-      - smartContractWallet
-    RevokeDelegatedAccessResponse:
-      type: object
-      required:
-      - results
-      - total
-      - succeeded
-      - failed
-      properties:
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/RevokeDelegatedAccessWalletResult'
-          description: Results for each wallet
-        total:
-          type: integer
-          description: Total number of wallets processed
-        succeeded:
-          type: integer
-          description: Number of wallets successfully revoked
-        failed:
-          type: integer
-          description: Number of wallets that failed to revoke
-    CustomFieldType:
-      type: string
-      enum:
-      - text
-      - checkbox
-      - select
-    ProjectSettingsKyc:
-      type: object
-      properties:
-        name:
+        address:
           type: string
-        required:
-          type: boolean
-        enabled:
-          type: boolean
-        unique:
-          type: boolean
-        verify:
-          type: boolean
-        type:
-          $ref: '#/components/schemas/KycFieldType'
-        validationRules:
-          $ref: '#/components/schemas/CustomFieldValidationRules'
-        validationType:
-          $ref: '#/components/schemas/CustomFieldType'
-        label:
-          type: string
-        position:
+          description: Address that signed the authorization
+        chainId:
           type: number
+          description: Chain ID
+        nonce:
+          type: number
+          description: Nonce
       required:
-      - name
-      - required
-      - enabled
-      - unique
-      - verify
-    WaasPolicyRuleType:
+      - address
+      - chainId
+      - nonce
+    UnprocessableEntity:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message describing the validation failure
+          type: string
+          example: Resources already exists for this Object
+        code:
+          $ref: '#/components/schemas/UnprocessableEntityErrorCode'
+        payload:
+          $ref: '#/components/schemas/UnprocessableEntityErrorPayload'
+        retryAfterSeconds:
+          description: Seconds the client should wait before retrying, present on rate-limit errors
+          type: integer
+          example: 600
+      required:
+      - error
+    WaasTransactionReviewTestScenario:
+      type: string
+      description: Synthetic transaction shape sent to the configured webhook for testing.
+      enum:
+      - signMessage
+      - evmTransaction
+      - evmTokenTransfer
+      - evmUserOperation
+      - evmTypedData
+      - svmTransaction
+      - svmMessage
+      - btcTransaction
+      - suiTransaction
+      - suiMessage
+      - stellarMessage
+    HeldBusinessAccountMemberRole:
+      type: string
+      description: 'The role a member actually holds: a built-in (`owner`, `admin`, `viewer`) or a customer-defined role the account has defined. Wider than AssignableBusinessAccountRoleName because a held role can be `owner`, which cannot be assigned directly.
+
+        '
+      pattern: ^[a-z0-9](?:[a-z0-9_-]{0,30}[a-z0-9])?$
+      example: cfo
+    uuid:
+      type: string
+      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+      minLength: 36
+      maxLength: 36
+      example: 95b11417-f18f-457f-8804-68e361f9164f
+    ChainalysisCheckResultEnum:
       type: string
       enum:
-      - allow
-      - deny
-      description: Whether the rule permits or denies the specified action
-    WaasVerifyApiKeyResponse:
+      - OK
+      - BLOCKED
+      - FAILED
+    SignMessageRawSign:
       type: object
-      required:
-      - environmentId
-      - verified
+      description: Chain-agnostic raw digest signing payload; the digest must equal hashFunction(prefix + payload)
       properties:
-        environmentId:
+        payload:
           type: string
-          format: uuid
-          description: The environment ID for which the API key was verified
-        verified:
-          type: boolean
-          description: Indicates whether the API key is valid and has access to the environment
-    EmbeddedWalletVersionEnum:
-      type: string
-      enum:
-      - V1
-      - V2
-      - V3
-    Wallet:
-      type: object
-      properties:
-        id:
-          $ref: '#/components/schemas/uuid'
-        name:
-          $ref: '#/components/schemas/NonEmptyString'
-        chain:
-          $ref: '#/components/schemas/ChainEnum'
-        publicKey:
-          $ref: '#/components/schemas/WalletPublicKey'
-        provider:
-          $ref: '#/components/schemas/WalletProviderEnum'
-        properties:
-          $ref: '#/components/schemas/WalletProperties'
-        lastSelectedAt:
-          type:
-          - string
-          - 'null'
-      required:
-      - id
-      - name
-      - chain
-      - publicKey
-      - provider
-    CoinbaseMpcWalletProperties:
-      type: object
-      properties:
-        claimed:
-          type: boolean
-          description: Dynamic pregenerated this wallet and stored the passcode
-        source:
-          $ref: '#/components/schemas/PasswordSourceTypeEnum'
-    WaasPolicyUpdateRequest:
-      type: object
-      required:
-      - rulesToUpdate
-      properties:
-        rulesToUpdate:
-          type: array
-          items:
-            $ref: '#/components/schemas/WaasPolicyRule'
-          description: Array of rules to update in the policy
-    NonEmptyStringWith255MaxLengthAndSpecialChars:
-      type: string
-      pattern: ^(?=\S)[\p{L}\p{N}a-zA-Z _.,:!?&%@\/+\-'()\[\]*]+(?<=\S)$
-      maxLength: 255
-      example: An example name
-    ecdsaValidatorOptions:
-      type: string
-      enum:
-      - zerodev_signer_to_ecdsa
-      - zerodev_multi_chain
-    WaasWalletSignaturePolicyTmpCreateRequest:
-      type: object
-      required:
-      - policyContent
-      - timeLimit
-      properties:
-        policyContent:
-          type: array
-          minItems: 1
-          description: Array of policy rules, each defining allowed addresses, chain, and value limits for different assets
-          items:
-            type: object
-            required:
-            - chain
-            - toAddresses
-            - valueLimits
-            properties:
-              chain:
-                $ref: '#/components/schemas/WaasChainEnum'
-              toAddresses:
-                type: array
-                minItems: 1
-                description: Array of allowed recipient addresses (vault addresses) for this chain
-                items:
-                  anyOf:
-                  - $ref: '#/components/schemas/WalletPublicKey'
-                  - $ref: '#/components/schemas/SolanaPublicKey'
-              valueLimits:
-                type: array
-                minItems: 1
-                description: Array of value limits for different assets on this chain
-                items:
-                  type: object
-                  required:
-                  - asset
-                  - maxPerCall
-                  properties:
-                    asset:
-                      description: Target asset address
-                      anyOf:
-                      - $ref: '#/components/schemas/WalletPublicKey'
-                      - $ref: '#/components/schemas/SolanaPublicKey'
-                    maxPerCall:
-                      type: string
-                      description: Maximum value per transaction (as string to handle bigint)
-                      pattern: ^[0-9]+$
-        timeLimit:
-          $ref: '#/components/schemas/WaasWalletSignaturePolicyTmpTimeLimit'
-    NameServiceData:
-      type: object
-      properties:
-        avatar:
+          maxLength: 204800
+          description: Pre-image the digest is derived from, as a hex string
+        hashFunction:
           type: string
-        name:
+          description: 'Hash applied to (prefix + payload) to reproduce the digest being signed. Allowed algorithms: sha512Half (e.g. XRPL single-signer), keccak256 (screened against EVM operations), sha256 (TRON, SVM, TON; guarded against 32-byte pre-hashed payloads that could reproduce a Bitcoin double-SHA256 sighash), and blake2b (Sui, 32-byte digest)'
+          enum:
+          - sha512Half
+          - keccak256
+          - sha256
+          - blake2b
+        prefix:
           type: string
-    MergeUserConflict:
-      type: object
-      description: Contains a merge conflict between two users with different values for the same user field data
+          maxLength: 1024
+          description: Optional hex prefix prepended to the payload before hashing, e.g. the XRPL single-signer 'STX\0' prefix (53545800)
       required:
-      - field
-      - fromUser
-      - currentUser
-      properties:
-        field:
-          $ref: '#/components/schemas/ProjectSettingsKyc'
-        fromUser:
-          $ref: '#/components/schemas/MergeUser'
-        currentUser:
-          $ref: '#/components/schemas/MergeUser'
-    WaasWalletSignaturePolicyTmpResponse:
-      type: object
-      required:
-      - id
-      - walletId
-      - expiresAt
-      - policyContent
-      properties:
-        id:
-          $ref: '#/components/schemas/uuid'
-        walletId:
-          $ref: '#/components/schemas/uuid'
-        expiresAt:
-          type: string
-          format: date-time
-          description: Timestamp when the policy expires
-        policyContent:
-          type: array
-          minItems: 1
-          description: Array of policy rules, each defining allowed addresses, chain, and value limits for different assets
-          items:
-            type: object
-            required:
-            - chain
-            - toAddresses
-            - valueLimits
-            properties:
-              chain:
-                $ref: '#/components/schemas/WaasChainEnum'
-              toAddresses:
-                type: array
-                minItems: 1
-                description: Array of allowed recipient addresses (vault addresses) for this chain
-                items:
-                  anyOf:
-                  - $ref: '#/components/schemas/WalletPublicKey'
-                  - $ref: '#/components/schemas/SolanaPublicKey'
-              valueLimits:
-                type: array
-                minItems: 1
-                description: Array of value limits for different assets on this chain
-                items:
-                  type: object
-                  required:
-                  - asset
-                  - maxPerCall
-                  properties:
-                    asset:
-                      description: Target asset address
-                      anyOf:
-                      - $ref: '#/components/schemas/WalletPublicKey'
-                      - $ref: '#/components/schemas/SolanaPublicKey'
-                    maxPerCall:
-                      type: string
-                      description: Maximum value per transaction (as string to handle bigint)
-                      pattern: ^[0-9]+$
-    WaasDelegationCredentialsRequest:
-      type: object
-      required:
-      - publicKey
-      properties:
-        publicKey:
-          $ref: '#/components/schemas/NonEmptyStringWith4096MaxLength'
-        alg:
-          $ref: '#/components/schemas/NonEmptyStringWith50MaxLength'
-        type:
-          $ref: '#/components/schemas/WaasDelegatedAccessEncryptionPublicKeyType'
+      - payload
+      - hashFunction
     TurnkeyWalletProperties:
       deprecated: true
       type: object
@@ -1123,6 +1305,7 @@ components:
           - $ref: '#/components/schemas/uuid'
           deprecated: true
         isSessionKeyCompatible:
+          description: Whether this wallet supports session key operations
           type: boolean
         version:
           $ref: '#/components/schemas/EmbeddedWalletVersionEnum'
@@ -1132,550 +1315,104 @@ components:
           $ref: '#/components/schemas/ProviderEntryPointVersionEnum'
         kernelVersion:
           $ref: '#/components/schemas/ProviderKernelVersionEnum'
-    WalletAddressType:
-      type: string
-      enum:
-      - ordinals
-      - payment
-      - cosmos
-      - evm
-      - ton
-    User:
-      allOf:
-      - $ref: '#/components/schemas/BaseUser'
-      - type: object
-        properties:
-          walletPublicKey:
-            type: string
-          wallet:
-            type: string
-          chain:
-            $ref: '#/components/schemas/ChainEnum'
-          createdAt:
-            type: string
-            format: date-time
-          updatedAt:
-            type: string
-            format: date-time
-          sessions:
-            type: array
-            items:
-              $ref: '#/components/schemas/Session'
-          wallets:
-            type: array
-            items:
-              $ref: '#/components/schemas/Wallet'
-          chainalysisChecks:
-            type: array
-            items:
-              $ref: '#/components/schemas/ChainalysisCheck'
-          oauthAccounts:
-            type: array
-            items:
-              $ref: '#/components/schemas/oAuthAccount'
-          mfaDevices:
-            type: array
-            items:
-              $ref: '#/components/schemas/MFADevice'
-    WaasAuthenticateResponse:
-      type: object
-      required:
-      - message
-      - encodedJwts
-      properties:
-        message:
-          type: string
-        encodedJwts:
-          type: object
-          properties:
-            jwt:
-              type: string
-            minifiedJwt:
-              type: string
-    WalletAdditionalAddress:
-      type: object
-      description: An additional address associated with a wallet.
-      required:
-      - address
-      - type
-      properties:
-        address:
-          type: string
-          description: An address associated with a wallet.
-        publicKey:
-          type: string
-          description: The public key associated with the address.
-        type:
-          $ref: '#/components/schemas/WalletAddressType'
-    SmartWalletProperties:
-      type: object
-      properties:
-        entryPointVersion:
-          $ref: '#/components/schemas/ProviderEntryPointVersionEnum'
-        kernelVersion:
-          $ref: '#/components/schemas/ProviderKernelVersionEnum'
-        ecdsaProviderType:
-          $ref: '#/components/schemas/ecdsaValidatorOptions'
-    CountryCode:
-      type:
-      - string
-      - 'null'
-      description: Standard ISO 3166-1 alpha-2 two-letter country code
-      pattern: ^[A-Z]{2}$
-      example: US
-      maxLength: 255
-    CustomFieldValidationRules:
-      type: object
-      properties:
-        unique:
-          type: boolean
-          description: If this field must be unique for every user in the environment
-        regex:
-          type: string
-          maxLength: 255
-          description: The regex pattern that the text field must match
-          example: ^0x
-        validOptions:
-          type: array
-          items:
-            $ref: '#/components/schemas/CustomFieldValidValue'
-          description: The dropdown options for the select field
-          example:
-          - label: small
-          - label: medium
-          - label: large
-        checkboxText:
-          type: string
-          maxLength: 255
-          description: The text that will be displayed for the checkbox field
-          example: Agree to the terms and conditions
-      description: Optional validation rules for the custom field
-    MfaBackupCodeAcknowledgement:
-      type:
-      - string
-      - 'null'
-      enum:
-      - pending
-      - complete
-    NonEmptyIsoCountryCode:
-      type: string
-      pattern: ^[a-zA-Z]{2,4}\d?$
-      maxLength: 4
-      example: US
-    MFADeviceType:
-      type: string
-      enum:
-      - totp
-      - passkey
-      - email
-    WaasBackupOptionsEnum:
-      type: string
-      enum:
-      - googleDrive
-      - iCloud
-      - dynamic
-      - external
-      - delegated
-    Unauthorized:
-      type: object
-      properties:
-        error:
-          type: string
-          example: No jwt provided!
     WalletPublicKey:
       type: string
-      pattern: ^[A-Za-z0-9]{18,100}$
-      description: Valid blockchain wallet address, must be an alphanumeric string without any special characters
+      pattern: ^[A-Za-z0-9_-]{18,100}$
+      description: Valid blockchain wallet address, must be an alphanumeric string (underscores allowed for chains like Midnight, hyphens allowed for chains using base64url-encoded addresses like TON)
       example: '0xbF394748301603f18d953C90F0b087CBEC0E1834'
       maxLength: 255
-    NonEmptyStringWith16384MaxLength:
-      type: string
-      maxLength: 16384
-      description: A string with a max length of 16384 characters
-    HardwareWalletProperties:
-      type: object
-      properties:
-        hardwareWallet:
-          $ref: '#/components/schemas/HardwareWalletEnum'
-    Session:
-      type: object
-      properties:
-        id:
-          $ref: '#/components/schemas/uuid'
-        createdAt:
-          type: string
-          format: date-time
-        ipAddress:
-          type:
-          - string
-          - 'null'
-        userAgent:
-          type:
-          - string
-          - 'null'
-        revokedAt:
-          type:
-          - string
-          - 'null'
-          format: date-time
-    ChainalysisCheckResultEnum:
-      type: string
-      enum:
-      - OK
-      - BLOCKED
-      - FAILED
-    RevokeDelegatedAccessWalletResult:
+    RevokeDelegatedAccessRequest:
       type: object
       required:
-      - walletId
-      - success
+      - walletIds
       properties:
-        walletId:
-          $ref: '#/components/schemas/uuid'
-        success:
-          type: boolean
-          description: Whether the revocation was successful for this wallet
-        error:
-          type: string
-          description: Error message if the revocation failed
-    UnprocessableEntityErrorPayload:
-      type: object
-      description: Contains information which the integrating client of this API can use to tailor an experience to a customer to fix the underlying issue that triggered this error.
-      properties:
-        email:
-          type: string
-          format: email
-          example: joe@email.com
-        loginProvider:
-          $ref: '#/components/schemas/ProviderEnum'
-        embeddedWalletName:
-          type: string
-        embeddedSocialSigninProvider:
-          $ref: '#/components/schemas/ProviderEnum'
-        mergeConflicts:
-          $ref: '#/components/schemas/MergeConflicts'
-        additionalMessages:
-          type: array
-          items:
-            type: string
-    DelegatedAccessEncryptionPublicKey:
-      type: object
-      required:
-      - id
-      - projectEnvironmentId
-      - kid
-      - alg
-      - publicKeyPemB64
-      - status
-      - type
-      - createdAt
-      - updatedAt
-      properties:
-        id:
-          $ref: '#/components/schemas/uuid'
-        projectEnvironmentId:
-          $ref: '#/components/schemas/uuid'
-        kid:
-          type: string
-          description: Short identifier referenced in webhook envelopes so the developer knows which private key to use
-          maxLength: 64
-        alg:
-          type: string
-          enum:
-          - RSA-OAEP-256
-          - HYBRID-RSA-AES-256
-          description: Algorithm for how this key is used
-        publicKeyPemB64:
-          type: string
-          description: Developer's public key material, PEM encoded then base64'd
-          maxLength: 4096
-        status:
-          type: string
-          enum:
-          - pending
-          - active
-          - revoked
-          description: Lifecycle status of this key
-        type:
-          $ref: '#/components/schemas/WaasDelegatedAccessEncryptionPublicKeyType'
-        expiresAt:
-          type:
-          - string
-          - 'null'
-          format: date-time
-          description: Optional expiry for planned rotations
-        revokedAt:
-          type:
-          - string
-          - 'null'
-          format: date-time
-          description: Timestamp when the key was revoked
-        createdAt:
-          type: string
-          format: date-time
-        updatedAt:
-          type: string
-          format: date-time
-    NonEmptyStringWith4096MaxLength:
-      type: string
-      maxLength: 4096
-      description: A string with a max length of 4096 characters
-    Forbidden:
-      type: object
-      properties:
-        error:
-          type: string
-          example: Access Forbidden
-    UnprocessableEntity:
-      type: object
-      properties:
-        error:
-          type: string
-          example: Resources already exists for this Object
-        code:
-          $ref: '#/components/schemas/UnprocessableEntityErrorCode'
-        payload:
-          $ref: '#/components/schemas/UnprocessableEntityErrorPayload'
-      required:
-      - error
-    NonEmptyString:
-      type: string
-      pattern: ^(?=\S)[\p{L}\p{N}a-zA-Z _.,:!?&%@\/+\-'|]+(?<=\S)$
-      example: An example name
-    WaasPolicyDeleteRequest:
-      type: object
-      required:
-      - ruleIdsToDelete
-      properties:
-        ruleIdsToDelete:
+        walletIds:
           type: array
           items:
             $ref: '#/components/schemas/uuid'
-          description: Array of rule IDs to delete from the policy
-    ProviderEntryPointVersionEnum:
-      type: string
-      enum:
-      - v6
-      - v7
-    WaasWallet:
-      type: object
-      required:
-      - accountAddress
-      - chainName
-      - derivationPath
-      - thresholdSignatureScheme
-      - walletId
-      properties:
-        accountAddress:
-          type: string
-          description: The account address of the wallet
-        chainName:
-          $ref: '#/components/schemas/WaasChainEnum'
-        walletId:
-          $ref: '#/components/schemas/uuid'
-        thresholdSignatureScheme:
-          $ref: '#/components/schemas/ThresholdSignatureScheme'
-        derivationPath:
-          type: string
-          description: The derivation path used for the wallet
-        keyShares:
-          type: array
-          items:
-            $ref: '#/components/schemas/WalletKeyShareInfo'
-    PasswordSourceTypeEnum:
-      type: string
-      enum:
-      - dynamic
-      - user
-    BadRequest:
-      type: object
-      properties:
-        error:
-          type: string
-    CustomFieldValidValue:
-      type: object
-      required:
-      - label
-      properties:
-        label:
-          $ref: '#/components/schemas/NonEmptyStringWith255MaxLengthAndSpecialChars'
-        key:
-          $ref: '#/components/schemas/NonEmptyStringWith255MaxLengthAndSpecialChars'
-    JwtVerifiedCredentialFormatEnum:
-      type: string
-      enum:
-      - blockchain
-      - email
-      - oauth
-      - passkey
-      - phoneNumber
-      - externalUser
+          description: Array of wallet IDs to revoke delegated access for
+          minItems: 1
+          maxItems: 100
     WaasDelegatedAccessEncryptionPublicKeyType:
       type: string
       enum:
       - dynamic
       - external
-    WaasChainEnum:
-      type: string
-      enum:
-      - EVM
-      - SVM
-      - SUI
-      - BTC
-      - TON
-    WaasPolicyResponse:
+    MergeConflicts:
       type: object
+      description: Contains information needed for the SDK to surface merge conflicts when attempting to merge information from one user to another
       required:
-      - policyId
-      - projectEnvironmentId
-      - createdAt
-      - updatedAt
-      - policyContent
+      - fromUser
+      - conflicts
       properties:
-        message:
-          type: string
-          description: Message describing the operation result
-        policyId:
-          type: string
-        projectEnvironmentId:
-          $ref: '#/components/schemas/uuid'
-        createdAt:
-          type: string
-          format: date-time
-        updatedAt:
-          type: string
-          format: date-time
-        policyContent:
+        fromUser:
+          $ref: '#/components/schemas/SdkUser'
+        conflicts:
+          description: List of field-level merge conflicts between users
           type: array
           items:
-            $ref: '#/components/schemas/WaasPolicyRule'
-    WaasWalletSignaturePolicyTmpTimeLimit:
-      type: integer
-      description: Time limit in seconds until the policy expires. Must be greater than 0 seconds.
-      minimum: 1
-    MFADevice:
-      type: object
-      properties:
-        type:
-          $ref: '#/components/schemas/MFADeviceType'
-        verified:
-          type: boolean
-          description: Whether or not the user has a verified this MFA Device
-        id:
-          $ref: '#/components/schemas/uuid'
-        createdAt:
-          type: string
-          format: date-time
-          description: The date and time the MFA device was created
-        verifiedAt:
-          type:
-          - string
-          - 'null'
-          format: date-time
-          description: The date and time the MFA device was verified
-        default:
-          type: boolean
-          description: Whether or not this is the default MFA device for the user
-        alias:
-          type: string
-          description: The optional alias for the MFA device
-    WaasDelegationCredentialsResponse:
-      type: object
-      required:
-      - publicKey
-      - kid
-      - alg
-      - createdAt
-      - updatedAt
-      properties:
-        publicKey:
-          $ref: '#/components/schemas/NonEmptyStringWith4096MaxLength'
-        kid:
-          type: string
-          description: Short identifier referenced in webhook envelopes so the developer knows which private key to use
-          maxLength: 64
-        alg:
-          type: string
-          enum:
-          - RSA-OAEP-256
-          - HYBRID-RSA-AES-256
-          description: Algorithm for how this key is used
-        type:
-          $ref: '#/components/schemas/WaasDelegatedAccessEncryptionPublicKeyType'
-        createdAt:
-          type: string
-          format: date-time
-        updatedAt:
-          type: string
-          format: date-time
-    WaasDelegateSignMessageRequest:
-      type: object
-      required:
-      - message
-      properties:
-        message:
-          $ref: '#/components/schemas/NonEmptyStringWith16384MaxLength'
-        isFormatted:
-          type: boolean
-        roomId:
-          type: string
-    MergeUser:
-      type: object
-      description: Contains the current field value for the user.
-      required:
-      - userId
-      - value
-      properties:
-        userId:
-          $ref: '#/components/schemas/uuid'
-        value:
-          $ref: '#/components/schemas/NonEmptyStringWith255MaxLength'
-    BackupKeySharesToLocationsWithUserIdRequest:
-      type: object
-      required:
-      - userId
-      - locations
-      properties:
-        userId:
-          type: string
-          format: uuid
-          description: The ID of the user who owns the wallet
-        locations:
-          type: array
-          items:
-            type: object
-            required:
-            - location
-            properties:
-              location:
-                $ref: '#/components/schemas/WaasBackupOptionsEnum'
-              keygenId:
-                $ref: '#/components/schemas/NonEmptyStringWith255MaxLength'
-              thresholdSignatureScheme:
-                $ref: '#/components/schemas/ThresholdSignatureScheme'
-              externalKeyShareId:
-                $ref: '#/components/schemas/NonEmptyString'
-    HardwareWalletEnum:
+            $ref: '#/components/schemas/MergeUserConflict'
+    ThresholdSignatureScheme:
       type: string
       enum:
-      - ledger
-    NonEmptyStringWith255MaxLength:
-      type: string
-      pattern: ^(?=\S)[\p{L}\p{N}a-zA-Z _.,:!?&%@\/+\-'|]+(?<=\S)$
-      maxLength: 255
-      example: An example name
-    WaasVerifyApiKeyErrorResponse:
+      - TWO_OF_TWO
+      - TWO_OF_THREE
+      - THREE_OF_FIVE
+    SignMessageEvmTypedData:
+      type: object
+      description: EIP-712 typed data payload
+      properties:
+        domain:
+          $ref: '#/components/schemas/Eip712Domain'
+        message:
+          type: object
+          description: Typed data message object
+        primaryType:
+          description: Primary type name for EIP-712 typed data signing
+          type: string
+        types:
+          $ref: '#/components/schemas/Eip712Types'
+      required:
+      - domain
+      - message
+      - primaryType
+      - types
+    Eip712Domain:
+      type: object
+      properties:
+        name:
+          description: Human-readable name of the signing domain
+          type: string
+        version:
+          description: Version of the signing domain
+          type: string
+        chainId:
+          description: Chain ID the typed data is intended for
+          type: number
+        verifyingContract:
+          $ref: '#/components/schemas/WalletPublicKey'
+    RevokeDelegatedAccessResponse:
       type: object
       required:
-      - message
-      - verified
+      - results
+      - total
+      - succeeded
+      - failed
       properties:
-        message:
-          type: string
-          description: Error message describing why verification failed
-        verified:
-          type: boolean
-          description: Always false for error responses
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/RevokeDelegatedAccessWalletResult'
+          description: Results for each wallet
+        total:
+          type: integer
+          description: Total number of wallets processed
+        succeeded:
+          type: integer
+          description: Number of wallets successfully revoked
+        failed:
+          type: integer
+          description: Number of wallets that failed to revoke
     DelegatedAccessEncryptionPublicKeyResponse:
       type: object
       required:
@@ -1687,73 +1424,205 @@ components:
         message:
           type: string
           description: Message describing the operation result
-    DelegatedAccessEncryptionPublicKeysUnifiedResponse:
+    WaasPolicyLayerUpdateRequest:
       type: object
       required:
-      - message
+      - op
       properties:
-        key:
-          allOf:
-          - $ref: '#/components/schemas/DelegatedAccessEncryptionPublicKey'
-          description: Single key when includeAll is false
-        keys:
+        op:
+          type: string
+          enum:
+          - upsert
+          - remove
+          - batch
+          - replace
+          description: The per-Rule operation to apply to the wallet-Layer, batch to apply multiple operations atomically in one enclave cycle, or replace to set the Layer's full Rule list
+        rule:
+          $ref: '#/components/schemas/WaasPolicyRule'
+        declarativeRule:
+          $ref: '#/components/schemas/WaasPolicyDeclarativeRuleInput'
+        ruleId:
+          $ref: '#/components/schemas/uuid'
+        operations:
+          type: array
+          minItems: 1
+          maxItems: 100
+          description: Only used when op is batch — applied atomically in one enclave cycle
+          items:
+            $ref: '#/components/schemas/WaasPolicyLayerRuleOperation'
+        rules:
+          type: array
+          maxItems: 200
+          description: Only used when op is replace — the Layer's full Rule list, in either syntax. A declarative Rule sent without a ruleId is given one. Only admins and business-account admins may replace.
+          items:
+            $ref: '#/components/schemas/WaasPolicyLayerRuleInput'
+    HardwareWalletProperties:
+      type: object
+      properties:
+        hardwareWallet:
+          $ref: '#/components/schemas/HardwareWalletEnum'
+    WaasPolicyDeclarativeApprovalRequirement:
+      type: object
+      description: 'One approval requirement on a Rule in the policy rule language. It has no condition of its own: the Rule''s own condition decides when it applies.'
+      required:
+      - v
+      - id
+      - requiredApprovals
+      properties:
+        v:
+          type: number
+          description: Schema version for this requirement. An unknown value rejects the Composition.
+        id:
+          type: string
+          description: Stable handle for this requirement, carried as requirementId in the deny reason.
+        eligibleApproverRoles:
           type: array
           items:
-            $ref: '#/components/schemas/DelegatedAccessEncryptionPublicKey'
-          description: Array of keys when includeAll is true
-        message:
+            type: string
+          description: Names of the roles whose holders may satisfy this requirement. A holder of any listed role may approve. An empty array means no restriction.
+        mandatoryApproverRoles:
+          type: array
+          items:
+            type: string
+          description: Names of the roles that must each be represented among the approvers, regardless of eligibleApproverRoles. An empty array means none.
+        eligibleApproverRole:
           type: string
-          description: Message describing the operation result
-    oAuthAccount:
+          deprecated: true
+          description: Deprecated. Use eligibleApproverRoles. Do not send both.
+        mandatoryApproverRole:
+          type: string
+          deprecated: true
+          description: Deprecated. Use mandatoryApproverRoles. Do not send both.
+        requiredApprovals:
+          type: number
+          description: Total approvals required. Never counts the Initiator.
+        completeWithinSeconds:
+          type: number
+          description: How long a collected-approvals proposal remains valid.
+    Unauthorized:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message describing the authentication failure
+          type: string
+          example: No jwt provided!
+    UserIdentifierTypeEnum:
+      type: string
+      enum:
+      - email
+      - id
+      - externalUserId
+      - phoneNumber
+      - socialUsername
+      - socialAccountId
+    NonEmptyStringWith50MaxLength:
+      type: string
+      pattern: ^(?=\S)[\p{L}\p{N}a-zA-Z _.,:!?&%@\/+\-'|]+(?<=\S)$
+      example: An example name
+      maxLength: 50
+    WaasPolicyRuleType:
+      type: string
+      enum:
+      - allow
+      - deny
+      description: Whether the rule permits or denies the specified action
+    WalletAddressType:
+      type: string
+      enum:
+      - ordinals
+      - payment
+      - cosmos
+      - evm
+      - stellar
+      - ton
+      - midnight_unshielded
+      - midnight_dust
+      - midnight_shielded
+    WaasPolicyDeleteRequest:
+      type: object
+      required:
+      - ruleIdsToDelete
+      properties:
+        ruleIdsToDelete:
+          type: array
+          items:
+            $ref: '#/components/schemas/uuid'
+          description: Array of rule IDs to delete from the policy
+    ProviderKernelVersionEnum:
+      type: string
+      enum:
+      - v2_4
+      - v3_0
+      - v3_1
+      - v3_2
+      - v3_3
+    WaasTransactionReviewTestRequest:
+      type: object
+      required:
+      - scenario
+      properties:
+        scenario:
+          $ref: '#/components/schemas/WaasTransactionReviewTestScenario'
+        config:
+          type: object
+          description: 'Optional config overrides. When provided, fields here take precedence over the saved configuration. Use this to test a config that has not been saved yet (e.g. driving a test from an unsaved form).
+
+            '
+          properties:
+            enabled:
+              type: boolean
+            webhookFailurePolicy:
+              $ref: '#/components/schemas/WaasTransactionReviewFailurePolicy'
+            webhookPublicKey:
+              type:
+              - string
+              - 'null'
+            webhookSecret:
+              type:
+              - string
+              - 'null'
+            webhookTimeoutMs:
+              type: integer
+              minimum: 500
+              maximum: 30000
+            webhookUrl:
+              type: string
+              format: uri
+    ChainalysisCheck:
       type: object
       properties:
         id:
           $ref: '#/components/schemas/uuid'
-        provider:
-          $ref: '#/components/schemas/ProviderEnum'
-        accountUsername:
+        createdAt:
+          description: ISO 8601 timestamp of when the Chainalysis check was performed
           type: string
-    WaasPolicyCreateRequest:
-      type: object
-      required:
-      - rulesToAdd
-      properties:
-        rulesToAdd:
-          type: array
-          items:
-            $ref: '#/components/schemas/WaasPolicyRule'
-          description: Array of rules to add to the policy, will create policy if it doesn't exist
-    BackupKeySharesToLocationsResponse:
-      type: object
-      required:
-      - message
-      - walletId
-      - locationsWithKeyShares
-      properties:
-        message:
+          format: date-time
+        result:
+          $ref: '#/components/schemas/ChainalysisCheckResultEnum'
+        walletPublicKey:
+          $ref: '#/components/schemas/WalletPublicKey'
+        response:
+          description: Raw JSON response body from the Chainalysis API
           type: string
-        walletId:
-          $ref: '#/components/schemas/uuid'
-        locationsWithKeyShares:
-          type: array
-          items:
-            type: object
-            required:
-            - location
-            - keyShareId
-            - externalKeyShareId
-            properties:
-              location:
-                $ref: '#/components/schemas/WaasBackupOptionsEnum'
-              keyShareId:
-                $ref: '#/components/schemas/uuid'
-              externalKeyShareId:
-                $ref: '#/components/schemas/uuid'
-    NonEmptyBase58StringWith100MaxLength:
+      required:
+      - id
+      - createdAt
+      - result
+      - walletPublicKey
+      - response
+    ServerSigningKeyPublicKey:
       type: string
-      pattern: ^[1-9A-HJ-NP-Za-km-z]+$
-      maxLength: 100
-      description: A base58 string with a max length of 100 characters
+      description: P-256 public key as SEC1 hex, compressed (33 bytes) or uncompressed (65 bytes)
+      pattern: ^(0[23][0-9a-fA-F]{64}|04[0-9a-fA-F]{128})$
+    SmartWalletProperties:
+      type: object
+      properties:
+        entryPointVersion:
+          $ref: '#/components/schemas/ProviderEntryPointVersionEnum'
+        kernelVersion:
+          $ref: '#/components/schemas/ProviderKernelVersionEnum'
+        ecdsaProviderType:
+          $ref: '#/components/schemas/ecdsaValidatorOptions'
     JwtVerifiedCredential:
       type: object
       required:
@@ -1764,38 +1633,46 @@ components:
         address:
           $ref: '#/components/schemas/WalletPublicKey'
         chain:
+          description: Blockchain network for this credential
           type: string
         refId:
           $ref: '#/components/schemas/uuid'
         signerRefId:
           $ref: '#/components/schemas/uuid'
         email:
+          description: Email address for email-based credentials
           type: string
           format: email
         id:
-          $ref: '#/components/schemas/uuid'
+          $ref: '#/components/schemas/VerifiedCredentialId'
         name_service:
           $ref: '#/components/schemas/NameServiceData'
         public_identifier:
           description: This is used to publicly identify a verified credential in a human-friendly way. For example, this will be the email address if credential format=email.
           type: string
         wallet_name:
+          description: Name of the wallet provider
           type: string
         wallet_provider:
           $ref: '#/components/schemas/WalletProviderEnum'
         wallet_properties:
           $ref: '#/components/schemas/WalletProperties'
+        business_account_properties:
+          $ref: '#/components/schemas/BusinessAccountProperties'
         format:
           $ref: '#/components/schemas/JwtVerifiedCredentialFormatEnum'
         oauth_provider:
           $ref: '#/components/schemas/ProviderEnum'
         oauth_username:
+          description: Username from the OAuth provider
           type: string
         oauth_display_name:
+          description: Display name from the OAuth provider
           type:
           - string
           - 'null'
         oauth_account_id:
+          description: Unique account identifier from the OAuth provider
           type:
           - string
           - 'null'
@@ -1812,10 +1689,12 @@ components:
           example: US
           type: string
         oauth_account_photos:
+          description: List of profile photo URLs from the OAuth provider
           type: array
           items:
             type: string
         oauth_emails:
+          description: List of email addresses from the OAuth provider
           type: array
           items:
             type: string
@@ -1828,10 +1707,12 @@ components:
           items:
             $ref: '#/components/schemas/uuid'
         embedded_wallet_id:
+          description: Identifier of the linked embedded wallet
           type:
           - string
           - 'null'
         wallet_additional_addresses:
+          description: List of additional addresses derived from this wallet
           type: array
           items:
             $ref: '#/components/schemas/WalletAdditionalAddress'
@@ -1846,6 +1727,15 @@ components:
           type: string
           format: date-time
           description: This timestamp indicates the last time this verified credential was verified.
+    CoinbaseMpcWalletProperties:
+      deprecated: true
+      type: object
+      properties:
+        claimed:
+          type: boolean
+          description: Dynamic pregenerated this wallet and stored the passcode
+        source:
+          $ref: '#/components/schemas/PasswordSourceTypeEnum'
     UnprocessableEntityErrorCode:
       type: string
       enum:
@@ -1857,6 +1747,7 @@ components:
       - unknown_transfer_error
       - transfer_mfa_required
       - transfer_mfa_failed
+      - intent_required
       - invalid_transfer_funds
       - invalid_transfer_currency
       - invalid_exchange_provider
@@ -1961,6 +1852,7 @@ components:
       - embedded_wallet_address_already_linked
       - key_share_already_backed_up
       - invalid_key_shares_length
+      - wallet_not_active
       - wallet_service_connection_error
       - no_global_wallet_found
       - invalid_metadata_value
@@ -1968,70 +1860,710 @@ components:
       - passkey_not_found
       - cannot_delete_passkey_linked_to_embedded_wallet
       - cannot_delete_last_sign_in_verified_credential
-    SmsCountryCode:
+      - credential_not_enabled_for_sign_in
+      - unsupported_chain
+      - share_set_id_required
+      - address_screening_byok_auth
+      - address_screening_byok_quota
+      - address_screening_byok_shape
+      - address_screening_byok_upstream
+      - captcha_settings_incomplete_key_pair
+      - invalid_signed_transaction
+      - signed_transaction_wallet_mismatch
+      - unsupported_waas_chain
+      - network_not_enabled
+      - broadcast_rejected
+      - broadcast_requires_resign
+      - broadcast_outcome_unknown
+      - broadcast_rate_limited
+      - broadcast_unavailable
+      - broadcast_idempotency_conflict
+      - broadcast_wallet_ineligible
+      - broadcast_not_submitted
+      - chain_mismatch
+      - network_disabled
+      - missing_fee
+      - missing_nonce
+      - missing_gas_limit
+      - ambiguous_fee_style
+      - unsupported_shape
+      - contract_creation_unsupported
+      - multiple_transactions
+      - durable_nonce_unsupported
+      - missing_cosigner
+      - blockhash_too_old
+      - certainty_unreachable
+      - ambiguous_broadcast_identifier
+      - offline_recovery_cloud_backup_conflict
+      - quote_expired
+      - insufficient_balance
+      - exchange_settlement_unsupported
+    WaasTransactionReviewConfigRequest:
       type: object
       required:
-      - isoCountryCode
-      - phoneCountryCode
+      - webhookUrl
       properties:
-        isoCountryCode:
-          $ref: '#/components/schemas/NonEmptyIsoCountryCode'
-        phoneCountryCode:
-          $ref: '#/components/schemas/NonEmptyStringWith255MaxLength'
-    WalletKeyShareInfo:
+        enabled:
+          type: boolean
+          description: Whether transaction review is active. Defaults to true.
+        webhookFailurePolicy:
+          $ref: '#/components/schemas/WaasTransactionReviewFailurePolicy'
+        webhookPublicKey:
+          type:
+          - string
+          - 'null'
+          description: 'Optional Ed25519 public key (PEM format) used to verify the response signature from the webhook. When configured, the webhook must include an x-dynamic-response-signature header containing a base64-encoded Ed25519 signature over the raw response body. Pass null to remove.
+
+            '
+        webhookSecret:
+          type:
+          - string
+          - 'null'
+          description: 'Optional secret used to sign webhook requests via HMAC-SHA256. Sent as the x-dynamic-signature header. Pass null to remove.
+
+            '
+        webhookTimeoutMs:
+          type: integer
+          minimum: 500
+          maximum: 30000
+          description: Milliseconds to wait for a webhook response. Defaults to 5000.
+        webhookUrl:
+          type: string
+          format: uri
+          description: URL that receives transaction review requests before signing.
+    NonEmptyDomainUrlWith255MaxLength:
+      type: string
+      pattern: ^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$|^https?:\/\/[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*(\.[a-zA-Z]{2,})?(:\d+)?(\/.*)?$
+      maxLength: 255
+      example: https://app.xyz.com
+    WaasDelegationCredentialsRequest:
       type: object
       required:
-      - id
-      - backupLocation
-      - passwordEncrypted
+      - publicKey
+      properties:
+        publicKey:
+          $ref: '#/components/schemas/NonEmptyStringWith4096MaxLength'
+        alg:
+          $ref: '#/components/schemas/NonEmptyStringWith50MaxLength'
+        type:
+          $ref: '#/components/schemas/WaasDelegatedAccessEncryptionPublicKeyType'
+    Eip712TypeMember:
+      type: object
+      required:
+      - name
+      - type
+      properties:
+        name:
+          description: Name of the struct field
+          type: string
+        type:
+          description: Solidity type of the struct field
+          type: string
+    InternalServerError:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message
+          type: string
+          example: Internal Server Error
+    BusinessAccountMutationIntent:
+      type: object
+      description: 'The initiator''s proposal, signed with their session key. Built by the API, not the client — sign these exact bytes verbatim, because re-serializing can change them and invalidate the signature.
+
+        `autoExecute` is inside the signed bytes, so an approver consents to it and nothing can flip it afterwards.
+
+        '
+      additionalProperties: true
+    oAuthAccount:
+      type: object
       properties:
         id:
           $ref: '#/components/schemas/uuid'
-        backupLocation:
-          type: string
-        passwordEncrypted:
-          type: boolean
-        externalKeyShareId:
-          $ref: '#/components/schemas/uuid'
-    RevokeDelegatedAccessRequest:
-      type: object
-      required:
-      - walletIds
-      properties:
-        walletIds:
-          type: array
-          items:
-            $ref: '#/components/schemas/uuid'
-          description: Array of wallet IDs to revoke delegated access for
-          minItems: 1
-          maxItems: 100
-    CreateUserWaasWalletsRequest:
-      required:
-      - identifier
-      - type
-      - chains
-      type: object
-      properties:
-        identifier:
-          type: string
-          description: Identifier for the user. Must be either an email, phone number, user id, external user id, or username from a supported social provider
-        type:
-          $ref: '#/components/schemas/UserIdentifierTypeEnum'
-        chains:
-          type: array
-          description: The chains to create the wallet for
-          items:
-            $ref: '#/components/schemas/WaasChainEnum'
-        smsCountryCode:
-          $ref: '#/components/schemas/SmsCountryCode'
-        socialProvider:
+        provider:
           $ref: '#/components/schemas/ProviderEnum'
-    ThresholdSignatureScheme:
+        accountUsername:
+          description: Username or display name from the linked OAuth provider account
+          type: string
+    SignMessageContext:
+      type: object
+      properties:
+        evmTransaction:
+          $ref: '#/components/schemas/SignMessageEvmTransaction'
+        evmUserOperation:
+          $ref: '#/components/schemas/SignMessageEvmUserOperation'
+        svmTransaction:
+          $ref: '#/components/schemas/SignMessageSvmTransaction'
+        suiTransaction:
+          $ref: '#/components/schemas/SignMessageSuiTransaction'
+        btcTransaction:
+          $ref: '#/components/schemas/SignMessageBtcTransaction'
+        eip7702Auth:
+          $ref: '#/components/schemas/SignMessageEip7702Auth'
+        evmMessage:
+          $ref: '#/components/schemas/SignMessageEvmMessage'
+        svmMessage:
+          $ref: '#/components/schemas/NonEmptyStringWith204800MaxLength'
+        suiMessage:
+          $ref: '#/components/schemas/NonEmptyStringWith204800MaxLength'
+        stellarMessage:
+          $ref: '#/components/schemas/NonEmptyStringWith204800MaxLength'
+        aleoMessage:
+          $ref: '#/components/schemas/NonEmptyStringWith204800MaxLength'
+        evmTypedData:
+          $ref: '#/components/schemas/SignMessageEvmTypedData'
+        rawSign:
+          $ref: '#/components/schemas/SignMessageRawSign'
+        domain:
+          $ref: '#/components/schemas/NonEmptyDomainUrlWith255MaxLength'
+    NonEmptyBase58StringWith100MaxLength:
+      type: string
+      pattern: ^[1-9A-HJ-NP-Za-km-z]+$
+      maxLength: 100
+      description: A base58 string with a max length of 100 characters
+    WaasPolicyDeclarativeRuleInput:
+      type: object
+      description: 'A Rule authored in the policy rule language, evaluated by the engine as stored rather than compiled from WaasPolicyRule. Shares identity and authorship with a legacy Rule so the Layer machinery — deletion markers, authorship stamping, the edit guard — keys on the same fields and needs no second code path for anything but evaluation. A Layer holds one syntax or the other: a write that would leave both in one Layer is refused.'
+      required:
+      - phase
+      - when
+      - then
+      properties:
+        ruleId:
+          $ref: '#/components/schemas/uuid'
+        name:
+          type: string
+          description: Human-readable name for the rule
+        phase:
+          type: string
+          description: Which question this Rule answers. A Layer is one flat list, so the phase travels on the Rule rather than being implied by its position.
+          enum:
+          - transaction
+          - operation
+        when:
+          type: object
+          description: Condition in the policy rule language, validated against the field catalog on write and again on read
+        then:
+          $ref: '#/components/schemas/WaasPolicyAction'
+        approvalRequirements:
+          type: array
+          description: The approvals a matching transaction needs. Required when then is REQUIRE_APPROVAL and refused on any other action. A deny in the same Layer wins first; otherwise every REQUIRE_APPROVAL Rule whose when holds, or cannot be decided, applies. A message or raw sign has no transaction to test, so every such Rule applies. Enforced only for business-account wallets. Valid on business-account, wallet and signer Layers and refused on the environment Layer. Only admins and business-account admins may author one. May not read spendWindows.
+          items:
+            $ref: '#/components/schemas/WaasPolicyDeclarativeApprovalRequirement'
+        modifiableBySigner:
+          type: boolean
+          description: When true, a Signer may adjust this Rule within its recognised shape
+    UnprocessableEntityErrorPayload:
+      type: object
+      description: Contains information which the integrating client of this API can use to tailor an experience to a customer to fix the underlying issue that triggered this error.
+      properties:
+        email:
+          description: Email address that caused the validation error
+          type: string
+          format: email
+          example: joe@email.com
+        loginProvider:
+          $ref: '#/components/schemas/ProviderEnum'
+        embeddedWalletName:
+          description: Embedded wallet name that caused the validation error
+          type: string
+        embeddedSocialSigninProvider:
+          $ref: '#/components/schemas/ProviderEnum'
+        mergeConflicts:
+          $ref: '#/components/schemas/MergeConflicts'
+        intent:
+          $ref: '#/components/schemas/BusinessAccountMutationIntent'
+        additionalMessages:
+          description: List of additional validation error messages
+          type: array
+          items:
+            type: string
+    Eip712Types:
+      type: object
+      additionalProperties:
+        type: array
+        items:
+          $ref: '#/components/schemas/Eip712TypeMember'
+    ServerSigningKeySummaryList:
+      type: object
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ServerSigningKeySummary'
+    User:
+      allOf:
+      - $ref: '#/components/schemas/BaseUser'
+      - type: object
+        properties:
+          walletPublicKey:
+            type: string
+          wallet:
+            type: string
+          chain:
+            $ref: '#/components/schemas/ChainEnum'
+          createdAt:
+            description: ISO 8601 timestamp of when the user account was created
+            type: string
+            format: date-time
+          updatedAt:
+            description: ISO 8601 timestamp of when the user account was last updated
+            type: string
+            format: date-time
+          sessions:
+            description: List of authentication sessions for this user
+            type: array
+            items:
+              $ref: '#/components/schemas/Session'
+          wallets:
+            description: List of wallets linked to this user
+            type: array
+            items:
+              $ref: '#/components/schemas/Wallet'
+          chainalysisChecks:
+            description: Deprecated. Always an empty array — per-user check records are no longer surfaced. Retained for backward compatibility only.
+            deprecated: true
+            type: array
+            items:
+              $ref: '#/components/schemas/ChainalysisCheck'
+          oauthAccounts:
+            description: List of OAuth social accounts linked to this user
+            type: array
+            items:
+              $ref: '#/components/schemas/oAuthAccount'
+          mfaDevices:
+            description: List of MFA devices registered by this user
+            type: array
+            items:
+              $ref: '#/components/schemas/MFADevice'
+    WaasAuthenticateResponse:
+      type: object
+      required:
+      - message
+      - encodedJwts
+      properties:
+        message:
+          description: Status message describing the authentication result
+          type: string
+        encodedJwts:
+          description: Object containing the full and minified JWT tokens for the authenticated session
+          type: object
+          properties:
+            jwt:
+              type: string
+            minifiedJwt:
+              type: string
+    SolanaPublicKey:
+      type: string
+      pattern: ^[1-9A-HJ-NP-Za-km-z]{43,44}$
+      description: Valid Solana wallet address, must be a 44-character string using base58 characters
+      example: vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg
+    RevokedServerSigningKeyResponse:
+      type: object
+      required:
+      - id
+      - revokedAt
+      - status
+      properties:
+        id:
+          $ref: '#/components/schemas/uuid'
+        revokedAt:
+          type: string
+          format: date-time
+        status:
+          $ref: '#/components/schemas/ServerSigningKeyStatus'
+    ServerSigningRegistrationConsent:
+      type: object
+      description: What the env admin signs to enroll a server's key.
+      additionalProperties: false
+      required:
+      - action
+      - consentedAt
+      - environmentId
+      - publicSigningKey
+      - serverIdentifier
+      properties:
+        action:
+          type: string
+          enum:
+          - register
+        consentedAt:
+          type: string
+          format: date-time
+          description: When the admin signed; must be within the last 5 minutes
+        environmentId:
+          $ref: '#/components/schemas/uuid'
+        publicSigningKey:
+          $ref: '#/components/schemas/ServerSigningKeyPublicKey'
+        serverIdentifier:
+          $ref: '#/components/schemas/uuid'
+    BackupKeySharesToLocationsResponse:
+      type: object
+      required:
+      - message
+      - walletId
+      - locationsWithKeyShares
+      properties:
+        locationsWithKeyShares:
+          description: List of backup locations paired with their key share identifiers
+          type: array
+          items:
+            type: object
+            required:
+            - location
+            - keyShareId
+            - externalKeyShareId
+            properties:
+              externalKeyShareId:
+                $ref: '#/components/schemas/uuid'
+              keyShareId:
+                $ref: '#/components/schemas/uuid'
+              location:
+                $ref: '#/components/schemas/WaasBackupOptionsEnum'
+        message:
+          description: Human-readable status message for the backup operation
+          type: string
+        passwordUpdateStatus:
+          description: Current status of the password update process
+          type: string
+          enum:
+          - activated
+          - pending
+        shareSetId:
+          allOf:
+          - $ref: '#/components/schemas/uuid'
+          description: Identifier of the share set that was activated by this backup.
+        shareSetType:
+          description: Role of the active share set for this wallet, or null if no active wallet exists.
+          type:
+          - string
+          - 'null'
+          enum:
+          - delegated
+          - rootUser
+          - server
+          - businessAccountUser
+        walletActive:
+          description: Whether the share set is active.
+          type: boolean
+        walletId:
+          $ref: '#/components/schemas/uuid'
+    ServerSigningKeySummary:
+      type: object
+      required:
+      - createdAt
+      - id
+      - kid
+      - label
+      - publicSigningKey
+      - revokedAt
+      - serverIdentifier
+      - status
+      properties:
+        id:
+          $ref: '#/components/schemas/uuid'
+        serverIdentifier:
+          $ref: '#/components/schemas/uuid'
+        kid:
+          type: string
+          description: RFC 7638 thumbprint of the public key; the JWS `kid` of operation proofs
+        label:
+          type:
+          - string
+          - 'null'
+        publicSigningKey:
+          type: string
+        status:
+          $ref: '#/components/schemas/ServerSigningKeyStatus'
+        createdAt:
+          type: string
+          format: date-time
+        revokedAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+    RevokeDelegatedAccessWalletResult:
+      type: object
+      required:
+      - walletId
+      - success
+      properties:
+        walletId:
+          $ref: '#/components/schemas/uuid'
+        success:
+          type: boolean
+          description: Whether the revocation was successful for this wallet
+        error:
+          type: string
+          description: Error message if the revocation failed
+    DelegatedAccessEncryptionPublicKey:
+      type: object
+      required:
+      - id
+      - projectEnvironmentId
+      - kid
+      - alg
+      - publicKeyPemB64
+      - status
+      - type
+      - createdAt
+      - updatedAt
+      properties:
+        id:
+          $ref: '#/components/schemas/uuid'
+        projectEnvironmentId:
+          $ref: '#/components/schemas/uuid'
+        kid:
+          type: string
+          description: Short identifier referenced in webhook envelopes so the developer knows which private key to use
+          maxLength: 64
+        alg:
+          type: string
+          enum:
+          - RSA-OAEP-256
+          - HYBRID-RSA-AES-256
+          description: Algorithm for how this key is used
+        publicKeyPemB64:
+          type: string
+          description: Developer's public key material, PEM encoded then base64'd
+          maxLength: 4096
+        status:
+          type: string
+          enum:
+          - pending
+          - active
+          - revoked
+          description: Lifecycle status of this key
+        type:
+          $ref: '#/components/schemas/WaasDelegatedAccessEncryptionPublicKeyType'
+        expiresAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: Optional expiry for planned rotations
+        revokedAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: Timestamp when the key was revoked
+        createdAt:
+          description: ISO 8601 timestamp of when the encryption public key was created
+          type: string
+          format: date-time
+        updatedAt:
+          description: ISO 8601 timestamp of when the encryption public key was last updated
+          type: string
+          format: date-time
+    BusinessAccountProperties:
+      type: object
+      description: 'Business-account context attached to a verified credential that belongs to a business account. Present whenever `wallet_properties.shareSetType` is `businessAccountUser`; absent otherwise. Each field is namespaced by its source table so a caller reading the response sees exactly which entity the value came from (no ambiguity between member role and signer type, between business-account name and signer-derived names, etc.).
+
+        '
+      required:
+      - businessAccountId
+      - businessAccountCreatedAt
+      - businessAccountSignerId
+      - businessAccountSignerType
+      - businessAccountMemberRole
+      properties:
+        businessAccountId:
+          $ref: '#/components/schemas/uuid'
+        businessAccountName:
+          type:
+          - string
+          - 'null'
+          description: Display name; user-supplied at create time. Nullable.
+        businessAccountExternalRef:
+          type:
+          - string
+          - 'null'
+          description: Developer-supplied stable ID inside the env. Nullable.
+        businessAccountCreatedAt:
+          type: string
+          format: date-time
+        businessAccountSignerId:
+          $ref: '#/components/schemas/uuid'
+        businessAccountSignerType:
+          $ref: '#/components/schemas/BusinessAccountSignerType'
+        businessAccountMemberRole:
+          $ref: '#/components/schemas/HeldBusinessAccountMemberRole'
+    WaasWalletShareSetType:
       type: string
       enum:
-      - TWO_OF_TWO
-      - TWO_OF_THREE
-      - THREE_OF_FIVE
+      - delegated
+      - rootUser
+      - server
+      - businessAccountUser
+      - offlineRecovery
+      description: The role this share set plays for the wallet
+    WalletAdditionalAddress:
+      type: object
+      description: An additional address associated with a wallet.
+      required:
+      - address
+      - type
+      properties:
+        address:
+          type: string
+          description: An address associated with a wallet.
+        publicKey:
+          type: string
+          description: The public key associated with the address.
+        type:
+          $ref: '#/components/schemas/WalletAddressType'
+        network:
+          type: string
+          description: Network this address is encoded for (e.g. 'mainnet' | 'testnet' | 'preview'). Present when a wallet exposes an address per network.
+    ecdsaValidatorOptions:
+      type: string
+      enum:
+      - zerodev_signer_to_ecdsa
+      - zerodev_multi_chain
+    Wallet:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/uuid'
+        name:
+          $ref: '#/components/schemas/NonEmptyString'
+        chain:
+          $ref: '#/components/schemas/ChainEnum'
+        publicKey:
+          $ref: '#/components/schemas/WalletPublicKey'
+        provider:
+          $ref: '#/components/schemas/WalletProviderEnum'
+        properties:
+          $ref: '#/components/schemas/WalletProperties'
+        lastSelectedAt:
+          description: ISO 8601 timestamp of when the user last selected this wallet as active
+          type:
+          - string
+          - 'null'
+      required:
+      - id
+      - name
+      - chain
+      - publicKey
+      - provider
+    TokenScopes:
+      type: string
+      description: Valid scopes for an environment API token
+      enum:
+      - all.read
+      - waas.delegatedAccess.signMessage
+      - waas.authenticate
+      - environment.settings.read
+      - environment.settings.write
+      - environment.apiTokens.read
+      - environment.apiTokens.write
+      - environment.users.read
+      - environment.users.write
+      - environment.analytics.read
+      - environment.webhooks.read
+      - environment.webhooks.write
+      - environment.events.read
+      - environment.events.write
+      - environment.balances.read
+      - gasless.read
+      - gasless.write
+      - flow.write
+      - waas.policies.write
+    WaasDelegationCredentialsResponse:
+      type: object
+      required:
+      - publicKey
+      - kid
+      - alg
+      - createdAt
+      - updatedAt
+      properties:
+        publicKey:
+          $ref: '#/components/schemas/NonEmptyStringWith4096MaxLength'
+        kid:
+          type: string
+          description: Short identifier referenced in webhook envelopes so the developer knows which private key to use
+          maxLength: 64
+        alg:
+          type: string
+          enum:
+          - RSA-OAEP-256
+          - HYBRID-RSA-AES-256
+          description: Algorithm for how this key is used
+        type:
+          $ref: '#/components/schemas/WaasDelegatedAccessEncryptionPublicKeyType'
+        createdAt:
+          description: ISO 8601 timestamp of when the delegation credentials were created
+          type: string
+          format: date-time
+        updatedAt:
+          description: ISO 8601 timestamp of when the delegation credentials were last updated
+          type: string
+          format: date-time
+    BusinessAccountSignerType:
+      type: string
+      description: Type of a business account signer
+      enum:
+      - endUser
+      - server
+    WaasPolicyLayerResponse:
+      type: object
+      required:
+      - layerId
+      - layerContent
+      - updatedAt
+      properties:
+        message:
+          type: string
+          description: Message describing the operation result
+        layerId:
+          type: string
+          description: Unique identifier for the wallet-Layer
+        layerContent:
+          type: object
+          description: The decrypted, mutated wallet-Layer document
+          properties:
+            rules:
+              type: array
+              description: 'The Layer''s Rules, in whichever syntax it holds — legacy (WaasPolicyLayerResponseRule) or the policy rule language (WaasPolicyDeclarativeRule). Free-form for the same reason the request side is: which syntax a Layer may hold, and that it holds only one, are the enclave''s checks, not this contract''s. Pinning the legacy shape here would make a successful write of a declarative Layer return a body that violates its own response schema.'
+              items:
+                type: object
+        updatedAt:
+          description: ISO 8601 timestamp of when the wallet-Layer was last updated
+          type: string
+          format: date-time
+    WaasVerifyApiKeyResponse:
+      type: object
+      required:
+      - environmentId
+      - verified
+      properties:
+        environmentId:
+          type: string
+          format: uuid
+          description: The environment ID for which the API key was verified
+        verified:
+          type: boolean
+          description: Indicates whether the API key is valid and has access to the environment
+        scopes:
+          type: array
+          description: Scopes granted to the verified API token
+          items:
+            $ref: '#/components/schemas/TokenScopes'
+    ServerSigningRegistrationError:
+      type: object
+      required:
+      - error
+      properties:
+        error:
+          description: Human-readable error message
+          type: string
+        code:
+          description: Machine-readable reason, e.g. a `SERVER_SIGNER_REGISTER_*` code or `server_signing_registration_unavailable`
+          type: string
     BaseUser:
       type: object
       required:
@@ -2043,11 +2575,12 @@ components:
         projectEnvironmentId:
           $ref: '#/components/schemas/uuid'
         verifiedCredentials:
+          description: List of verified credentials (wallets, emails, social accounts) linked to the user
           type: array
           items:
             $ref: '#/components/schemas/JwtVerifiedCredential'
         lastVerifiedCredentialId:
-          $ref: '#/components/schemas/uuid'
+          $ref: '#/components/schemas/LastVerifiedCredentialId'
         sessionId:
           $ref: '#/components/schemas/uuid'
         alias:
@@ -2055,6 +2588,7 @@ components:
         country:
           $ref: '#/components/schemas/CountryCode'
         email:
+          description: Primary email address of the user
           type:
           - string
           - 'null'
@@ -2067,11 +2601,13 @@ components:
         lastName:
           $ref: '#/components/schemas/OptionalNullableNonEmptyStringWith255MaxLength'
         phoneNumber:
+          description: Phone number of the user
           type:
           - string
           - 'null'
           maxLength: 255
         policiesConsent:
+          description: Whether the user has accepted the terms of service and privacy policy
           type:
           - boolean
           - 'null'
@@ -2082,50 +2618,63 @@ components:
         username:
           $ref: '#/components/schemas/OptionalNullableNonEmptyStringWith255MaxLength'
         firstVisit:
+          description: ISO 8601 timestamp of when the user first visited
           type: string
           format: date-time
         lastVisit:
+          description: ISO 8601 timestamp of when the user last visited
           type: string
           format: date-time
         newUser:
+          description: Whether this is a newly created user
           type: boolean
         metadata:
+          description: Arbitrary key-value metadata associated with the user
           type: object
         mfaBackupCodeAcknowledgement:
           $ref: '#/components/schemas/MfaBackupCodeAcknowledgement'
         btcWallet:
+          description: Bitcoin wallet address of the user
           type:
           - string
           - 'null'
         kdaWallet:
+          description: Kadena wallet address of the user
           type:
           - string
           - 'null'
         ltcWallet:
+          description: Litecoin wallet address of the user
           type:
           - string
           - 'null'
         ckbWallet:
+          description: Nervos CKB wallet address of the user
           type:
           - string
           - 'null'
         kasWallet:
+          description: Kaspa wallet address of the user
           type:
           - string
           - 'null'
         dogeWallet:
+          description: Dogecoin wallet address of the user
           type:
           - string
           - 'null'
         emailNotification:
+          description: Whether the user has opted in to email notifications
           type:
           - boolean
           - 'null'
         discordNotification:
+          description: Whether the user has opted in to Discord notifications
           type:
           - boolean
           - 'null'
         newsletterNotification:
+          description: Whether the user has opted in to newsletter notifications
           type:
           - boolean
           - 'null'
@@ -2139,85 +2688,10 @@ components:
           description: 'A whitespace-separate list of permissions associated with the JWT token issued. This conforms to the JWT standard for scope claims: https://datatracker.ietf.org/doc/html/rfc8693#section-4.2'
           example: superuser marketing operations
         missingFields:
+          description: List of required user fields that have not yet been provided
           type: array
           items:
             $ref: '#/components/schemas/ProjectSettingsKyc'
-    WaasWalletProperties:
-      type: object
-      properties:
-        keyShares:
-          type: array
-          items:
-            $ref: '#/components/schemas/WalletKeyShareInfo'
-        thresholdSignatureScheme:
-          $ref: '#/components/schemas/ThresholdSignatureScheme'
-        derivationPath:
-          type: string
-          description: The derivation path for the wallet
-        settings:
-          $ref: '#/components/schemas/WaasWalletSettings'
-        version:
-          $ref: '#/components/schemas/EmbeddedWalletVersionEnum'
-    SolanaPublicKey:
-      type: string
-      pattern: ^[1-9A-HJ-NP-Za-km-z]{43,44}$
-      description: Valid Solana wallet address, must be a 44-character string using base58 characters
-      example: vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg
-    NonEmptyStringWith50MaxLength:
-      type: string
-      pattern: ^(?=\S)[\p{L}\p{N}a-zA-Z _.,:!?&%@\/+\-'|]+(?<=\S)$
-      example: An example name
-      maxLength: 50
-    OpenRoomResponse:
-      type: object
-      required:
-      - roomId
-      properties:
-        roomId:
-          type: string
-        serverKeygenIds:
-          type: array
-          items:
-            $ref: '#/components/schemas/NonEmptyBase58StringWith100MaxLength'
-        newServerKeygenIds:
-          type: array
-          items:
-            $ref: '#/components/schemas/NonEmptyBase58StringWith100MaxLength'
-        walletId:
-          $ref: '#/components/schemas/uuid'
-    UserResponse:
-      type: object
-      properties:
-        user:
-          $ref: '#/components/schemas/User'
-    MergeConflicts:
-      type: object
-      description: Contains information needed for the SDK to surface merge conflicts when attempting to merge information from one user to another
-      required:
-      - fromUser
-      - conflicts
-      properties:
-        fromUser:
-          $ref: '#/components/schemas/SdkUser'
-        conflicts:
-          type: array
-          items:
-            $ref: '#/components/schemas/MergeUserConflict'
-    WaasPolicyArgumentConstraint:
-      type: object
-      required:
-      - operator
-      - value
-      - index
-      properties:
-        operator:
-          $ref: '#/components/schemas/WaasPolicyConstraintCondition'
-        value:
-          description: Reference value for comparison
-        index:
-          type: integer
-          minimum: 0
-          description: Index of the function argument to validate
     ProviderEnum:
       type: string
       description: The 'turnkey' value is deprecated and will be removed in a future version.
@@ -2242,7 +2716,9 @@ components:
       - blocto
       - banxa
       - coinbaseOnramp
+      - binanceOnramp
       - cryptoDotCom
+      - moonPay
       - dynamic
       - alchemy
       - zerodev
@@ -2262,61 +2738,1015 @@ components:
       - okta
       - sendgrid
       - resend
-    WaasPolicyConstraintCondition:
-      type: string
-      enum:
-      - equal
-      - greater
-      - less
-      - greaterEqual
-      - lessEqual
-      - notEqual
-      description: Comparison operator for argument validation
-    ChainalysisCheck:
+      - trmWalletScreening
+      - chainalysisAddressScreening
+      - gemini
+    BadRequest:
       type: object
       properties:
+        error:
+          description: Human-readable error message
+          type: string
+        code:
+          description: Machine-readable reason for the 400, set only by endpoints that distinguish rejections. Flow endpoints use exchange_not_supported and exchange_currency_unsupported.
+          type: string
+          example: exchange_currency_unsupported
+    WaasPolicyDeclarativeRule:
+      allOf:
+      - $ref: '#/components/schemas/WaasPolicyDeclarativeRuleInput'
+      - type: object
+        required:
+        - ruleId
+    NonEmptyStringWith204800MaxLength:
+      type: string
+      maxLength: 204800
+      description: A string with a max length of 204800 characters
+    LastVerifiedCredentialId:
+      description: ID of the most recently used verified credential. This would refer to a value in the verified credentials list
+      type: string
+      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(-zerodev)?$
+      minLength: 36
+      maxLength: 45
+      example: 95b11417-f18f-457f-8804-68e361f9164f-zerodev
+    ServerSigningKeyStatus:
+      type: string
+      enum:
+      - active
+      - expired
+      - revoked
+    ProviderEntryPointVersionEnum:
+      type: string
+      enum:
+      - v6
+      - v7
+    CustomFieldValidValue:
+      type: object
+      required:
+      - label
+      properties:
+        label:
+          $ref: '#/components/schemas/NonEmptyStringWith255MaxLengthAndSpecialChars'
+        key:
+          $ref: '#/components/schemas/NonEmptyStringWith255MaxLengthAndSpecialChars'
+    ProjectSettingsKyc:
+      type: object
+      properties:
+        name:
+          description: Internal name identifier of the KYC field
+          type: string
+        required:
+          description: Whether this KYC field is required for user onboarding
+          type: boolean
+        enabled:
+          description: Whether this KYC field is enabled for collection
+          type: boolean
+        unique:
+          description: Whether this KYC field value must be unique across all users
+          type: boolean
+        verify:
+          description: Whether this KYC field requires verification
+          type: boolean
+        type:
+          $ref: '#/components/schemas/KycFieldType'
+        validationRules:
+          $ref: '#/components/schemas/CustomFieldValidationRules'
+        validationType:
+          $ref: '#/components/schemas/CustomFieldType'
+        label:
+          description: Display label for the KYC field shown to users
+          type: string
+        position:
+          description: Display position order of the KYC field in the form
+          type: number
+      required:
+      - name
+      - required
+      - enabled
+      - unique
+      - verify
+    SignMessageEvmUserOperation:
+      type: object
+      description: User Operation (ERC-4337)
+      properties:
+        chainId:
+          type: number
+          description: Chain identifier needed for user operation hash calculation
+        entryPoint:
+          type: string
+          description: Address of the entry point contract
+        operation:
+          $ref: '#/components/schemas/SignMessageUserOperationData'
+    WaasPolicyAction:
+      type: string
+      description: What a rule in the policy rule language decides when it matches. REQUIRE_APPROVAL neither allows nor denies; it applies the Rule's approvalRequirements to a matching transaction, and is valid in the transaction phase only.
+      enum:
+      - ALLOW
+      - DENY
+      - REQUIRE_APPROVAL
+    WaasWallet:
+      type: object
+      required:
+      - accountAddress
+      - chainName
+      - derivationPath
+      - thresholdSignatureScheme
+      - walletId
+      properties:
+        accountAddress:
+          type: string
+          description: The account address of the wallet
+        chainName:
+          $ref: '#/components/schemas/WaasChainEnum'
+        walletId:
+          $ref: '#/components/schemas/uuid'
+        thresholdSignatureScheme:
+          $ref: '#/components/schemas/ThresholdSignatureScheme'
+        derivationPath:
+          type: string
+          description: The derivation path used for the wallet
+        keyShares:
+          description: List of key share objects describing how wallet key material is distributed
+          type: array
+          items:
+            $ref: '#/components/schemas/WalletKeyShareInfo'
+    Ed25519Variant:
+      type: string
+      description: Protocol variant for the wallet. `ed25519Standard` = non-exportable Ed25519, used for raw-scalar import where the 32-byte input is the signing scalar itself (not an RFC-8032 seed). Omitted/`ed25519Exportable` = the default seed-based Ed25519. Only meaningful for ed25519 chains (e.g. Solana).
+      enum:
+      - ed25519Exportable
+      - ed25519Standard
+    OpenRoomResponse:
+      type: object
+      required:
+      - roomId
+      properties:
+        roomId:
+          description: Unique identifier of the opened MPC room
+          type: string
+        serverKeygenIds:
+          description: List of existing server-side key generation identifiers
+          type: array
+          items:
+            $ref: '#/components/schemas/NonEmptyBase58StringWith100MaxLength'
+        newServerKeygenIds:
+          description: List of newly generated server-side key generation identifiers
+          type: array
+          items:
+            $ref: '#/components/schemas/NonEmptyBase58StringWith100MaxLength'
+        walletId:
+          $ref: '#/components/schemas/uuid'
+    ChainEnum:
+      type: string
+      enum:
+      - ETH
+      - EVM
+      - FLOW
+      - SOL
+      - ALGO
+      - STARK
+      - COSMOS
+      - BTC
+      - ECLIPSE
+      - SUI
+      - SPARK
+      - TRON
+      - APTOS
+      - TON
+      - STELLAR
+      - ALEO
+      - TEMPO
+      - MIDNIGHT
+    Conflict:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message
+          type: string
+          example: 'Conflict: invalid state transition'
+    WaasPolicyArgumentConstraint:
+      type: object
+      required:
+      - operator
+      - value
+      - index
+      properties:
+        operator:
+          $ref: '#/components/schemas/WaasPolicyConstraintCondition'
+        value:
+          description: Reference value for comparison
+        index:
+          type: integer
+          minimum: 0
+          description: Index of the function argument to validate
+    KycFieldType:
+      type: string
+      enum:
+      - standard
+      - custom
+    SignMessageEvmTransaction:
+      type: object
+      description: Standard EVM transaction
+      properties:
+        to:
+          type: string
+          description: Recipient address
+        chainId:
+          type: number
+          description: Chain ID
+        data:
+          type: string
+          description: Transaction data as hex string
+        gas:
+          type: string
+          description: Gas limit as hex string
+        gasPrice:
+          type: string
+          description: Gas price as hex string
+        maxFeePerGas:
+          type: string
+          description: Maximum fee per gas as hex string
+        maxPriorityFeePerGas:
+          type: string
+          description: Maximum priority fee per gas as hex string
+        nonce:
+          type: number
+          description: Transaction nonce
+        value:
+          type: string
+          description: Transaction value as hex string
+      required:
+      - chainId
+      - to
+    SignMessageAuthorizationSignature:
+      type: object
+      description: Authorization signature data (optional)
+      properties:
+        address:
+          type: string
+          description: Address that signed the authorization
+        chainId:
+          type: number
+          description: Chain ID for the authorization signature
+        nonce:
+          type: number
+          description: Nonce used in the authorization signature
+        r:
+          type: string
+          description: R component of the ECDSA signature
+        s:
+          type: string
+          description: S component of the ECDSA signature
+        v:
+          type: string
+          description: V component of the ECDSA signature
+        yParity:
+          type: number
+          description: Y parity of the signature (0 or 1)
+    WaasPolicyResponse:
+      type: object
+      required:
+      - policyId
+      - projectEnvironmentId
+      - createdAt
+      - updatedAt
+      - policyContent
+      properties:
+        message:
+          type: string
+          description: Message describing the operation result
+        policyId:
+          description: Unique identifier for the wallet policy
+          type: string
+        projectEnvironmentId:
+          $ref: '#/components/schemas/uuid'
+        createdAt:
+          description: ISO 8601 timestamp of when the policy was created
+          type: string
+          format: date-time
+        updatedAt:
+          description: ISO 8601 timestamp of when the policy was last updated
+          type: string
+          format: date-time
+        policyContent:
+          description: List of policy rule objects defining allowed or denied wallet operations
+          type: array
+          items:
+            $ref: '#/components/schemas/WaasPolicyRule'
+    BackupKeySharesToLocationsWithUserIdRequest:
+      type: object
+      required:
+      - userId
+      - locations
+      properties:
+        userId:
+          type: string
+          format: uuid
+          description: The ID of the user who owns the wallet
+        shareSetId:
+          allOf:
+          - $ref: '#/components/schemas/uuid'
+          description: 'Identifier of the share set (WaasWallets row) being activated. Optional
+
+            for backwards compatibility — when omitted, the active rootUser share
+
+            set is resolved from walletId.
+
+            '
+        locations:
+          description: Where to store key backup shares — valid values include user, dynamic, googleDrive, iCloud, external
+          type: array
+          items:
+            type: object
+            required:
+            - location
+            properties:
+              location:
+                $ref: '#/components/schemas/WaasBackupOptionsEnum'
+              keygenId:
+                $ref: '#/components/schemas/NonEmptyStringWith255MaxLength'
+              thresholdSignatureScheme:
+                $ref: '#/components/schemas/ThresholdSignatureScheme'
+              externalKeyShareId:
+                $ref: '#/components/schemas/NonEmptyString'
+              passwordEncrypted:
+                description: 'Whether the key share stored at this location is encrypted with a
+
+                  user-provided password. Stored as `false` when omitted, which makes
+
+                  recovery decrypt the share with the environment id instead.
+
+                  '
+                type: boolean
+            not:
+              allOf:
+              - required:
+                - location
+                properties:
+                  location:
+                    enum:
+                    - dynamic
+              - not:
+                  required:
+                  - externalKeyShareId
+    UserResponse:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+    SignMessageBtcTransaction:
+      type: object
+      description: Bitcoin PSBT transaction for signing
+      properties:
+        psbt:
+          type: string
+          description: PSBT (Partially Signed Bitcoin Transaction) in base64 or hex format
+        chainId:
+          type: string
+          description: Chain identifier (1=mainnet, 2=testnet, 3=signet)
+        accountAddress:
+          type: string
+          description: Bitcoin address of the signer (deprecated - use EAC accountAddress instead)
+      required:
+      - psbt
+      - chainId
+    HardwareWalletEnum:
+      type: string
+      enum:
+      - ledger
+    NotFound:
+      type: object
+      required:
+      - error
+      - code
+      properties:
+        error:
+          description: Human-readable error message
+          type: string
+          example: Not Found
+        code:
+          description: Machine-readable error code. Flow endpoints use exchange_not_configured when the requested exchange isn't set up for the environment.
+          type: string
+          example: not_found
+    CustomFieldType:
+      type: string
+      enum:
+      - text
+      - checkbox
+      - select
+    SignMessageUserOperationData:
+      type: object
+      description: The actual user operation data
+      properties:
+        authorization:
+          $ref: '#/components/schemas/SignMessageAuthorizationSignature'
+        callData:
+          type: string
+          description: The data to pass to the sender during the main execution call
+        callGasLimit:
+          type: string
+          description: The amount of gas to allocate the main execution call
+        factory:
+          type: string
+          description: Account factory address (optional, only for new accounts)
+        factoryData:
+          type: string
+          description: Data for account factory (optional)
+        maxFeePerGas:
+          type: string
+          description: Maximum fee per gas
+        maxPriorityFeePerGas:
+          type: string
+          description: Maximum priority fee per gas
+        nonce:
+          type: string
+          description: Anti-replay parameter
+        paymaster:
+          type: string
+          description: Address of paymaster contract (optional)
+        paymasterData:
+          type: string
+          description: Data for paymaster (optional)
+        paymasterPostOpGasLimit:
+          type: string
+          description: The amount of gas to allocate for the paymaster post-operation code (optional)
+        paymasterVerificationGasLimit:
+          type: string
+          description: The amount of gas to allocate for the paymaster validation code (optional)
+        preVerificationGas:
+          type: string
+          description: Extra gas to pay the Bundler
+        sender:
+          type: string
+          description: The account making the operation
+        signature:
+          type: string
+          description: Data passed into the account to verify authorization
+        verificationGasLimit:
+          type: string
+          description: The amount of gas to allocate for the verification step
+    SmsCountryCode:
+      type: object
+      required:
+      - isoCountryCode
+      - phoneCountryCode
+      properties:
+        isoCountryCode:
+          $ref: '#/components/schemas/NonEmptyIsoCountryCode'
+        phoneCountryCode:
+          $ref: '#/components/schemas/NonEmptyStringWith255MaxLength'
+    WaasVerifyApiKeyErrorResponse:
+      type: object
+      required:
+      - message
+      - verified
+      properties:
+        message:
+          type: string
+          description: Error message describing why verification failed
+        verified:
+          type: boolean
+          description: Always false for error responses
+    SignMessageSuiTransaction:
+      type: object
+      description: Sui BCS serialized transaction as hex string
+      properties:
+        chainId:
+          $ref: '#/components/schemas/NonEmptyStringWith255MaxLength'
+        serializedTransaction:
+          $ref: '#/components/schemas/NonEmptyStringWith204800MaxLength'
+      required:
+      - chainId
+      - serializedTransaction
+    WaasChainEnum:
+      type: string
+      enum:
+      - EVM
+      - MIDNIGHT
+      - SVM
+      - SUI
+      - BTC
+      - TON
+      - STELLAR
+      - TEMPO
+      - ALEO
+      - TRON
+    NonEmptyStringWith4096MaxLength:
+      type: string
+      maxLength: 4096
+      description: A string with a max length of 4096 characters
+    MFADevice:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/MFADeviceType'
+        verified:
+          type: boolean
+          description: Whether or not the user has a verified this MFA Device
         id:
           $ref: '#/components/schemas/uuid'
         createdAt:
           type: string
           format: date-time
-        result:
-          $ref: '#/components/schemas/ChainalysisCheckResultEnum'
-        walletPublicKey:
-          $ref: '#/components/schemas/WalletPublicKey'
-        response:
+          description: The date and time the MFA device was created
+        verifiedAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: The date and time the MFA device was verified
+        default:
+          type: boolean
+          description: Whether or not this is the default MFA device for the user
+        alias:
           type: string
+          description: The optional alias for the MFA device
+    DelegatedAccessEncryptionPublicKeysUnifiedResponse:
+      type: object
       required:
-      - id
-      - createdAt
-      - result
-      - walletPublicKey
-      - response
-    UserIdentifierTypeEnum:
+      - message
+      properties:
+        key:
+          allOf:
+          - $ref: '#/components/schemas/DelegatedAccessEncryptionPublicKey'
+          description: Single key when includeAll is false
+        keys:
+          type: array
+          items:
+            $ref: '#/components/schemas/DelegatedAccessEncryptionPublicKey'
+          description: Array of keys when includeAll is true
+        message:
+          type: string
+          description: Message describing the operation result
+    MFADeviceType:
       type: string
       enum:
+      - totp
+      - passkey
       - email
-      - id
-      - externalUserId
+    PasswordSourceTypeEnum:
+      type: string
+      enum:
+      - dynamic
+      - user
+    WaasPolicyLayerRuleInput:
+      anyOf:
+      - $ref: '#/components/schemas/WaasPolicyRule'
+      - $ref: '#/components/schemas/WaasPolicyDeclarativeRuleInput'
+    MergeUser:
+      type: object
+      description: Contains the current field value for the user.
+      required:
+      - userId
+      - value
+      properties:
+        userId:
+          $ref: '#/components/schemas/uuid'
+        value:
+          $ref: '#/components/schemas/NonEmptyStringWith255MaxLength'
+    CountryCode:
+      type:
+      - string
+      - 'null'
+      description: Standard ISO 3166-1 alpha-2 two-letter country code
+      pattern: ^[A-Z]{2}$
+      example: US
+      maxLength: 255
+    WaasTransactionReviewTestResponse:
+      type: object
+      required:
+      - decision
+      - failurePolicyApplied
+      - latencyMs
+      - request
+      - response
+      - responseSignature
+      - scenario
+      - transportError
+      properties:
+        decision:
+          type: object
+          required:
+          - proceed
+          properties:
+            proceed:
+              type: boolean
+            reason:
+              type: string
+        failurePolicyApplied:
+          type: boolean
+          description: True if the decision came from the failure policy (timeout, transport error, bad status, signature problem) rather than from a parsed webhook response.
+        latencyMs:
+          type: integer
+          description: Wall-clock duration of the call in milliseconds.
+        request:
+          type: object
+          required:
+          - body
+          - headers
+          - url
+          properties:
+            body:
+              type: object
+              description: The exact payload sent to the webhook.
+              additionalProperties: true
+            headers:
+              type: object
+              description: 'Headers sent to the webhook. When a secret is configured the x-dynamic-signature header is present but its HMAC value is redacted (returned as "[redacted]") so the computed signature is never echoed back to the caller.
+
+                '
+              additionalProperties:
+                type: string
+            url:
+              type: string
+              format: uri
+        response:
+          type: object
+          required:
+          - body
+          - headers
+          - parsed
+          - status
+          properties:
+            body:
+              type:
+              - string
+              - 'null'
+              description: Raw response body as received from the webhook, or null on transport error.
+            headers:
+              type: object
+              additionalProperties:
+                type: string
+            parsed:
+              type:
+              - object
+              - 'null'
+              description: The JSON-parsed response when the body parsed cleanly and the status was 2xx, otherwise null.
+              properties:
+                proceed:
+                  type: boolean
+                reason:
+                  type: string
+            status:
+              type:
+              - integer
+              - 'null'
+        responseSignature:
+          type: object
+          required:
+          - status
+          properties:
+            status:
+              type: string
+              enum:
+              - not_configured
+              - missing
+              - invalid
+              - valid
+        scenario:
+          $ref: '#/components/schemas/WaasTransactionReviewTestScenario'
+        transportError:
+          type:
+          - string
+          - 'null'
+          description: Network or timeout error message, if any.
+    WaasPolicyUpdateRequest:
+      type: object
+      required:
+      - rulesToUpdate
+      properties:
+        rulesToUpdate:
+          type: array
+          items:
+            $ref: '#/components/schemas/WaasPolicyRule'
+          description: Array of rules to update in the policy
+    CreateUserWaasWalletsRequest:
+      required:
+      - identifier
+      - type
+      - chains
+      type: object
+      properties:
+        identifier:
+          type: string
+          description: Identifier for the user. Must be either an email, phone number, user id, external user id, or username from a supported social provider
+        type:
+          $ref: '#/components/schemas/UserIdentifierTypeEnum'
+        chains:
+          type: array
+          description: The chains to create the wallet for
+          items:
+            $ref: '#/components/schemas/WaasChainEnum'
+        smsCountryCode:
+          $ref: '#/components/schemas/SmsCountryCode'
+        socialProvider:
+          $ref: '#/components/schemas/ProviderEnum'
+    SignMessageSvmTransaction:
+      type: object
+      description: Solana serialized transactions
+      properties:
+        chainId:
+          type: string
+          description: Chain identifier
+        method:
+          type: string
+          description: Method identifier
+        serializedTransactions:
+          type: array
+          items:
+            type: string
+          description: Array of serialized transaction strings
+      required:
+      - chainId
+      - method
+      - serializedTransactions
+    CustomFieldValidationRules:
+      type: object
+      properties:
+        unique:
+          type: boolean
+          description: If this field must be unique for every user in the environment
+        regex:
+          type: string
+          maxLength: 255
+          description: The regex pattern that the text field must match
+          example: ^0x
+        validOptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/CustomFieldValidValue'
+          description: The dropdown options for the select field
+          example:
+          - label: small
+          - label: medium
+          - label: large
+        checkboxText:
+          type: string
+          maxLength: 255
+          description: The text that will be displayed for the checkbox field
+          example: Agree to the terms and conditions
+      description: Optional validation rules for the custom field
+    WaasShareSet:
+      type: object
+      required:
+      - shareSetId
+      - shareSetType
+      - thresholdSignatureScheme
+      - createdAt
+      properties:
+        shareSetId:
+          type: string
+          format: uuid
+          description: Identifier of the share set (WaasWallets row id).
+        shareSetType:
+          $ref: '#/components/schemas/WaasWalletShareSetType'
+        thresholdSignatureScheme:
+          $ref: '#/components/schemas/ThresholdSignatureScheme'
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when this share set was created.
+    OptionalNullableNonEmptyStringWith255MaxLength:
+      type:
+      - string
+      - 'null'
+      pattern: ^$|^(?=\S)[\p{L}\p{N} _.,:!?&%@\/+-]+(?<=\S)$
+      example: An example name
+      maxLength: 255
+    JwtVerifiedCredentialFormatEnum:
+      type: string
+      enum:
+      - blockchain
+      - email
+      - oauth
+      - passkey
       - phoneNumber
-      - socialUsername
-      - socialAccountId
-  parameters:
-    walletId:
-      in: path
-      name: walletId
-      schema:
-        $ref: '#/components/schemas/uuid'
-      required: true
-      description: UUID of the wallet
-    environmentId:
-      in: path
-      name: environmentId
-      required: true
-      description: ID of the environment
-      schema:
-        $ref: '#/components/schemas/uuid'
+      - externalUser
+      - totp
+    NonEmptyIsoCountryCode:
+      type: string
+      pattern: ^[a-zA-Z]{2,4}\d?$
+      maxLength: 4
+      example: US
+    WaasWalletProperties:
+      type: object
+      properties:
+        keyShares:
+          description: List of key share information for the primary share set (the one this auth principal signs with).
+          type: array
+          items:
+            $ref: '#/components/schemas/WalletKeyShareInfo'
+        thresholdSignatureScheme:
+          $ref: '#/components/schemas/ThresholdSignatureScheme'
+        derivationPath:
+          type: string
+          description: The derivation path for the wallet
+        settings:
+          $ref: '#/components/schemas/WaasWalletSettings'
+        shareSetId:
+          type: string
+          format: uuid
+          description: 'Identifier of the primary share set (the one whose `keyShares`, `thresholdSignatureScheme`, `derivationPath`, and `settings` are inlined at the top level). Browser context: rootUser. Delegated-server context: delegated.'
+        shareSetType:
+          $ref: '#/components/schemas/WaasWalletShareSetType'
+        businessAccountId:
+          type: string
+          format: uuid
+          description: Identifier of the business account that owns this wallet, when it is a business-account wallet; absent for personal wallets.
+        otherShareSets:
+          type: array
+          description: All other active share sets that exist on this wallet (i.e., owned by other auth principals). Returned for awareness so consumers can see, e.g., that a delegated share set is set up alongside their rootUser. Server-typed share sets are never exposed.
+          items:
+            $ref: '#/components/schemas/WaasShareSet'
+        version:
+          $ref: '#/components/schemas/EmbeddedWalletVersionEnum'
+    WalletKeyShareInfo:
+      type: object
+      required:
+      - id
+      - backupLocation
+      - passwordEncrypted
+      properties:
+        id:
+          $ref: '#/components/schemas/uuid'
+        backupLocation:
+          description: Where this key share is stored (e.g. "user", "dynamic", "googleDrive", "iCloud")
+          type: string
+        passwordEncrypted:
+          description: Whether this key share is additionally encrypted with a user-provided password
+          type: boolean
+        walletShareDeveloperKeyEncrypted:
+          description: Whether this key share is encrypted with the developer's encryption public key
+          type: boolean
+        externalKeyShareId:
+          $ref: '#/components/schemas/uuid'
+        keygenId:
+          description: Identifier of the key generation ceremony that produced this share
+          type: string
+    NonEmptyString:
+      type: string
+      pattern: ^(?=\S)[\p{L}\p{N}a-zA-Z _.,:!?&%@\/+\-'|]+(?<=\S)$
+      example: An example name
+    EmbeddedWalletVersionEnum:
+      type: string
+      enum:
+      - V1
+      - V2
+      - V3
+    MergeUserConflict:
+      type: object
+      description: Contains a merge conflict between two users with different values for the same user field data
+      required:
+      - field
+      - fromUser
+      - currentUser
+      properties:
+        field:
+          $ref: '#/components/schemas/ProjectSettingsKyc'
+        fromUser:
+          $ref: '#/components/schemas/MergeUser'
+        currentUser:
+          $ref: '#/components/schemas/MergeUser'
+    WaasDelegateSignMessageRequest:
+      type: object
+      required:
+      - message
+      properties:
+        message:
+          $ref: '#/components/schemas/NonEmptyStringWith204800MaxLength'
+        isFormatted:
+          description: When true, `message` is treated as a pre-computed 32-byte hash (64 hex characters, optionally with a leading `0x`) and signed by the MPC server as-is ("raw signing"). When false or omitted, the SDK hashes the message bytes using the chain's standard algorithm (e.g. keccak256 for EVM).
+          type: boolean
+        roomId:
+          description: Unique session identifier that groups related key-generation and signing operations
+          type: string
+        context:
+          allOf:
+          - $ref: '#/components/schemas/SignMessageContext'
+          description: Chain-specific transaction/message payload evaluated by the wallet policy engine. Required when the wallet's policy has rules.
+        shareSetId:
+          allOf:
+          - $ref: '#/components/schemas/uuid'
+          description: 'Optional identifier of the share set this operation targets. When
+
+            omitted, the active rootUser share set for `walletId` is resolved
+
+            server-side (backwards-compat fallback for older SDKs).
+
+            '
+    WalletProviderEnum:
+      type: string
+      enum:
+      - browserExtension
+      - custodialService
+      - walletConnect
+      - qrCode
+      - deepLink
+      - embeddedWallet
+      - smartContractWallet
+    Session:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/uuid'
+        createdAt:
+          description: ISO 8601 timestamp of when the session was created
+          type: string
+          format: date-time
+        ipAddress:
+          description: IP address of the client that initiated the session
+          type:
+          - string
+          - 'null'
+        userAgent:
+          description: User-Agent string of the client that initiated the session
+          type:
+          - string
+          - 'null'
+        revokedAt:
+          description: ISO 8601 timestamp of when the session was revoked, or null if still active
+          type:
+          - string
+          - 'null'
+          format: date-time
+    MfaBackupCodeAcknowledgement:
+      type:
+      - string
+      - 'null'
+      enum:
+      - pending
+      - complete
+    Forbidden:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message
+          type: string
+          example: Access Forbidden
+        code:
+          description: Machine-readable reason for the 403, set only by endpoints that distinguish rejections. Flow endpoints use sanctions_blocked, session_token_invalid and risk_blocked.
+          type: string
+          example: sanctions_blocked
+    WaasWalletSettings:
+      type: object
+      properties:
+        hasDeniedDelegatedAccess:
+          description: Whether the user has denied delegated access for this wallet
+          type: boolean
+        shouldRefreshOnNextSignOn:
+          description: Whether to refresh wallet key shares on the user's next sign-on
+          type: boolean
+        reshareOnNextSignOn:
+          $ref: '#/components/schemas/ThresholdSignatureScheme'
+        revokeOnNextSignOn:
+          description: Whether to revoke delegated access on the user's next sign-on
+          type: boolean
+        variant:
+          $ref: '#/components/schemas/Ed25519Variant'
+    WaasPolicyLayerRule:
+      anyOf:
+      - $ref: '#/components/schemas/WaasPolicyRule'
+      - $ref: '#/components/schemas/WaasPolicyDeclarativeRule'
+    WalletProperties:
+      anyOf:
+      - $ref: '#/components/schemas/TurnkeyWalletProperties'
+      - $ref: '#/components/schemas/HardwareWalletProperties'
+      - $ref: '#/components/schemas/CoinbaseMpcWalletProperties'
+      - $ref: '#/components/schemas/SmartWalletProperties'
+      - $ref: '#/components/schemas/WaasWalletProperties'
+    WaasPolicyCreateRequest:
+      type: object
+      required:
+      - rulesToAdd
+      properties:
+        rulesToAdd:
+          type: array
+          items:
+            $ref: '#/components/schemas/WaasPolicyRule'
+          description: Array of rules to add to the policy, will create policy if it doesn't exist
+    NonEmptyStringWith255MaxLengthAndSpecialChars:
+      type: string
+      pattern: ^(?=\S)[\p{L}\p{N}a-zA-Z _.,:!?&%@\/+\-'()\[\]*]+(?<=\S)$
+      maxLength: 255
+      example: An example name
   responses:
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Forbidden'
+    UnprocessableEntity:
+      description: Unprocessable Entity
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UnprocessableEntity'
+    NotFound:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/NotFound'
     InternalServerError:
       description: Internal Server Error
       content:
@@ -2329,30 +3759,33 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/Unauthorized'
-    Forbidden:
-      description: Forbidden
+    Conflict:
+      description: Conflict
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Forbidden'
+            $ref: '#/components/schemas/Conflict'
     BadRequest:
       description: Bad Request
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/BadRequest'
-    NotFound:
-      description: Not Found
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/NotFound'
-    UnprocessableEntity:
-      description: Unprocessable Entity
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/UnprocessableEntity'
+  parameters:
+    environmentId:
+      in: path
+      name: environmentId
+      required: true
+      description: ID of the environment
+      schema:
+        $ref: '#/components/schemas/uuid'
+    walletId:
+      in: path
+      name: walletId
+      schema:
+        $ref: '#/components/schemas/uuid'
+      required: true
+      description: UUID of the wallet
   securitySchemes:
     bearerAuth:
       type: http

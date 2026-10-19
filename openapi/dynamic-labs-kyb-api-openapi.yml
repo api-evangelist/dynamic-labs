@@ -1,0 +1,992 @@
+openapi: 3.2.0
+info:
+  title: Dashboard Kyb API
+  description: Dashboard API documentation
+  version: 1.0.0
+servers:
+- url: https://app.dynamicauth.com/api/v0
+- url: https://app.dynamic.xyz/api/v0
+- url: http://localhost:3333/api/v0
+tags:
+- name: Kyb
+  description: Verify a business's identity via AI Prise passthrough and check KYB tier status.
+paths:
+  /organizations/{organizationId}/kyb/documents:
+    post:
+      operationId: uploadKybDocument
+      x-cli-ignore: true
+      security:
+      - bearerAuth: []
+      tags:
+      - Kyb
+      summary: Upload a single KYB business document
+      description: 'Forwards one document to AI Prise and returns its document id, referenced
+
+        from submitKybVerification''s documentIds or an additionalInfo fileId. Not
+
+        persisted by Redcoast. Creates the business profile for this organization
+
+        and tier if the first upload precedes the submission.'
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/KybDocumentUploadRequest'
+      responses:
+        '201':
+          description: Document forwarded to AI Prise.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KybDocumentUploadResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '502':
+          $ref: '#/components/responses/BadGateway'
+  /organizations/{organizationId}/kyb/verify:
+    post:
+      operationId: submitKybVerification
+      x-cli-ignore: true
+      security:
+      - bearerAuth: []
+      tags:
+      - Kyb
+      summary: Submit a KYB business verification for a given tier
+      description: 'Passthrough to AI Prise. Reuses the business profile from the org''s first
+
+        uploadKybDocument call, or creates one, then runs subsequent tiers against
+
+        it. Business data is forwarded directly and never persisted by Redcoast;
+
+        documents are referenced by uploadKybDocument ids. Returns only the
+
+        session ID, result, and tier.'
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/KybVerifyRequest'
+      responses:
+        '200':
+          description: Verification submitted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KybVerifyResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: A KYB verification for this org+tier is already in progress or already approved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KybAlreadyInProgressResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '502':
+          $ref: '#/components/responses/BadGateway'
+  /organizations/{organizationId}/kyb:
+    get:
+      operationId: getKybStatus
+      x-cli-ignore: true
+      security:
+      - bearerAuth: []
+      tags:
+      - Kyb
+      summary: Get all KYB tier statuses for an organization
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      responses:
+        '200':
+          description: KYB status for all completed tiers.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KybStatusResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /organizations/{organizationId}/kyb/submission:
+    get:
+      operationId: getKybSubmission
+      x-cli-ignore: true
+      security:
+      - bearerAuth: []
+      tags:
+      - Kyb
+      summary: Get the organization's prior KYB submission and any flagged reasons
+      description: 'Returns the business data submitted with the org''s basic-tier
+
+        verification session (vendor-shaped, mapped to the same shape
+
+        submitKybVerification accepts) plus any vendor-reported reasons the
+
+        last decision wasn''t APPROVED. Used to prefill a failed/reopened
+
+        wizard so the customer only fixes the flagged fields. Not gated on the
+
+        stored row''s status — submitKybVerification''s own duplicate-application
+
+        guard already restricts resubmission to fixable states.'
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      responses:
+        '200':
+          description: The organization's prior KYB submission.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KybSubmissionResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '502':
+          $ref: '#/components/responses/BadGateway'
+  /kyb/officers/verify:
+    get:
+      operationId: verifyKybOfficerConsent
+      x-cli-ignore: true
+      tags:
+      - Kyb
+      summary: Redirect a business officer to their identity verification session
+      description: 'Consumes the one-time token from an officer''s invitation email and
+
+        redirects to the vendor-hosted verification session.
+
+
+        Deliberately unauthenticated: the officer is not a Dynamic user, so the
+
+        signed token in the link is the credential. It is single-use, expires with
+
+        the vendor session, and its redirect target is restricted to the vendor''s
+
+        own hosts.'
+      parameters:
+      - name: token
+        in: query
+        required: true
+        description: One-time consent token issued when the invitation was sent.
+        schema:
+          type: string
+      responses:
+        '302':
+          description: Redirect to the vendor-hosted verification session.
+          content:
+            text/plain:
+              schema:
+                type: string
+            text/html:
+              schema:
+                type: string
+          headers:
+            Location:
+              schema:
+                type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /organizations/{organizationId}/kyb/officers:
+    get:
+      operationId: getKybOfficers
+      x-cli-ignore: true
+      security:
+      - bearerAuth: []
+      tags:
+      - Kyb
+      summary: Get the live officer roster for an organization's KYB profile
+      description: 'Passthrough to AI Prise''s related-people roster. Redcoast stores no
+
+        officer PII, so this reads live on every call. Emails are never
+
+        returned raw — only a masked display form and a presence flag.'
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      responses:
+        '200':
+          description: Live officer roster.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KybOfficersResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '502':
+          $ref: '#/components/responses/BadGateway'
+  /organizations/{organizationId}/kyb/officers/resend-verification:
+    post:
+      operationId: resendKybOfficerVerification
+      x-cli-ignore: true
+      security:
+      - bearerAuth: []
+      tags:
+      - Kyb
+      summary: Re-send officer KYC verification emails with a fresh AI Prise session
+      description: 'Fixes lost emails and expired sessions: a fresh AI Prise verification
+
+        session is created per targeted officer and the existing verification
+
+        email is re-enqueued. Officers with no email on file, or already
+
+        APPROVED, are skipped rather than failing the request. One officer''s
+
+        failure does not abort the rest.'
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/KybResendVerificationRequest'
+      responses:
+        '200':
+          description: Resend outcome per targeted officer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KybResendVerificationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '502':
+          $ref: '#/components/responses/BadGateway'
+  /organizations/{organizationId}/kyb/company-search:
+    get:
+      operationId: kybCompanySearch
+      x-cli-ignore: true
+      tags:
+      - Kyb
+      summary: Search for a company by name in the AI Prise registry
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - in: query
+        name: name
+        required: true
+        schema:
+          type: string
+          minLength: 2
+          maxLength: 200
+      - in: query
+        name: countryCode
+        required: true
+        schema:
+          $ref: '#/components/schemas/IsoCountryCode'
+      - in: query
+        name: stateCode
+        required: false
+        schema:
+          type: string
+          maxLength: 10
+      responses:
+        '200':
+          description: List of matching companies.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KybCompanySearchResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '502':
+          $ref: '#/components/responses/BadGateway'
+      security:
+      - bearerAuth: []
+  /organizations/{organizationId}/kyb/company-lookup:
+    get:
+      operationId: kybCompanyLookup
+      x-cli-ignore: true
+      tags:
+      - Kyb
+      summary: Fetch full company profile from the AI Prise registry
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - in: query
+        name: businessEntityId
+        required: false
+        schema:
+          type: string
+      - in: query
+        name: countryCode
+        required: true
+        schema:
+          $ref: '#/components/schemas/IsoCountryCode'
+      - in: query
+        name: stateCode
+        required: false
+        schema:
+          type: string
+          maxLength: 10
+      - in: query
+        name: companyId
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Full company profile.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KybCompanyResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '502':
+          $ref: '#/components/responses/BadGateway'
+      security:
+      - bearerAuth: []
+components:
+  parameters:
+    organizationId:
+      in: path
+      name: organizationId
+      required: true
+      description: ID of organization
+      schema:
+        $ref: '#/components/schemas/uuid'
+  schemas:
+    KybVerifyResponse:
+      type: object
+      required:
+      - verificationSessionId
+      - verificationResult
+      - tier
+      properties:
+        verificationSessionId:
+          type: string
+        verificationResult:
+          $ref: '#/components/schemas/KybVerificationResultEnum'
+        tier:
+          type: string
+    NotFound:
+      type: object
+      required:
+      - error
+      - code
+      properties:
+        error:
+          description: Human-readable error message
+          type: string
+          example: Not Found
+        code:
+          description: Machine-readable error code. Flow endpoints use exchange_not_configured when the requested exchange isn't set up for the environment.
+          type: string
+          example: not_found
+    KybDocumentUploadResponse:
+      type: object
+      required:
+      - documentId
+      additionalProperties: false
+      properties:
+        documentId:
+          type: string
+          description: AI Prise document id to reference from submitKybVerification.
+    KybVerificationResultEnum:
+      type: string
+      enum:
+      - APPROVED
+      - DECLINED
+      - DRAFT
+      - REVIEW
+      - PENDING
+      - REOPENED
+      - UNKNOWN
+    IsoCountryCode:
+      type: string
+      description: ISO 3166-1 alpha-2 country code
+      pattern: ^[a-zA-Z]{2}$
+      maxLength: 2
+      example: US
+    KybDocumentUploadRequest:
+      type: object
+      additionalProperties: false
+      required:
+      - tier
+      - file
+      properties:
+        tier:
+          type: string
+          description: Tier slug defined in kybTiers.ts (e.g. "basic").
+        file:
+          type: string
+          format: binary
+          description: Document contents, at most 2 MB, sent with the original file name. Accepted extensions are pdf, jpg, jpeg, png, doc, docx, gif, bmp, tiff, webp and txt.
+        fileType:
+          type: string
+          description: Freeform document-type descriptor (e.g. "Certificate of Incorporation").
+          maxLength: 255
+    KybCompanyResult:
+      type: object
+      required:
+      - legalName
+      - businessEntityId
+      - countryCode
+      properties:
+        legalName:
+          type: string
+        businessEntityId:
+          type: string
+        companyId:
+          type:
+          - string
+          - 'null'
+          description: AI Prise's own internal company id — an alternate lookup key alongside businessEntityId.
+        entityType:
+          type:
+          - string
+          - 'null'
+        countryCode:
+          $ref: '#/components/schemas/IsoCountryCode'
+        stateCode:
+          type:
+          - string
+          - 'null'
+        addresses:
+          type:
+          - array
+          - 'null'
+          items:
+            type: object
+            properties:
+              street:
+                type: string
+              city:
+                type: string
+              postalCode:
+                type: string
+              country:
+                type: string
+    KybResendVerificationResponse:
+      type: object
+      required:
+      - resent
+      - skipped
+      properties:
+        resent:
+          type: integer
+          description: Number of officers whose verification email was freshly re-sent.
+        skipped:
+          type: array
+          items:
+            $ref: '#/components/schemas/KybResendSkippedOfficer'
+    KybCompanySearchResponse:
+      type: object
+      required:
+      - results
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/KybCompanyResult'
+    KybResendSkipReasonEnum:
+      type: string
+      enum:
+      - NO_EMAIL
+      - ALREADY_VERIFIED
+      - DECLINED
+      - EMAIL_DOMAIN_MISMATCH
+      - BUSINESS_CONTACT_REQUIRED
+      - NOT_FOUND
+      - FAILED
+      - RATE_LIMITED
+      - NOT_DELIVERABLE
+    KybSubmissionBusinessData:
+      type: object
+      description: Same shape KybVerifyRequest's businessData accepts — lets the wizard feed a prior submission straight back into a resubmission.
+      properties:
+        name:
+          type: string
+        countryCode:
+          type: string
+        stateCode:
+          type: string
+        businessEntityId:
+          type: string
+        entityType:
+          type: string
+          description: Never populated today — AI Prise's get_business_data_from_request response has no field to read the SOLE_PROPRIETORSHIP flag back from. Kept for symmetry with KybVerifyRequest.
+          enum:
+          - SOLE_PROPRIETORSHIP
+        emailAddresses:
+          type: array
+          items:
+            type: string
+        formationDate:
+          type: string
+        phoneNumbers:
+          type: array
+          items:
+            type: string
+        taxIdentificationNumber:
+          type: string
+        website:
+          type: string
+        addresses:
+          type: array
+          items:
+            $ref: '#/components/schemas/KybSubmissionAddress'
+    KybStatusResponse:
+      type: object
+      required:
+      - tiers
+      properties:
+        businessProfileId:
+          type:
+          - string
+          - 'null'
+        tiers:
+          type: array
+          items:
+            $ref: '#/components/schemas/KybTierStatus'
+    BadRequest:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message
+          type: string
+        code:
+          description: Machine-readable reason for the 400, set only by endpoints that distinguish rejections. Flow endpoints use exchange_not_supported and exchange_currency_unsupported.
+          type: string
+          example: exchange_currency_unsupported
+    KybVendorQuestion:
+      type: object
+      description: 'One answered question from a question group a reviewer configured on the AI Prise template. Read-only: no AI Prise write endpoint accepts `questions_response`, so these are never submitted by us — they are captured in AI Prise''s own hosted flow and surfaced here for reconciliation.
+
+        '
+      required:
+      - questionId
+      - question
+      - answer
+      properties:
+        questionId:
+          type: string
+          description: Vendor question key (Q01, Q02, ...).
+        question:
+          type: string
+          description: Vendor-authored question text; shown verbatim to the customer.
+        answer:
+          type: string
+          description: The recorded answer. Empty string when the question is unanswered.
+    InternalServerError:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message
+          type: string
+          example: Internal Server Error
+    KybSubmissionResponse:
+      type: object
+      required:
+      - businessData
+      - statusReasons
+      - verificationResult
+      properties:
+        businessData:
+          $ref: '#/components/schemas/KybSubmissionBusinessData'
+        statusReasons:
+          type: array
+          items:
+            $ref: '#/components/schemas/KybStatusReason'
+        vendorQuestions:
+          type: array
+          description: 'Empty for most profiles — only populated when a reviewer has configured a business question group on the AI Prise template.
+
+            '
+          items:
+            $ref: '#/components/schemas/KybVendorQuestion'
+        verificationResult:
+          $ref: '#/components/schemas/KybVerificationResultEnum'
+    uuid:
+      type: string
+      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+      minLength: 36
+      maxLength: 36
+      example: 95b11417-f18f-457f-8804-68e361f9164f
+    KybSubmissionAddress:
+      type: object
+      properties:
+        addressStreet1:
+          type: string
+        addressStreet2:
+          type:
+          - string
+          - 'null'
+        addressCity:
+          type: string
+        addressState:
+          type: string
+        addressZipCode:
+          type: string
+        addressCountry:
+          type: string
+    KybOfficerSummary:
+      type: object
+      required:
+      - personReferenceId
+      - fullName
+      - emailPresent
+      - maskedEmail
+      - role
+      - verificationResult
+      properties:
+        personReferenceId:
+          type: string
+        fullName:
+          type: string
+        emailPresent:
+          type: boolean
+          description: Whether AI Prise has an email on file for this officer.
+        maskedEmail:
+          type:
+          - string
+          - 'null'
+          description: Masked display form (e.g. "j***@e***.com"); null when the officer has no email on file. The raw address is never returned.
+        role:
+          type: string
+          description: Primary role name for this officer as stored in AI Prise (e.g. "CEO", "DIRECTOR"). Empty string when no role is on file.
+        verificationResult:
+          $ref: '#/components/schemas/KybVerificationResultEnum'
+    KybResendVerificationRequest:
+      type: object
+      properties:
+        personReferenceIds:
+          type: array
+          items:
+            type: string
+          description: Officer person_reference_ids to resend to. Omit or pass an empty array to resend to every officer on the profile.
+    KybOfficersResponse:
+      type: object
+      required:
+      - officers
+      properties:
+        officers:
+          type: array
+          items:
+            $ref: '#/components/schemas/KybOfficerSummary'
+    KybTierStatus:
+      type: object
+      required:
+      - tier
+      - verificationResult
+      properties:
+        tier:
+          type: string
+        verificationResult:
+          $ref: '#/components/schemas/KybVerificationResultEnum'
+        verificationSessionId:
+          type:
+          - string
+          - 'null'
+    TooManyRequests:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message indicating rate limit exceeded
+          type: string
+          example: Too Many Requests
+    BadGateway:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message
+          type: string
+          example: Error from Snowflake service
+        code:
+          description: Machine-readable reason for the 502, set only by endpoints that distinguish rejections. Flow endpoints use exchange_unavailable.
+          type: string
+          example: exchange_unavailable
+      required:
+      - error
+    KybResendSkippedOfficer:
+      type: object
+      required:
+      - personReferenceId
+      - reason
+      properties:
+        personReferenceId:
+          type: string
+        reason:
+          $ref: '#/components/schemas/KybResendSkipReasonEnum'
+    KybAlreadyInProgressResponse:
+      type: object
+      required:
+      - error
+      - code
+      additionalProperties: false
+      properties:
+        error:
+          type: string
+          description: Human-readable message identifying why a new KYB submission for this org+tier was rejected.
+        code:
+          type: string
+          enum:
+          - KYB_ALREADY_IN_PROGRESS
+          - KYB_ALREADY_APPROVED
+    KybAdditionalInfoData:
+      type: object
+      description: Text or document value for an additional info entry. Forwarded to AI Prise; not stored by Redcoast.
+      additionalProperties: false
+      properties:
+        value:
+          type: string
+          description: Plain text value (e.g. officer name/email).
+          maxLength: 1000
+        fileId:
+          type: string
+          description: AI Prise document id returned by uploadKybDocument, for an entry whose value is a document rather than text.
+    KybVerifyRequest:
+      type: object
+      additionalProperties: false
+      required:
+      - tier
+      properties:
+        tier:
+          type: string
+          description: Tier slug defined in kybTiers.ts (e.g. "basic").
+        businessData:
+          type: object
+          additionalProperties: false
+          description: Business identity data forwarded to AI Prise. Not stored by Redcoast.
+          properties:
+            name:
+              type: string
+            taxIdentificationNumber:
+              type: string
+            businessEntityId:
+              type: string
+            countryCode:
+              type: string
+              pattern: ^$|^[a-zA-Z]{2}$
+              description: 2-letter ISO country code or an empty string when not provided.
+            stateCode:
+              type: string
+            formationDate:
+              type: string
+              description: YYYY-MM-DD or an empty string when not provided. Final format validation happens in the controller.
+            website:
+              type: string
+              maxLength: 2048
+              description: Website URL. The controller normalizes bare domains to https:// and rejects non-HTTP(S) schemes.
+            addresses:
+              type: array
+              items:
+                type: object
+                additionalProperties: false
+                properties:
+                  addressStreet1:
+                    type: string
+                  addressStreet2:
+                    type:
+                    - string
+                    - 'null'
+                  addressCity:
+                    type: string
+                  addressState:
+                    type: string
+                  addressZipCode:
+                    type: string
+                  addressCountry:
+                    type: string
+            phoneNumbers:
+              type: array
+              items:
+                type: string
+            emailAddresses:
+              type: array
+              items:
+                type: string
+            entityType:
+              type: string
+              description: Optional business entity type. Currently only SOLE_PROPRIETORSHIP is supported; omit for a registered business. AI Prise has no entity_type field, so this is mapped to a `tags` entry instead.
+              enum:
+              - SOLE_PROPRIETORSHIP
+        documentIds:
+          type: array
+          description: AI Prise document ids returned by uploadKybDocument. Upload each document first, then reference its id here.
+          maxItems: 5
+          items:
+            type: string
+        officers:
+          type: array
+          description: Business officers/directors. Not stored by Redcoast — each entry registers a related person and starts their own KYC verification session.
+          maxItems: 50
+          items:
+            type: object
+            required:
+            - fullName
+            - role
+            additionalProperties: false
+            properties:
+              fullName:
+                type: string
+              emailAddress:
+                type: string
+              role:
+                type: string
+                description: One of DIRECTOR | BENEFICIAL_OWNER | OFFICER | SECRETARY.
+        additionalInfo:
+          type: array
+          description: Officer PII and document references forwarded to AI Prise. Not stored by Redcoast.
+          maxItems: 5
+          items:
+            type: object
+            required:
+            - additionalInfoType
+            - additionalInfoData
+            additionalProperties: false
+            properties:
+              additionalInfoType:
+                type: string
+              additionalInfoData:
+                $ref: '#/components/schemas/KybAdditionalInfoData'
+    KybStatusReason:
+      type: object
+      required:
+      - code
+      - message
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+          description: Vendor-authored text describing what needs correction; shown verbatim to the customer.
+    Forbidden:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message
+          type: string
+          example: Access Forbidden
+        code:
+          description: Machine-readable reason for the 403, set only by endpoints that distinguish rejections. Flow endpoints use sanctions_blocked, session_token_invalid and risk_blocked.
+          type: string
+          example: sanctions_blocked
+    Unauthorized:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message describing the authentication failure
+          type: string
+          example: No jwt provided!
+  responses:
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/InternalServerError'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Unauthorized'
+    BadGateway:
+      description: Bad Gateway
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BadGateway'
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Forbidden'
+    TooManyRequests:
+      description: Too Many Requests
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TooManyRequests'
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BadRequest'
+    NotFound:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/NotFound'
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

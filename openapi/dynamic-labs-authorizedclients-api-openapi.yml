@@ -1,0 +1,246 @@
+openapi: 3.2.0
+info:
+  title: Dashboard Authorized Clients API
+  description: Dashboard API documentation
+  version: 1.0.0
+servers:
+- url: https://app.dynamicauth.com/api/v0
+- url: https://app.dynamic.xyz/api/v0
+- url: http://localhost:3333/api/v0
+tags:
+- name: AuthorizedClients
+  description: 'Manage first-party clients (CLI / MCP / demo / IDE plugins) authorized
+
+    to act as a dashboard user. Surfaced under Profile → Authorized Clients.'
+paths:
+  /auth/clients:
+    get:
+      operationId: listAuthorizedClients
+      tags:
+      - AuthorizedClients
+      summary: List the caller's authorized clients
+      description: 'Returns the caller''s authorized clients (active, revoked, and expired,
+
+        newest first). Used by the `Profile → Authorized Clients` page.'
+      responses:
+        '200':
+          description: List of authorized clients.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthorizedClientList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /auth/clients/{authorizedClientId}:
+    patch:
+      operationId: updateAuthorizedClient
+      tags:
+      - AuthorizedClients
+      summary: Update an authorized client (label only)
+      description: Renames an authorized client. Currently only `label` is editable.
+      parameters:
+      - in: path
+        name: authorizedClientId
+        required: true
+        schema:
+          $ref: '#/components/schemas/uuid'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAuthorizedClientRequest'
+      responses:
+        '200':
+          description: Updated authorized client.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthorizedClient'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Authorized client not found.
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      operationId: revokeAuthorizedClient
+      tags:
+      - AuthorizedClients
+      summary: Revoke an authorized client
+      description: 'Sets `revoked_at = now()`. Subsequent API calls carrying the JWT for
+
+        this client return 401 immediately (the auth middleware checks
+
+        `revoked_at` on every request via the `cid` JWT claim). Idempotent.'
+      parameters:
+      - in: path
+        name: authorizedClientId
+        required: true
+        schema:
+          $ref: '#/components/schemas/uuid'
+      responses:
+        '200':
+          description: Authorized client revoked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthorizedClient'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Authorized client not found.
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+components:
+  schemas:
+    uuid:
+      type: string
+      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+      minLength: 36
+      maxLength: 36
+      example: 95b11417-f18f-457f-8804-68e361f9164f
+    AuthorizedClientList:
+      description: Response from `GET /auth/clients`.
+      type: object
+      required:
+      - data
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuthorizedClient'
+    ClientTypeEnum:
+      description: 'Type of first-party client being authorized. `cli` for the dyn CLI,
+
+        `mcp` for an MCP server, `demo` for demo applications oauth-ing into
+
+        redcoast, `ide-plugin` for editor extensions, and `other` as a catch-all.
+
+        '
+      type: string
+      enum:
+      - cli
+      - mcp
+      - demo
+      - ide-plugin
+      - other
+    UpdateAuthorizedClientRequest:
+      description: Request body for `PATCH /auth/clients/{authorizedClientId}`.
+      type: object
+      properties:
+        label:
+          description: New user-editable label. Pass null to clear.
+          type:
+          - string
+          - 'null'
+          maxLength: 255
+    Unauthorized:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message describing the authentication failure
+          type: string
+          example: No jwt provided!
+    AuthorizedClient:
+      description: 'A first-party client (CLI / MCP / demo / IDE plugin) authorized to act as
+
+        the user via the OAuth grant flow. Surfaced in `Profile → Authorized
+
+        Clients` for management.
+
+        '
+      type: object
+      required:
+      - id
+      - client_type
+      - created_at
+      - expires_at
+      properties:
+        id:
+          $ref: '#/components/schemas/uuid'
+        client_type:
+          $ref: '#/components/schemas/ClientTypeEnum'
+        client_name:
+          description: Package or product name reported at grant time.
+          type:
+          - string
+          - 'null'
+        client_version:
+          description: Version reported at grant time.
+          type:
+          - string
+          - 'null'
+        label:
+          description: 'User-editable label. Defaults to `client_metadata.hostname` at grant
+
+            time; the user can rename it from the management UI.
+
+            '
+          type:
+          - string
+          - 'null'
+        ip_at_grant:
+          description: IP address recorded at grant approval time.
+          type:
+          - string
+          - 'null'
+        created_at:
+          type: string
+          format: date-time
+        last_used_at:
+          description: 'Timestamp of the most recent successful auth check. Sampled at most
+
+            once per minute per client to avoid write amplification on hot loops.
+
+            '
+          type:
+          - string
+          - 'null'
+          format: date-time
+        revoked_at:
+          description: When the client was revoked. Null = active.
+          type:
+          - string
+          - 'null'
+          format: date-time
+        expires_at:
+          description: When the client's JWT naturally expires (typically 30 days post-grant).
+          type: string
+          format: date-time
+        is_current:
+          description: 'True when the listing request''s own JWT references this row. The UI
+
+            uses this to render a "This client" badge and require extra
+
+            confirmation on revoke.
+
+            '
+          type: boolean
+    InternalServerError:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message
+          type: string
+          example: Internal Server Error
+  responses:
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/InternalServerError'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Unauthorized'
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

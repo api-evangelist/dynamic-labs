@@ -1,0 +1,471 @@
+openapi: 3.2.0
+info:
+  title: Dashboard Admin Actions API
+  description: Dashboard API documentation
+  version: 1.0.0
+servers:
+- url: https://app.dynamicauth.com/api/v0
+- url: https://app.dynamic.xyz/api/v0
+- url: http://localhost:3333/api/v0
+tags:
+- name: AdminActions
+  description: Manage admin action requests that require approval from another administrator.
+paths:
+  /organizations/{organizationId}/adminActions:
+    get:
+      operationId: getAdminActionRequests
+      tags:
+      - AdminActions
+      summary: List admin action requests
+      description: Returns a paginated list of admin action requests for the specified organization.
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - in: query
+        name: status
+        required: false
+        schema:
+          $ref: '#/components/schemas/AdminActionRequestStatus'
+      - in: query
+        name: actionType
+        required: false
+        schema:
+          $ref: '#/components/schemas/AdminActionType'
+      - in: query
+        name: environmentId
+        required: false
+        schema:
+          type: string
+          format: uuid
+      - in: query
+        name: limit
+        required: false
+        schema:
+          type: integer
+          default: 50
+      - in: query
+        name: offset
+        required: false
+        schema:
+          type: integer
+          default: 0
+      responses:
+        '200':
+          description: List of admin action requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminActionRequestListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - bearerAuth: []
+  /organizations/{organizationId}/adminActions/{adminActionRequestId}:
+    get:
+      operationId: getAdminActionRequest
+      tags:
+      - AdminActions
+      summary: Get a single admin action request
+      description: Returns the details of a single admin action request.
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - in: path
+        name: adminActionRequestId
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Admin action request details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminActionRequestResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - bearerAuth: []
+  /organizations/{organizationId}/adminActions/{adminActionRequestId}/approve:
+    post:
+      operationId: approveAdminActionRequest
+      tags:
+      - AdminActions
+      summary: Approve an admin action request
+      description: Approves a pending admin action request. The reviewer cannot be the same user who submitted the request.
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - in: path
+        name: adminActionRequestId
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminActionReviewRequest'
+      responses:
+        '200':
+          description: Action request approved and executed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminActionRequestResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - bearerAuth: []
+  /organizations/{organizationId}/adminActions/{adminActionRequestId}/deny:
+    post:
+      operationId: denyAdminActionRequest
+      tags:
+      - AdminActions
+      summary: Deny an admin action request
+      description: Denies a pending admin action request. The reviewer cannot be the same user who submitted the request.
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - in: path
+        name: adminActionRequestId
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminActionReviewRequest'
+      responses:
+        '200':
+          description: Action request denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminActionRequestResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - bearerAuth: []
+components:
+  parameters:
+    organizationId:
+      in: path
+      name: organizationId
+      required: true
+      description: ID of organization
+      schema:
+        $ref: '#/components/schemas/uuid'
+  responses:
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/InternalServerError'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Unauthorized'
+    Conflict:
+      description: Conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Conflict'
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Forbidden'
+    NotFound:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/NotFound'
+  schemas:
+    AdminActionRequest:
+      description: An admin action that may require approval before execution. When approval mode is enabled, sensitive actions create a pending request. When disabled, actions are auto-approved with an audit record.
+      type: object
+      required:
+      - id
+      - organizationId
+      - submittedById
+      - status
+      - actionType
+      - displayName
+      - category
+      - actionPayload
+      - requiredApprovals
+      - currentApprovals
+      - expiresAt
+      - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        organizationId:
+          description: The organization this action belongs to.
+          type: string
+          format: uuid
+        environmentId:
+          description: The environment this action targets. Null for org-level actions.
+          type:
+          - string
+          - 'null'
+          format: uuid
+        submittedById:
+          description: The admin who initiated this action.
+          type: string
+          format: uuid
+        submittedBy:
+          $ref: '#/components/schemas/AdminActionRequestUser'
+        responses:
+          description: Review responses from admins, one row per reviewer per request. Under quorum, multiple approve responses may accumulate before the request reaches requiredApprovals and transitions to approved.
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminActionResponseItem'
+        status:
+          $ref: '#/components/schemas/AdminActionRequestStatus'
+        actionType:
+          $ref: '#/components/schemas/AdminActionType'
+        displayName:
+          description: Human-readable action label shown in the Activity Queue, e.g. "Reset MFA for alice@example.com" or "Environment Lock".
+          type: string
+        category:
+          description: Grouping label for the Activity Queue table, e.g. "Security" or "User Management".
+          type: string
+        targetEntityType:
+          description: The type of entity this action targets, e.g. "user" or "provider". Null for settings changes.
+          type:
+          - string
+          - 'null'
+        targetEntityId:
+          description: The ID of the target entity. Null for settings changes.
+          type:
+          - string
+          - 'null'
+          format: uuid
+        previousState:
+          description: State before the change. Shape varies by actionType. Used for display and conflict detection.
+          type:
+          - object
+          - 'null'
+        actionPayload:
+          description: What to apply when approved. Shape varies by actionType — for settings_change includes fullSettingsSnapshot, for reset_user_mfa includes userId and resetAll flag, for delete_user includes userId and email.
+          type: object
+        requiredApprovals:
+          description: Number of distinct admin approvals needed to execute this request, snapshotted from the organization settings at creation time. Subsequent changes to the org setting do not affect in-flight requests.
+          type: integer
+        currentApprovals:
+          description: Number of approvals received so far. The request transitions to approved when this reaches requiredApprovals. A single deny at any point transitions the request to denied regardless of this counter.
+          type: integer
+        expiresAt:
+          description: When this request expires if still pending. Calculated as createdAt + TTL hours.
+          type: string
+          format: date-time
+        resolvedAt:
+          description: When the request was approved, denied, or expired. Null while pending.
+          type:
+          - string
+          - 'null'
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+    NotFound:
+      type: object
+      required:
+      - error
+      - code
+      properties:
+        error:
+          description: Human-readable error message
+          type: string
+          example: Not Found
+        code:
+          description: Machine-readable error code. Flow endpoints use exchange_not_configured when the requested exchange isn't set up for the environment.
+          type: string
+          example: not_found
+    AdminActionRequestUser:
+      description: Minimal user info embedded in action request and response objects.
+      type: object
+      required:
+      - id
+      - email
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+        name:
+          description: Display name, if available.
+          type: string
+    AdminActionResponseItem:
+      description: A single review response from an admin. One row per reviewer per request, stored in a separate table to support future quorum (multiple reviewers).
+      type: object
+      required:
+      - id
+      - actionRequestId
+      - reviewerId
+      - decision
+      - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        actionRequestId:
+          description: The action request this response belongs to.
+          type: string
+          format: uuid
+        reviewerId:
+          description: The admin who submitted this review.
+          type: string
+          format: uuid
+        reviewer:
+          $ref: '#/components/schemas/AdminActionRequestUser'
+        decision:
+          $ref: '#/components/schemas/AdminActionResponseDecision'
+        note:
+          description: Optional note from the reviewer explaining their decision.
+          type:
+          - string
+          - 'null'
+        createdAt:
+          type: string
+          format: date-time
+    InternalServerError:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message
+          type: string
+          example: Internal Server Error
+    AdminActionReviewRequest:
+      description: Request body for approving or denying an action request.
+      type: object
+      properties:
+        note:
+          description: Optional note explaining the decision. Shown to the submitter.
+          type: string
+          maxLength: 1000
+    AdminActionRequestListResponse:
+      description: Paginated list of action requests with a pending count for badge display.
+      type: object
+      required:
+      - items
+      - total
+      - pendingCount
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminActionRequest'
+        total:
+          description: Total number of action requests matching the filters.
+          type: integer
+        pendingCount:
+          description: Number of currently pending (non-expired) requests. Used for the Activity Queue nav badge.
+          type: integer
+    uuid:
+      type: string
+      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+      minLength: 36
+      maxLength: 36
+      example: 95b11417-f18f-457f-8804-68e361f9164f
+    AdminActionRequestStatus:
+      description: The lifecycle status of an admin action request.
+      type: string
+      enum:
+      - pending
+      - approved
+      - denied
+      - expired
+      - auto_approved
+    AdminActionRequestResponse:
+      description: Wrapper response for a single action request, returned by get/approve/deny endpoints.
+      type: object
+      required:
+      - actionRequest
+      properties:
+        actionRequest:
+          $ref: '#/components/schemas/AdminActionRequest'
+        message:
+          description: Human-readable message, e.g. "This action requires approval from another admin."
+          type: string
+    Conflict:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message
+          type: string
+          example: 'Conflict: invalid state transition'
+    AdminActionType:
+      description: The type of admin action. Determines how the action payload is interpreted and executed.
+      type: string
+      enum:
+      - settings_change
+      - reset_user_mfa
+      - delete_user
+    Forbidden:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message
+          type: string
+          example: Access Forbidden
+        code:
+          description: Machine-readable reason for the 403, set only by endpoints that distinguish rejections. Flow endpoints use sanctions_blocked, session_token_invalid and risk_blocked.
+          type: string
+          example: sanctions_blocked
+    Unauthorized:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message describing the authentication failure
+          type: string
+          example: No jwt provided!
+    AdminActionResponseDecision:
+      description: The reviewer's decision on an action request.
+      type: string
+      enum:
+      - approved
+      - denied
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

@@ -88,78 +88,6 @@ apis:
     url: https://www.dynamic.xyz/docs/api-reference/allowlists
   - type: Documentation
     url: https://www.dynamic.xyz/docs/api-reference/analytics/get-environments-analyticswallets
-- aid: dynamic-labs:dynamic-labs-api-tokens-api
-  name: Dynamic API Tokens API
-  description: Create and revoke environment-scoped API tokens.
-  humanURL: https://www.dynamic.xyz/docs/api-reference/users
-  baseURL: https://app.dynamicauth.com/api/v0
-  tags:
-  - API Tokens
-  properties:
-  - type: OpenAPI
-    url: openapi/dynamic-labs-api-tokens-api-openapi.yml
-  - type: Documentation
-    url: https://www.dynamic.xyz/docs/api-reference/users
-  - type: APIReference
-    url: https://www.dynamic.xyz/docs/api-reference/users
-  - type: PostmanCollection
-    url: collections/dynamic-labs.postman_collection.json
-  - type: OpenCollection
-    url: collections/dynamic-labs.opencollection.json
-  - type: Documentation
-    url: https://www.dynamic.xyz/docs/api-reference/wallets
-  - type: APIReference
-    url: https://www.dynamic.xyz/docs/api-reference/wallets/get-wallets-by-user
-  - type: Documentation
-    url: https://www.dynamic.xyz/docs/api-reference/embedded-wallets
-  - type: Documentation
-    url: https://www.dynamic.xyz/docs/api-reference/environments
-  - type: Documentation
-    url: https://www.dynamic.xyz/docs/api-reference/tokens/create-a-new-api-token
-  - type: Documentation
-    url: https://www.dynamic.xyz/docs/api-reference/webhooks
-  - type: Documentation
-    url: https://www.dynamic.xyz/docs/api-reference/sdk/find-jwks-for-public-key-json-format
-  - type: Documentation
-    url: https://www.dynamic.xyz/docs/api-reference/allowlists
-  - type: Documentation
-    url: https://www.dynamic.xyz/docs/api-reference/analytics/get-environments-analyticswallets
-- aid: dynamic-labs:dynamic-labs-embedded-wallets-api
-  name: Dynamic Embedded Wallets API
-  description: Provision MPC-TSS embedded wallets for users.
-  humanURL: https://www.dynamic.xyz/docs/api-reference/users
-  baseURL: https://app.dynamicauth.com/api/v0
-  tags:
-  - Embedded Wallets
-  properties:
-  - type: OpenAPI
-    url: openapi/dynamic-labs-embedded-wallets-api-openapi.yml
-  - type: Documentation
-    url: https://www.dynamic.xyz/docs/api-reference/users
-  - type: APIReference
-    url: https://www.dynamic.xyz/docs/api-reference/users
-  - type: PostmanCollection
-    url: collections/dynamic-labs.postman_collection.json
-  - type: OpenCollection
-    url: collections/dynamic-labs.opencollection.json
-  - type: Documentation
-    url: https://www.dynamic.xyz/docs/api-reference/wallets
-  - type: APIReference
-    url: https://www.dynamic.xyz/docs/api-reference/wallets/get-wallets-by-user
-  - type: Documentation
-    url: https://www.dynamic.xyz/docs/api-reference/embedded-wallets
-  - type: Documentation
-    url: https://www.dynamic.xyz/docs/api-reference/environments
-  - type: Documentation
-    url: https://www.dynamic.xyz/docs/api-reference/tokens/create-a-new-api-token
-  - type: Documentation
-    url: https://www.dynamic.xyz/docs/api-reference/webhooks
-  - type: Documentation
-    url: https://www.dynamic.xyz/docs/api-reference/sdk/find-jwks-for-public-key-json-format
-  - type: Documentation
-    url: https://www.dynamic.xyz/docs/api-reference/allowlists
-  - type: Documentation
-    url: https://www.dynamic.xyz/docs/api-reference/analytics/get-environments-analyticswallets
 - aid: dynamic-labs:dynamic-labs-environments-api
   name: Dynamic Environments API
   description: Retrieve and update environment (project) configuration.
@@ -210,42 +138,6 @@ apis:
   properties:
   - type: OpenAPI
     url: openapi/dynamic-labs-exports-api-openapi.yml
-  - type: Documentation
-    url: https://www.dynamic.xyz/docs/api-reference/users
-  - type: APIReference
-    url: https://www.dynamic.xyz/docs/api-reference/users
-  - type: PostmanCollection
-    url: collections/dynamic-labs.postman_collection.json
-  - type: OpenCollection
-    url: collections/dynamic-labs.opencollection.json
-  - type: Documentation
-    url: https://www.dynamic.xyz/docs/api-reference/wallets
-  - type: APIReference
-    url: https://www.dynamic.xyz/docs/api-reference/wallets/get-wallets-by-user
-  - type: Documentation
-    url: https://www.dynamic.xyz/docs/api-reference/embedded-wallets
-  - type: Documentation
-    url: https://www.dynamic.xyz/docs/api-reference/environments
-  - type: Documentation
-    url: https://www.dynamic.xyz/docs/api-reference/tokens/create-a-new-api-token
-  - type: Documentation
-    url: https://www.dynamic.xyz/docs/api-reference/webhooks
-  - type: Documentation
-    url: https://www.dynamic.xyz/docs/api-reference/sdk/find-jwks-for-public-key-json-format
-  - type: Documentation
-    url: https://www.dynamic.xyz/docs/api-reference/allowlists
-  - type: Documentation
-    url: https://www.dynamic.xyz/docs/api-reference/analytics/get-environments-analyticswallets
-- aid: dynamic-labs:dynamic-labs-jwks-api
-  name: Dynamic JWKS API
-  description: Fetch the JSON Web Key Set used to verify Dynamic JWTs.
-  humanURL: https://www.dynamic.xyz/docs/api-reference/users
-  baseURL: https://app.dynamicauth.com/api/v0
-  tags:
-  - JWKS
-  properties:
-  - type: OpenAPI
-    url: openapi/dynamic-labs-jwks-api-openapi.yml
   - type: Documentation
     url: https://www.dynamic.xyz/docs/api-reference/users
   - type: APIReference
@@ -631,16 +523,6 @@ apis:
   properties:
   - type: OpenAPI
     url: openapi/dynamic-labs-sessions-api-openapi.yml
-- aid: dynamic-labs:dynamic-labs-settings-api
-  name: Dynamic Settings API
-  description: The Settings API from Dynamic — 9 operation(s) for settings.
-  humanURL: https://www.dynamic.xyz/docs/api-reference/users
-  baseURL: https://app.dynamicauth.com/api/v0
-  tags:
-  - Settings
-  properties:
-  - type: OpenAPI
-    url: openapi/dynamic-labs-settings-api-openapi.yml
 - aid: dynamic-labs:dynamic-labs-testaccount-api
   name: Dynamic Test Account API
   description: The TestAccount API from Dynamic — 1 operation(s) for testaccount.
@@ -681,14 +563,645 @@ apis:
   properties:
   - type: OpenAPI
     url: openapi/dynamic-labs-walletconnect-api-openapi.yml
-- aid: dynamic-labs:dynamic-labs-allow-lists-api
-  name: Dynamic Allow Lists API
-  description: Gate authentication with allowlists.
+- aid: dynamic-labs:dynamic-labs-adminactions-api
+  name: Dynamic Admin Actions API
+  description: Manage admin action requests that require approval from another administrator.
   humanURL: https://www.dynamic.xyz/docs/api-reference/users
   baseURL: https://app.dynamicauth.com/api/v0
   tags:
-  - Allowlists
-  tags_raw:
+  - AdminActions
+  properties:
+  - type: OpenAPI
+    url: openapi/dynamic-labs-adminactions-api-openapi.yml
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/users
+  - type: APIReference
+    url: https://www.dynamic.xyz/docs/api-reference/users
+  - type: PostmanCollection
+    url: collections/dynamic-labs.postman_collection.json
+  - type: OpenCollection
+    url: collections/dynamic-labs.opencollection.json
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/wallets
+  - type: APIReference
+    url: https://www.dynamic.xyz/docs/api-reference/wallets/get-wallets-by-user
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/embedded-wallets
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/environments
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/tokens/create-a-new-api-token
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/webhooks
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/sdk/find-jwks-for-public-key-json-format
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/allowlists
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/analytics/get-environments-analyticswallets
+- aid: dynamic-labs:dynamic-labs-authorizedclients-api
+  name: Dynamic Authorized Clients API
+  description: >-
+    Manage first-party clients (CLI / MCP / demo / IDE plugins) authorized
+
+    to act as a dashboard user. Surfaced under Profile → Authorized Clients.
+  humanURL: https://www.dynamic.xyz/docs/api-reference/users
+  baseURL: https://app.dynamicauth.com/api/v0
+  tags:
+  - AuthorizedClients
+  properties:
+  - type: OpenAPI
+    url: openapi/dynamic-labs-authorizedclients-api-openapi.yml
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/users
+  - type: APIReference
+    url: https://www.dynamic.xyz/docs/api-reference/users
+  - type: PostmanCollection
+    url: collections/dynamic-labs.postman_collection.json
+  - type: OpenCollection
+    url: collections/dynamic-labs.opencollection.json
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/wallets
+  - type: APIReference
+    url: https://www.dynamic.xyz/docs/api-reference/wallets/get-wallets-by-user
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/embedded-wallets
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/environments
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/tokens/create-a-new-api-token
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/webhooks
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/sdk/find-jwks-for-public-key-json-format
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/allowlists
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/analytics/get-environments-analyticswallets
+- aid: dynamic-labs:dynamic-labs-businessaccounts-api
+  name: Dynamic Business Accounts API
+  description: >-
+    Administer the business accounts (multi-operator wallet containers) that end users create in an environment.
+  humanURL: https://www.dynamic.xyz/docs/api-reference/users
+  baseURL: https://app.dynamicauth.com/api/v0
+  tags:
+  - BusinessAccounts
+  properties:
+  - type: OpenAPI
+    url: openapi/dynamic-labs-businessaccounts-api-openapi.yml
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/users
+  - type: APIReference
+    url: https://www.dynamic.xyz/docs/api-reference/users
+  - type: PostmanCollection
+    url: collections/dynamic-labs.postman_collection.json
+  - type: OpenCollection
+    url: collections/dynamic-labs.opencollection.json
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/wallets
+  - type: APIReference
+    url: https://www.dynamic.xyz/docs/api-reference/wallets/get-wallets-by-user
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/embedded-wallets
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/environments
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/tokens/create-a-new-api-token
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/webhooks
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/sdk/find-jwks-for-public-key-json-format
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/allowlists
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/analytics/get-environments-analyticswallets
+- aid: dynamic-labs:dynamic-labs-captcha-api
+  name: Dynamic Captcha API
+  description: Configure captcha verification (provider, site key, secret key) for your environment.
+  humanURL: https://www.dynamic.xyz/docs/api-reference/users
+  baseURL: https://app.dynamicauth.com/api/v0
+  tags:
+  - Captcha
+  properties:
+  - type: OpenAPI
+    url: openapi/dynamic-labs-captcha-api-openapi.yml
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/users
+  - type: APIReference
+    url: https://www.dynamic.xyz/docs/api-reference/users
+  - type: PostmanCollection
+    url: collections/dynamic-labs.postman_collection.json
+  - type: OpenCollection
+    url: collections/dynamic-labs.opencollection.json
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/wallets
+  - type: APIReference
+    url: https://www.dynamic.xyz/docs/api-reference/wallets/get-wallets-by-user
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/embedded-wallets
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/environments
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/tokens/create-a-new-api-token
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/webhooks
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/sdk/find-jwks-for-public-key-json-format
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/allowlists
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/analytics/get-environments-analyticswallets
+- aid: dynamic-labs:dynamic-labs-checkout-api
+  name: Dynamic Checkout API
+  description: Accept crypto payments and deposits from any wallet. Settle in any token you choose.
+  humanURL: https://www.dynamic.xyz/docs/api-reference/users
+  baseURL: https://app.dynamicauth.com/api/v0
+  tags:
+  - Checkout
+  properties:
+  - type: OpenAPI
+    url: openapi/dynamic-labs-checkout-api-openapi.yml
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/users
+  - type: APIReference
+    url: https://www.dynamic.xyz/docs/api-reference/users
+  - type: PostmanCollection
+    url: collections/dynamic-labs.postman_collection.json
+  - type: OpenCollection
+    url: collections/dynamic-labs.opencollection.json
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/wallets
+  - type: APIReference
+    url: https://www.dynamic.xyz/docs/api-reference/wallets/get-wallets-by-user
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/embedded-wallets
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/environments
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/tokens/create-a-new-api-token
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/webhooks
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/sdk/find-jwks-for-public-key-json-format
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/allowlists
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/analytics/get-environments-analyticswallets
+- aid: dynamic-labs:dynamic-labs-clientgrant-api
+  name: Dynamic Client Grant API
+  description: >-
+    OAuth 2.0 Device Authorization Grant flow (RFC 8628) used by first-party
+
+    Dynamic clients (CLI, MCP server, demo apps, IDE plugins) to obtain a
+
+    revocable, 30-day client JWT without ever seeing the user's dashboard
+
+    session token.
+  humanURL: https://www.dynamic.xyz/docs/api-reference/users
+  baseURL: https://app.dynamicauth.com/api/v0
+  tags:
+  - ClientGrant
+  properties:
+  - type: OpenAPI
+    url: openapi/dynamic-labs-clientgrant-api-openapi.yml
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/users
+  - type: APIReference
+    url: https://www.dynamic.xyz/docs/api-reference/users
+  - type: PostmanCollection
+    url: collections/dynamic-labs.postman_collection.json
+  - type: OpenCollection
+    url: collections/dynamic-labs.opencollection.json
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/wallets
+  - type: APIReference
+    url: https://www.dynamic.xyz/docs/api-reference/wallets/get-wallets-by-user
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/embedded-wallets
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/environments
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/tokens/create-a-new-api-token
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/webhooks
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/sdk/find-jwks-for-public-key-json-format
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/allowlists
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/analytics/get-environments-analyticswallets
+- aid: dynamic-labs:dynamic-labs-exchanges-api
+  name: Dynamic Exchanges API
+  description: >-
+    Configure exchange integrations (Coinbase, Binance, etc.) for fiat on-ramp within your environment.
+  humanURL: https://www.dynamic.xyz/docs/api-reference/users
+  baseURL: https://app.dynamicauth.com/api/v0
+  tags:
+  - Exchanges
+  properties:
+  - type: OpenAPI
+    url: openapi/dynamic-labs-exchanges-api-openapi.yml
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/users
+  - type: APIReference
+    url: https://www.dynamic.xyz/docs/api-reference/users
+  - type: PostmanCollection
+    url: collections/dynamic-labs.postman_collection.json
+  - type: OpenCollection
+    url: collections/dynamic-labs.opencollection.json
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/wallets
+  - type: APIReference
+    url: https://www.dynamic.xyz/docs/api-reference/wallets/get-wallets-by-user
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/embedded-wallets
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/environments
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/tokens/create-a-new-api-token
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/webhooks
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/sdk/find-jwks-for-public-key-json-format
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/allowlists
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/analytics/get-environments-analyticswallets
+- aid: dynamic-labs:dynamic-labs-flowanalytics-api
+  name: Dynamic Flow Analytics API
+  description: Query aggregated analytics and paginated transaction lists for the Flow product.
+  humanURL: https://www.dynamic.xyz/docs/api-reference/users
+  baseURL: https://app.dynamicauth.com/api/v0
+  tags:
+  - FlowAnalytics
+  properties:
+  - type: OpenAPI
+    url: openapi/dynamic-labs-flowanalytics-api-openapi.yml
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/users
+  - type: APIReference
+    url: https://www.dynamic.xyz/docs/api-reference/users
+  - type: PostmanCollection
+    url: collections/dynamic-labs.postman_collection.json
+  - type: OpenCollection
+    url: collections/dynamic-labs.opencollection.json
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/wallets
+  - type: APIReference
+    url: https://www.dynamic.xyz/docs/api-reference/wallets/get-wallets-by-user
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/embedded-wallets
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/environments
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/tokens/create-a-new-api-token
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/webhooks
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/sdk/find-jwks-for-public-key-json-format
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/allowlists
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/analytics/get-environments-analyticswallets
+- aid: dynamic-labs:dynamic-labs-gasless-api
+  name: Dynamic Gasless API
+  description: >-
+    Query billing summaries and paginated transaction lists for sponsored (gasless) transactions.
+  humanURL: https://www.dynamic.xyz/docs/api-reference/users
+  baseURL: https://app.dynamicauth.com/api/v0
+  tags:
+  - Gasless
+  properties:
+  - type: OpenAPI
+    url: openapi/dynamic-labs-gasless-api-openapi.yml
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/users
+  - type: APIReference
+    url: https://www.dynamic.xyz/docs/api-reference/users
+  - type: PostmanCollection
+    url: collections/dynamic-labs.postman_collection.json
+  - type: OpenCollection
+    url: collections/dynamic-labs.opencollection.json
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/wallets
+  - type: APIReference
+    url: https://www.dynamic.xyz/docs/api-reference/wallets/get-wallets-by-user
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/embedded-wallets
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/environments
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/tokens/create-a-new-api-token
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/webhooks
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/sdk/find-jwks-for-public-key-json-format
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/allowlists
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/analytics/get-environments-analyticswallets
+- aid: dynamic-labs:dynamic-labs-kyb-api
+  name: Dynamic Kyb API
+  description: Verify a business's identity via AI Prise passthrough and check KYB tier status.
+  humanURL: https://www.dynamic.xyz/docs/api-reference/users
+  baseURL: https://app.dynamicauth.com/api/v0
+  tags:
+  - Kyb
+  properties:
+  - type: OpenAPI
+    url: openapi/dynamic-labs-kyb-api-openapi.yml
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/users
+  - type: APIReference
+    url: https://www.dynamic.xyz/docs/api-reference/users
+  - type: PostmanCollection
+    url: collections/dynamic-labs.postman_collection.json
+  - type: OpenCollection
+    url: collections/dynamic-labs.opencollection.json
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/wallets
+  - type: APIReference
+    url: https://www.dynamic.xyz/docs/api-reference/wallets/get-wallets-by-user
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/embedded-wallets
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/environments
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/tokens/create-a-new-api-token
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/webhooks
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/sdk/find-jwks-for-public-key-json-format
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/allowlists
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/analytics/get-environments-analyticswallets
+- aid: dynamic-labs:dynamic-labs-organizationsettings-api
+  name: Dynamic Organization Settings API
+  description: Read and update organization-level settings such as approval workflow configuration.
+  humanURL: https://www.dynamic.xyz/docs/api-reference/users
+  baseURL: https://app.dynamicauth.com/api/v0
+  tags:
+  - OrganizationSettings
+  properties:
+  - type: OpenAPI
+    url: openapi/dynamic-labs-organizationsettings-api-openapi.yml
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/users
+  - type: APIReference
+    url: https://www.dynamic.xyz/docs/api-reference/users
+  - type: PostmanCollection
+    url: collections/dynamic-labs.postman_collection.json
+  - type: OpenCollection
+    url: collections/dynamic-labs.opencollection.json
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/wallets
+  - type: APIReference
+    url: https://www.dynamic.xyz/docs/api-reference/wallets/get-wallets-by-user
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/embedded-wallets
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/environments
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/tokens/create-a-new-api-token
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/webhooks
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/sdk/find-jwks-for-public-key-json-format
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/allowlists
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/analytics/get-environments-analyticswallets
+- aid: dynamic-labs:dynamic-labs-providers-api
+  name: Dynamic Providers API
+  description: >-
+    List, enable, disable, and configure authentication providers (OAuth, email, wallet, SMS, etc.) for
+    your environment.
+  humanURL: https://www.dynamic.xyz/docs/api-reference/users
+  baseURL: https://app.dynamicauth.com/api/v0
+  tags:
+  - Providers
+  properties:
+  - type: OpenAPI
+    url: openapi/dynamic-labs-providers-api-openapi.yml
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/users
+  - type: APIReference
+    url: https://www.dynamic.xyz/docs/api-reference/users
+  - type: PostmanCollection
+    url: collections/dynamic-labs.postman_collection.json
+  - type: OpenCollection
+    url: collections/dynamic-labs.opencollection.json
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/wallets
+  - type: APIReference
+    url: https://www.dynamic.xyz/docs/api-reference/wallets/get-wallets-by-user
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/embedded-wallets
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/environments
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/tokens/create-a-new-api-token
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/webhooks
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/sdk/find-jwks-for-public-key-json-format
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/allowlists
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/analytics/get-environments-analyticswallets
+- aid: dynamic-labs:dynamic-labs-screeningpolicies-api
+  name: Dynamic Screening Policies API
+  description: >-
+    Author per-provider address screening policies that map TRM and Chainalysis
+
+    signals to block, alert, or allow, plus per-address exceptions. The
+
+    sanctions floor sits underneath every policy and is not configurable.
+  humanURL: https://www.dynamic.xyz/docs/api-reference/users
+  baseURL: https://app.dynamicauth.com/api/v0
+  tags:
+  - ScreeningPolicies
+  properties:
+  - type: OpenAPI
+    url: openapi/dynamic-labs-screeningpolicies-api-openapi.yml
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/users
+  - type: APIReference
+    url: https://www.dynamic.xyz/docs/api-reference/users
+  - type: PostmanCollection
+    url: collections/dynamic-labs.postman_collection.json
+  - type: OpenCollection
+    url: collections/dynamic-labs.opencollection.json
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/wallets
+  - type: APIReference
+    url: https://www.dynamic.xyz/docs/api-reference/wallets/get-wallets-by-user
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/embedded-wallets
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/environments
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/tokens/create-a-new-api-token
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/webhooks
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/sdk/find-jwks-for-public-key-json-format
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/allowlists
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/analytics/get-environments-analyticswallets
+- aid: dynamic-labs:dynamic-labs-server-api
+  name: Dynamic Server API
+  description: Server-side SDK endpoints authenticated by environment API tokens.
+  humanURL: https://www.dynamic.xyz/docs/api-reference/users
+  baseURL: https://app.dynamicauth.com/api/v0
+  tags:
+  - Server
+  properties:
+  - type: OpenAPI
+    url: openapi/dynamic-labs-server-api-openapi.yml
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/users
+  - type: APIReference
+    url: https://www.dynamic.xyz/docs/api-reference/users
+  - type: PostmanCollection
+    url: collections/dynamic-labs.postman_collection.json
+  - type: OpenCollection
+    url: collections/dynamic-labs.opencollection.json
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/wallets
+  - type: APIReference
+    url: https://www.dynamic.xyz/docs/api-reference/wallets/get-wallets-by-user
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/embedded-wallets
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/environments
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/tokens/create-a-new-api-token
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/webhooks
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/sdk/find-jwks-for-public-key-json-format
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/allowlists
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/analytics/get-environments-analyticswallets
+- aid: dynamic-labs:dynamic-labs-tokens-api
+  name: Dynamic Tokens API
+  description: Create and manage API tokens used to authenticate requests to the Dynamic API.
+  humanURL: https://www.dynamic.xyz/docs/api-reference/users
+  baseURL: https://app.dynamicauth.com/api/v0
+  tags:
+  - Tokens
+  properties:
+  - type: OpenAPI
+    url: openapi/dynamic-labs-tokens-api-openapi.yml
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/users
+  - type: APIReference
+    url: https://www.dynamic.xyz/docs/api-reference/users
+  - type: PostmanCollection
+    url: collections/dynamic-labs.postman_collection.json
+  - type: OpenCollection
+    url: collections/dynamic-labs.opencollection.json
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/wallets
+  - type: APIReference
+    url: https://www.dynamic.xyz/docs/api-reference/wallets/get-wallets-by-user
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/embedded-wallets
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/environments
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/tokens/create-a-new-api-token
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/webhooks
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/sdk/find-jwks-for-public-key-json-format
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/allowlists
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/analytics/get-environments-analyticswallets
+- aid: dynamic-labs:dynamic-labs-yield-api
+  name: Dynamic Yield API
+  description: List yield vaults registered for your environment.
+  humanURL: https://www.dynamic.xyz/docs/api-reference/users
+  baseURL: https://app.dynamicauth.com/api/v0
+  tags:
+  - Yield
+  properties:
+  - type: OpenAPI
+    url: openapi/dynamic-labs-yield-api-openapi.yml
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/users
+  - type: APIReference
+    url: https://www.dynamic.xyz/docs/api-reference/users
+  - type: PostmanCollection
+    url: collections/dynamic-labs.postman_collection.json
+  - type: OpenCollection
+    url: collections/dynamic-labs.opencollection.json
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/wallets
+  - type: APIReference
+    url: https://www.dynamic.xyz/docs/api-reference/wallets/get-wallets-by-user
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/embedded-wallets
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/environments
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/tokens/create-a-new-api-token
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/webhooks
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/sdk/find-jwks-for-public-key-json-format
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/allowlists
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/analytics/get-environments-analyticswallets
+- aid: dynamic-labs:dynamic-labs-zendesk-api
+  name: Dynamic Zendesk API
+  description: The Zendesk API from Dynamic — 1 operation(s) for zendesk.
+  humanURL: https://www.dynamic.xyz/docs/api-reference/users
+  baseURL: https://app.dynamicauth.com/api/v0
+  tags:
+  - Zendesk
+  properties:
+  - type: OpenAPI
+    url: openapi/dynamic-labs-zendesk-api-openapi.yml
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/users
+  - type: APIReference
+    url: https://www.dynamic.xyz/docs/api-reference/users
+  - type: PostmanCollection
+    url: collections/dynamic-labs.postman_collection.json
+  - type: OpenCollection
+    url: collections/dynamic-labs.opencollection.json
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/wallets
+  - type: APIReference
+    url: https://www.dynamic.xyz/docs/api-reference/wallets/get-wallets-by-user
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/embedded-wallets
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/environments
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/tokens/create-a-new-api-token
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/webhooks
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/sdk/find-jwks-for-public-key-json-format
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/allowlists
+  - type: Documentation
+    url: https://www.dynamic.xyz/docs/api-reference/analytics/get-environments-analyticswallets
+- aid: dynamic-labs:dynamic-labs-allow-lists-api
+  name: Dynamic Allow Lists API
+  description: >-
+    Manage allowlists to control which wallet addresses or email addresses can access your environment.
+  humanURL: https://www.dynamic.xyz/docs/api-reference/users
+  baseURL: https://app.dynamicauth.com/api/v0
+  tags:
   - Allow Lists
   properties:
   - type: OpenAPI
@@ -721,7 +1234,7 @@ apis:
     url: https://www.dynamic.xyz/docs/api-reference/analytics/get-environments-analyticswallets
 - aid: dynamic-labs:dynamic-labs-custom-hostnames-api
   name: Dynamic Custom Hostnames API
-  description: The Custom Hostnames API from Dynamic — 2 operation(s) for custom hostnames.
+  description: Configure custom hostnames for white-labeling the Dynamic authentication experience.
   humanURL: https://www.dynamic.xyz/docs/api-reference/users
   baseURL: https://app.dynamicauth.com/api/v0
   tags:
@@ -757,7 +1270,7 @@ apis:
     url: https://www.dynamic.xyz/docs/api-reference/analytics/get-environments-analyticswallets
 - aid: dynamic-labs:dynamic-labs-mfa-settings-api
   name: Dynamic MFA Settings API
-  description: The MFA Settings API from Dynamic — 3 operation(s) for mfa settings.
+  description: Configure multi-factor authentication (MFA) policies for your organization.
   humanURL: https://www.dynamic.xyz/docs/api-reference/users
   baseURL: https://app.dynamicauth.com/api/v0
   tags:
@@ -793,7 +1306,7 @@ apis:
     url: https://www.dynamic.xyz/docs/api-reference/analytics/get-environments-analyticswallets
 - aid: dynamic-labs:dynamic-labs-user-api-tokens-api
   name: Dynamic User API Tokens API
-  description: The User API Tokens API from Dynamic — 2 operation(s) for user api tokens.
+  description: Create and manage user-scoped API tokens for programmatic access on behalf of a user.
   humanURL: https://www.dynamic.xyz/docs/api-reference/users
   baseURL: https://app.dynamicauth.com/api/v0
   tags:

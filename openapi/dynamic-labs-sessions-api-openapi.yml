@@ -1,6 +1,6 @@
 openapi: 3.2.0
 info:
-  title: Dashboard Allowlists Sessions API
+  title: Dashboard Sessions API
   description: Dashboard API documentation
   version: 1.0.0
 servers:
@@ -9,11 +9,14 @@ servers:
 - url: http://localhost:3333/api/v0
 tags:
 - name: Sessions
+  description: View and revoke active user sessions within an environment.
 paths:
   /sessions/{sessionId}/revoke:
     put:
       summary: Revoke a session
+      description: Revokes the specified session.
       operationId: revokeSessionById
+      x-destructive: true
       tags:
       - Sessions
       security:
@@ -37,6 +40,7 @@ paths:
     get:
       operationId: getSessionById
       summary: Get a session by ID
+      description: Returns a session by its unique identifier.
       tags:
       - Sessions
       parameters:
@@ -62,6 +66,7 @@ paths:
   /environments/{environmentId}/users/sessions/revoke:
     post:
       operationId: revokeAllEnvironmentSessions
+      x-destructive: true
       summary: Revoke all sessions for an environment
       description: Queues the revocation of all user sessions in the specified environment. This is an asynchronous operation - the job runs in the background.
       tags:
@@ -86,124 +91,7 @@ paths:
       security:
       - bearerAuth: []
 components:
-  schemas:
-    uuid:
-      type: string
-      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
-      minLength: 36
-      maxLength: 36
-      example: 95b11417-f18f-457f-8804-68e361f9164f
-    ForbiddenWithErrorAndPayload:
-      type: object
-      properties:
-        error:
-          $ref: '#/components/schemas/ErrorMessageWithCode'
-        payload:
-          $ref: '#/components/schemas/ForbiddenErrorPayload'
-    NotFound:
-      type: object
-      required:
-      - error
-      - code
-      properties:
-        error:
-          type: string
-          example: Not Found
-        code:
-          type: string
-          example: not_found
-    InternalServerError:
-      type: object
-      properties:
-        error:
-          type: string
-          example: Internal Server Error
-    BadRequest:
-      type: object
-      properties:
-        error:
-          type: string
-    RevokeAllSessionsResponse:
-      type: object
-      required:
-      - message
-      properties:
-        message:
-          type: string
-          description: Status message indicating the revocation has been queued
-    Unauthorized:
-      type: object
-      properties:
-        error:
-          type: string
-          example: No jwt provided!
-    WalletPublicKey:
-      type: string
-      pattern: ^[A-Za-z0-9]{18,100}$
-      description: Valid blockchain wallet address, must be an alphanumeric string without any special characters
-      example: '0xbF394748301603f18d953C90F0b087CBEC0E1834'
-      maxLength: 255
-    Session:
-      type: object
-      properties:
-        id:
-          $ref: '#/components/schemas/uuid'
-        createdAt:
-          type: string
-          format: date-time
-        ipAddress:
-          type:
-          - string
-          - 'null'
-        userAgent:
-          type:
-          - string
-          - 'null'
-        revokedAt:
-          type:
-          - string
-          - 'null'
-          format: date-time
-    ErrorMessageWithCode:
-      type: object
-      properties:
-        code:
-          type: string
-        message:
-          type: string
-    Forbidden:
-      type: object
-      properties:
-        error:
-          type: string
-          example: Access Forbidden
-    ForbiddenErrorPayload:
-      type: object
-      properties:
-        walletPublicKey:
-          $ref: '#/components/schemas/WalletPublicKey'
-        email:
-          type: string
-          format: email
   responses:
-    Forbidden:
-      description: Forbidden
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Forbidden'
-    ForbiddenWithErrorAndPayload:
-      description: Forbidden
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ForbiddenWithErrorAndPayload'
-    NotFound:
-      description: Not Found
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/NotFound'
     InternalServerError:
       description: Internal Server Error
       content:
@@ -216,20 +104,151 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/Unauthorized'
+    ForbiddenWithErrorAndPayload:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ForbiddenWithErrorAndPayload'
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Forbidden'
     BadRequest:
       description: Bad Request
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/BadRequest'
+    NotFound:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/NotFound'
+  schemas:
+    NotFound:
+      type: object
+      required:
+      - error
+      - code
+      properties:
+        error:
+          description: Human-readable error message
+          type: string
+          example: Not Found
+        code:
+          description: Machine-readable error code. Flow endpoints use exchange_not_configured when the requested exchange isn't set up for the environment.
+          type: string
+          example: not_found
+    ErrorMessageWithCode:
+      type: object
+      properties:
+        code:
+          description: Machine-readable error code
+          type: string
+        message:
+          description: Human-readable error message
+          type: string
+    ForbiddenErrorPayload:
+      type: object
+      properties:
+        walletPublicKey:
+          $ref: '#/components/schemas/WalletPublicKey'
+        email:
+          description: Email address associated with the forbidden request
+          type: string
+          format: email
+    BadRequest:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message
+          type: string
+        code:
+          description: Machine-readable reason for the 400, set only by endpoints that distinguish rejections. Flow endpoints use exchange_not_supported and exchange_currency_unsupported.
+          type: string
+          example: exchange_currency_unsupported
+    InternalServerError:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message
+          type: string
+          example: Internal Server Error
+    RevokeAllSessionsResponse:
+      type: object
+      required:
+      - message
+      properties:
+        message:
+          type: string
+          description: Status message indicating the revocation has been queued
+    uuid:
+      type: string
+      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+      minLength: 36
+      maxLength: 36
+      example: 95b11417-f18f-457f-8804-68e361f9164f
+    WalletPublicKey:
+      type: string
+      pattern: ^[A-Za-z0-9_-]{18,100}$
+      description: Valid blockchain wallet address, must be an alphanumeric string (underscores allowed for chains like Midnight, hyphens allowed for chains using base64url-encoded addresses like TON)
+      example: '0xbF394748301603f18d953C90F0b087CBEC0E1834'
+      maxLength: 255
+    Forbidden:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message
+          type: string
+          example: Access Forbidden
+        code:
+          description: Machine-readable reason for the 403, set only by endpoints that distinguish rejections. Flow endpoints use sanctions_blocked, session_token_invalid and risk_blocked.
+          type: string
+          example: sanctions_blocked
+    Unauthorized:
+      type: object
+      properties:
+        error:
+          description: Human-readable error message describing the authentication failure
+          type: string
+          example: No jwt provided!
+    ForbiddenWithErrorAndPayload:
+      type: object
+      properties:
+        error:
+          $ref: '#/components/schemas/ErrorMessageWithCode'
+        payload:
+          $ref: '#/components/schemas/ForbiddenErrorPayload'
+    Session:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/uuid'
+        createdAt:
+          description: ISO 8601 timestamp of when the session was created
+          type: string
+          format: date-time
+        ipAddress:
+          description: IP address of the client that initiated the session
+          type:
+          - string
+          - 'null'
+        userAgent:
+          description: User-Agent string of the client that initiated the session
+          type:
+          - string
+          - 'null'
+        revokedAt:
+          description: ISO 8601 timestamp of when the session was revoked, or null if still active
+          type:
+          - string
+          - 'null'
+          format: date-time
   parameters:
-    userId:
-      in: path
-      name: userId
-      schema:
-        $ref: '#/components/schemas/uuid'
-      required: true
-      description: UUID of the user
     environmentId:
       in: path
       name: environmentId
@@ -244,6 +263,13 @@ components:
       required: true
       schema:
         $ref: '#/components/schemas/uuid'
+    userId:
+      in: path
+      name: userId
+      schema:
+        $ref: '#/components/schemas/uuid'
+      required: true
+      description: UUID of the user
   securitySchemes:
     bearerAuth:
       type: http
