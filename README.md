@@ -1,4 +1,4 @@
-# Dynamic (dynamic-labs)
+# Dynamic
 
 <!-- API-EVANGELIST-PROVENANCE:BEGIN -->
 > ### About this repository
@@ -66,218 +66,166 @@
 
 Dynamic is a web3 authentication and embedded wallet platform. It provides multi-chain login, embedded and smart wallets secured with MPC-TSS, onramps, and end-to-end user management through a developer dashboard, client SDKs, and an environment-scoped REST API for programmatically managing users, wallets, projects, webhooks, and token verification.
 
-**APIs.json:** [https://raw.githubusercontent.com/api-evangelist/dynamic-labs/refs/heads/main/apis.yml](https://raw.githubusercontent.com/api-evangelist/dynamic-labs/refs/heads/main/apis.yml)
+**Areas:** Web3 · Authentication · Embedded Wallets · Wallets · MPC · Onboarding · Cryptocurrency
+
+## Dynamic on APIs.io
+
+Everything profiled for Dynamic is published on APIs.io rather than in this repository. Start at the provider page — **[apis.io/providers/dynamic-labs/](https://apis.io/providers/dynamic-labs/)** — or go straight to one of the APIs or properties below.
+
+### APIs (41)
 
-## Tags
+- [Dynamic Analytics API](https://apis.io/apis/dynamic-labs/dynamic-labs-analytics-api/) — Retrieve aggregate environment analytics.
+- [Dynamic API Tokens API](https://apis.io/apis/dynamic-labs/dynamic-labs-api-tokens-api/) — Create and revoke environment-scoped API tokens.
+- [Dynamic Embedded Wallets API](https://apis.io/apis/dynamic-labs/dynamic-labs-embedded-wallets-api/) — Provision MPC-TSS embedded wallets for users.
+- [Dynamic Environments API](https://apis.io/apis/dynamic-labs/dynamic-labs-environments-api/) — Retrieve and update environment (project) configuration.
+- [Dynamic Exports API](https://apis.io/apis/dynamic-labs/dynamic-labs-exports-api/) — Download data exports.
+- [Dynamic JWKS API](https://apis.io/apis/dynamic-labs/dynamic-labs-jwks-api/) — Fetch the JSON Web Key Set used to verify Dynamic JWTs.
+- [Dynamic Users API](https://apis.io/apis/dynamic-labs/dynamic-labs-users-api/) — List and manage end users authenticated into an environment.
+- [Dynamic Wallets API](https://apis.io/apis/dynamic-labs/dynamic-labs-wallets-api/) — View and manage wallets linked to users.
+- [Dynamic Webhooks API](https://apis.io/apis/dynamic-labs/dynamic-labs-webhooks-api/) — Manage webhook endpoints for event notifications.
+- [Dynamic Backend API](https://apis.io/apis/dynamic-labs/backend-api/) — REST API for backend integrations: list users and wallets, manage policies, validate JWTs, fetch auth events, manage environments.
+- [Dynamic Webhooks](https://apis.io/apis/dynamic-labs/webhooks/) — Webhook delivery of auth, user, wallet, and session events. Subscriptions managed through dashboard and Backend API.
+- [Dynamic Chainalysis API](https://apis.io/apis/dynamic-labs/dynamic-labs-chainalysis-api/) — The Chainalysis API from Dynamic — 3 operation(s) for chainalysis.
+- [Dynamic Chains API](https://apis.io/apis/dynamic-labs/dynamic-labs-chains-api/) — The Chains API from Dynamic — 1 operation(s) for chains.
+- [Dynamic Custom Fields API](https://apis.io/apis/dynamic-labs/dynamic-labs-custom-fields-api/) — The Custom Fields API from Dynamic — 2 operation(s) for custom fields.
+- [Dynamic Custom Networks API](https://apis.io/apis/dynamic-labs/dynamic-labs-custom-networks-api/) — The Custom Networks API from Dynamic — 2 operation(s) for custom networks.
+- [Dynamic Deeplink URLS API](https://apis.io/apis/dynamic-labs/dynamic-labs-deeplinkurls-api/) — The DeeplinkUrls API from Dynamic — 2 operation(s) for deeplinkurls.
+- [Dynamic Events API](https://apis.io/apis/dynamic-labs/dynamic-labs-events-api/) — The Events API from Dynamic — 3 operation(s) for events.
+- [Dynamic External JWT API](https://apis.io/apis/dynamic-labs/dynamic-labs-externaljwt-api/) — The ExternalJwt API from Dynamic — 1 operation(s) for externaljwt.
+- [Dynamic Gates API](https://apis.io/apis/dynamic-labs/dynamic-labs-gates-api/) — The Gates API from Dynamic — 4 operation(s) for gates.
+- [Dynamic Global Wallet Access Control API](https://apis.io/apis/dynamic-labs/dynamic-labs-globalwalletaccesscontrol-api/) — The GlobalWalletAccessControl API from Dynamic — 5 operation(s) for globalwalletaccesscontrol.
+- [Dynamic Global Wallet Connections API](https://apis.io/apis/dynamic-labs/dynamic-labs-globalwalletconnections-api/) — The GlobalWalletConnections API from Dynamic — 1 operation(s) for globalwalletconnections.
+- [Dynamic Global Wallets API](https://apis.io/apis/dynamic-labs/dynamic-labs-globalwallets-api/) — The GlobalWallets API from Dynamic — 3 operation(s) for globalwallets.
+- [Dynamic Invites API](https://apis.io/apis/dynamic-labs/dynamic-labs-invites-api/) — The Invites API from Dynamic — 3 operation(s) for invites.
+- [Dynamic Members API](https://apis.io/apis/dynamic-labs/dynamic-labs-members-api/) — The Members API from Dynamic — 4 operation(s) for members.
+- [Dynamic Mfa API](https://apis.io/apis/dynamic-labs/dynamic-labs-mfa-api/) — The Mfa API from Dynamic — 2 operation(s) for mfa.
+- [Dynamic Name Services API](https://apis.io/apis/dynamic-labs/dynamic-labs-nameservices-api/) — The NameServices API from Dynamic — 4 operation(s) for nameservices.
+- [Dynamic Organizations API](https://apis.io/apis/dynamic-labs/dynamic-labs-organizations-api/) — The Organizations API from Dynamic — 8 operation(s) for organizations.
+- [Dynamic Origins API](https://apis.io/apis/dynamic-labs/dynamic-labs-origins-api/) — The Origins API from Dynamic — 2 operation(s) for origins.
+- [Dynamic Projects API](https://apis.io/apis/dynamic-labs/dynamic-labs-projects-api/) — The Projects API from Dynamic — 2 operation(s) for projects.
+- [Dynamic SDK API](https://apis.io/apis/dynamic-labs/dynamic-labs-sdk-api/) — The SDK API from Dynamic — 124 operation(s) for sdk.
+- [Dynamic SDK Views API](https://apis.io/apis/dynamic-labs/dynamic-labs-sdk-views-api/) — The SDK Views API from Dynamic — 2 operation(s) for sdk views.
+- [Dynamic Sessions API](https://apis.io/apis/dynamic-labs/dynamic-labs-sessions-api/) — The Sessions API from Dynamic — 3 operation(s) for sessions.
+- [Dynamic Settings API](https://apis.io/apis/dynamic-labs/dynamic-labs-settings-api/) — The Settings API from Dynamic — 9 operation(s) for settings.
+- [Dynamic Test Account API](https://apis.io/apis/dynamic-labs/dynamic-labs-testaccount-api/) — The TestAccount API from Dynamic — 1 operation(s) for testaccount.
+- [Dynamic Visits API](https://apis.io/apis/dynamic-labs/dynamic-labs-visits-api/) — The Visits API from Dynamic — 1 operation(s) for visits.
+- [Dynamic Waas API](https://apis.io/apis/dynamic-labs/dynamic-labs-waas-api/) — The Waas API from Dynamic — 14 operation(s) for waas.
+- [Dynamic Wallet Connect API](https://apis.io/apis/dynamic-labs/dynamic-labs-walletconnect-api/) — The WalletConnect API from Dynamic — 1 operation(s) for walletconnect.
+- [Dynamic Allow Lists API](https://apis.io/apis/dynamic-labs/dynamic-labs-allow-lists-api/) — Gate authentication with allowlists.
+- [Dynamic Custom Hostnames API](https://apis.io/apis/dynamic-labs/dynamic-labs-custom-hostnames-api/) — The Custom Hostnames API from Dynamic — 2 operation(s) for custom hostnames.
+- [Dynamic MFA Settings API](https://apis.io/apis/dynamic-labs/dynamic-labs-mfa-settings-api/) — The MFA Settings API from Dynamic — 3 operation(s) for mfa settings.
+- [Dynamic User API Tokens API](https://apis.io/apis/dynamic-labs/dynamic-labs-user-api-tokens-api/) — The User API Tokens API from Dynamic — 2 operation(s) for user api tokens.
 
-- Web3
-- Authentication
-- Embedded Wallets
-- Wallets
-- MPC
-- Onboarding
-- Crypto
+### Published properties
 
-## Timestamps
+Each property below is a page on APIs.io carrying the machine-readable artifact and what it says.
 
-- **Created:** 2026-07-01
-- **Modified:** 2026-07-01
+#### Agentic access (1)
 
-## APIs
+Which operations an agent can call, which act, and which need a human in the loop.
 
-### Dynamic Users API
+- [Dynamic Labs Agentic Access](https://apis.io/agentic-access/dynamic-labs/dynamic-labs-agentic-access/)
 
-List, retrieve, update, export, and delete end users authenticated into a Dynamic environment, along with their linked verified credentials and OAuth accounts.
+#### Collections (11)
 
-- **Human URL:** [https://www.dynamic.xyz/docs/api-reference/users](https://www.dynamic.xyz/docs/api-reference/users)
-- **Base URL:** `https://app.dynamicauth.com/api/v0`
+Postman and Open Collection request collections.
 
-#### Tags
+- [Dynamic API](https://apis.io/collections/dynamic-labs/open-dynamic-labs/)
+- [Dynamic Allowlists API](https://apis.io/collections/dynamic-labs/open-dynamic-labs-allowlists-api/)
+- [Dynamic Allowlists Analytics API](https://apis.io/collections/dynamic-labs/open-dynamic-labs-analytics-api/)
+- [Dynamic Allowlists API Tokens API](https://apis.io/collections/dynamic-labs/open-dynamic-labs-api-tokens-api/)
+- [Dynamic Allowlists Embedded Wallets API](https://apis.io/collections/dynamic-labs/open-dynamic-labs-embedded-wallets-api/)
+- [Dynamic Allowlists Environments API](https://apis.io/collections/dynamic-labs/open-dynamic-labs-environments-api/)
+- [Dynamic Allowlists Exports API](https://apis.io/collections/dynamic-labs/open-dynamic-labs-exports-api/)
+- [Dynamic Allowlists JWKS API](https://apis.io/collections/dynamic-labs/open-dynamic-labs-jwks-api/)
+- [Dynamic Allowlists Users API](https://apis.io/collections/dynamic-labs/open-dynamic-labs-users-api/)
+- [Dynamic Allowlists Wallets API](https://apis.io/collections/dynamic-labs/open-dynamic-labs-wallets-api/)
+- [Dynamic Allowlists Webhooks API](https://apis.io/collections/dynamic-labs/open-dynamic-labs-webhooks-api/)
 
-- Users
-- Management
-- Identity
+#### Security (4)
 
-#### Properties
+Authentication, trust centre, and vulnerability disclosure.
 
-- [Documentation](https://www.dynamic.xyz/docs/api-reference/users)
-- [API Reference](https://www.dynamic.xyz/docs/api-reference/users)
-- [OpenAPI](openapi/dynamic-labs-openapi.yml) — [OpenAPI Specification](https://spec.openapis.org/oas/latest.html)
-- [Postman Collection](collections/dynamic-labs.postman_collection.json) — [Postman Collection 2.1](https://schema.getpostman.com/json/collection/v2.1.0/collection.json)
-- [Open Collection](collections/dynamic-labs.opencollection.json) — [Open Collection 1.0](https://schema.opencollection.com/opencollection/v1.0.0.json)
+- [Dynamic Labs Authentication](https://apis.io/security/dynamic-labs/dynamic-labs-authentication/)
+- [Dynamic Labs Domain Security](https://apis.io/security/dynamic-labs/dynamic-labs-domain-security/)
+- [Dynamic Labs Trust Center](https://apis.io/security/dynamic-labs/dynamic-labs-trust-center/)
+- [Dynamic Labs Vulnerability Disclosure](https://apis.io/security/dynamic-labs/dynamic-labs-vulnerability-disclosure/)
 
-### Dynamic Wallets API
+#### Plans and pricing (1)
 
-View and manage the wallets linked to users in an environment across supported EVM, Solana, Bitcoin, and other chains.
+Published plans, tiers and prices.
 
-- **Human URL:** [https://www.dynamic.xyz/docs/api-reference/wallets](https://www.dynamic.xyz/docs/api-reference/wallets)
-- **Base URL:** `https://app.dynamicauth.com/api/v0`
+- [Dynamic Labs Plans Pricing](https://apis.io/plans/dynamic-labs/dynamic-labs-plans-pricing/)
 
-#### Tags
+#### Rate limits (1)
 
-- Wallets
-- Multi-Chain
-- Crypto
+Published request limits.
 
-#### Properties
+- [Dynamic Labs Rate Limits](https://apis.io/rate-limits/dynamic-labs/dynamic-labs-rate-limits/)
 
-- [Documentation](https://www.dynamic.xyz/docs/api-reference/wallets)
-- [API Reference](https://www.dynamic.xyz/docs/api-reference/wallets/get-wallets-by-user)
-- [OpenAPI](openapi/dynamic-labs-openapi.yml) — [OpenAPI Specification](https://spec.openapis.org/oas/latest.html)
-- [Postman Collection](collections/dynamic-labs.postman_collection.json) — [Postman Collection 2.1](https://schema.getpostman.com/json/collection/v2.1.0/collection.json)
-- [Open Collection](collections/dynamic-labs.opencollection.json) — [Open Collection 1.0](https://schema.opencollection.com/opencollection/v1.0.0.json)
+#### FinOps (1)
 
-### Dynamic Embedded Wallets API
+What the API costs to run, by operation.
 
-Programmatically create MPC-TSS embedded wallets for users, generating self-custodial keys split across parties without seed phrases.
+- [Dynamic Labs Finops](https://apis.io/finops/dynamic-labs/dynamic-labs-finops/)
 
-- **Human URL:** [https://www.dynamic.xyz/docs/api-reference/embedded-wallets](https://www.dynamic.xyz/docs/api-reference/embedded-wallets)
-- **Base URL:** `https://app.dynamicauth.com/api/v0`
+## Where to find this API
 
-#### Tags
+Links to the company's own pages. This repository publishes no copy of their specifications — the canonical document is theirs and lives at the URLs below.
 
-- Embedded Wallets
-- MPC
-- TSS
-
-#### Properties
-
-- [Documentation](https://www.dynamic.xyz/docs/api-reference/embedded-wallets)
-- [OpenAPI](openapi/dynamic-labs-openapi.yml) — [OpenAPI Specification](https://spec.openapis.org/oas/latest.html)
-- [Postman Collection](collections/dynamic-labs.postman_collection.json) — [Postman Collection 2.1](https://schema.getpostman.com/json/collection/v2.1.0/collection.json)
-- [Open Collection](collections/dynamic-labs.opencollection.json) — [Open Collection 1.0](https://schema.opencollection.com/opencollection/v1.0.0.json)
-
-### Dynamic Environments API
-
-Retrieve and update environment (project) configuration and settings, and programmatically provision isolated sandbox and live environments.
-
-- **Human URL:** [https://www.dynamic.xyz/docs/api-reference/environments](https://www.dynamic.xyz/docs/api-reference/environments)
-- **Base URL:** `https://app.dynamicauth.com/api/v0`
-
-#### Tags
-
-- Environments
-- Projects
-- Settings
-
-#### Properties
-
-- [Documentation](https://www.dynamic.xyz/docs/api-reference/environments)
-- [OpenAPI](openapi/dynamic-labs-openapi.yml) — [OpenAPI Specification](https://spec.openapis.org/oas/latest.html)
-- [Postman Collection](collections/dynamic-labs.postman_collection.json) — [Postman Collection 2.1](https://schema.getpostman.com/json/collection/v2.1.0/collection.json)
-- [Open Collection](collections/dynamic-labs.opencollection.json) — [Open Collection 1.0](https://schema.opencollection.com/opencollection/v1.0.0.json)
-
-### Dynamic API Tokens API
-
-Create, list, and revoke environment-scoped API tokens (dyn_ prefixed bearer tokens) used to authenticate admin API requests.
-
-- **Human URL:** [https://www.dynamic.xyz/docs/api-reference/tokens](https://www.dynamic.xyz/docs/api-reference/tokens)
-- **Base URL:** `https://app.dynamicauth.com/api/v0`
-
-#### Tags
-
-- API Tokens
-- Access
-- Security
-
-#### Properties
-
-- [Documentation](https://www.dynamic.xyz/docs/api-reference/tokens/create-a-new-api-token)
-- [OpenAPI](openapi/dynamic-labs-openapi.yml) — [OpenAPI Specification](https://spec.openapis.org/oas/latest.html)
-- [Postman Collection](collections/dynamic-labs.postman_collection.json) — [Postman Collection 2.1](https://schema.getpostman.com/json/collection/v2.1.0/collection.json)
-- [Open Collection](collections/dynamic-labs.opencollection.json) — [Open Collection 1.0](https://schema.opencollection.com/opencollection/v1.0.0.json)
-
-### Dynamic Webhooks API
-
-Register, list, update, and delete webhook endpoints that receive signed event notifications for user, wallet, and session lifecycle events.
-
-- **Human URL:** [https://www.dynamic.xyz/docs/api-reference/webhooks](https://www.dynamic.xyz/docs/api-reference/webhooks)
-- **Base URL:** `https://app.dynamicauth.com/api/v0`
-
-#### Tags
-
-- Webhooks
-- Events
-- Notifications
-
-#### Properties
-
-- [Documentation](https://www.dynamic.xyz/docs/api-reference/webhooks)
-- [OpenAPI](openapi/dynamic-labs-openapi.yml) — [OpenAPI Specification](https://spec.openapis.org/oas/latest.html)
-- [Postman Collection](collections/dynamic-labs.postman_collection.json) — [Postman Collection 2.1](https://schema.getpostman.com/json/collection/v2.1.0/collection.json)
-- [Open Collection](collections/dynamic-labs.opencollection.json) — [Open Collection 1.0](https://schema.opencollection.com/opencollection/v1.0.0.json)
-
-### Dynamic Token Verification API
-
-Fetch the environment JSON Web Key Set (JWKS) used to verify Dynamic JWT auth tokens server-side, plus SDK utility endpoints such as URL threat scanning.
-
-- **Human URL:** [https://www.dynamic.xyz/docs/api-reference/sdk/find-jwks-for-public-key-json-format](https://www.dynamic.xyz/docs/api-reference/sdk/find-jwks-for-public-key-json-format)
-- **Base URL:** `https://app.dynamicauth.com/api/v0`
-
-#### Tags
-
-- JWKS
-- Token Verification
-- SDK
-
-#### Properties
-
-- [Documentation](https://www.dynamic.xyz/docs/api-reference/sdk/find-jwks-for-public-key-json-format)
-- [OpenAPI](openapi/dynamic-labs-openapi.yml) — [OpenAPI Specification](https://spec.openapis.org/oas/latest.html)
-- [Postman Collection](collections/dynamic-labs.postman_collection.json) — [Postman Collection 2.1](https://schema.getpostman.com/json/collection/v2.1.0/collection.json)
-- [Open Collection](collections/dynamic-labs.opencollection.json) — [Open Collection 1.0](https://schema.opencollection.com/opencollection/v1.0.0.json)
-
-### Dynamic Allowlists API
-
-Create and manage allowlists and allowlist entries to gate who can authenticate into an environment by email, wallet address, or other criteria.
-
-- **Human URL:** [https://www.dynamic.xyz/docs/api-reference/allowlists](https://www.dynamic.xyz/docs/api-reference/allowlists)
-- **Base URL:** `https://app.dynamicauth.com/api/v0`
-
-#### Tags
-
-- Allowlists
-- Access Control
-- Gating
-
-#### Properties
-
-- [Documentation](https://www.dynamic.xyz/docs/api-reference/allowlists)
-- [OpenAPI](openapi/dynamic-labs-openapi.yml) — [OpenAPI Specification](https://spec.openapis.org/oas/latest.html)
-- [Postman Collection](collections/dynamic-labs.postman_collection.json) — [Postman Collection 2.1](https://schema.getpostman.com/json/collection/v2.1.0/collection.json)
-- [Open Collection](collections/dynamic-labs.opencollection.json) — [Open Collection 1.0](https://schema.opencollection.com/opencollection/v1.0.0.json)
-
-### Dynamic Analytics API
-
-Retrieve aggregate analytics for an environment, including user, wallet, and transaction metrics for reporting and dashboards.
-
-- **Human URL:** [https://www.dynamic.xyz/docs/api-reference/analytics](https://www.dynamic.xyz/docs/api-reference/analytics)
-- **Base URL:** `https://app.dynamicauth.com/api/v0`
-
-#### Tags
-
-- Analytics
-- Metrics
-- Reporting
-
-#### Properties
-
-- [Documentation](https://www.dynamic.xyz/docs/api-reference/analytics/get-environments-analyticswallets)
-- [OpenAPI](openapi/dynamic-labs-openapi.yml) — [OpenAPI Specification](https://spec.openapis.org/oas/latest.html)
-- [Postman Collection](collections/dynamic-labs.postman_collection.json) — [Postman Collection 2.1](https://schema.getpostman.com/json/collection/v2.1.0/collection.json)
-- [Open Collection](collections/dynamic-labs.opencollection.json) — [Open Collection 1.0](https://schema.opencollection.com/opencollection/v1.0.0.json)
-
-## Common Properties
-
-- [GitHub Organization](https://github.com/dynamic-labs)
-- [LinkedIn](https://www.linkedin.com/company/dynamic-labs-financial)
 - [Website](https://www.dynamic.xyz)
 - [Documentation](https://docs.dynamic.xyz)
-- [Plans](plans/dynamic-labs-plans-pricing.yml)
-- [Rate Limits](rate-limits/dynamic-labs-rate-limits.yml)
-- [Fin Ops](finops/dynamic-labs-finops.yml)
+- [GitHub](https://github.com/dynamic-labs)
 
-## Maintainers
+## API Evangelist rating
 
-**FN:** Kin Lane
-**Email:** kin@apievangelist.com
+**Kin Score 31.3** — thin · rubric 0.24.0 · scored 2026-10-17
+
+| Facet | Score |
+|---|---|
+| Discoverability | 71.4 |
+| Contract quality | 48.1 |
+| Contract governance | 0.0 |
+| Operational transparency | 10.5 |
+| Developer ergonomics | 29.8 |
+| Access clarity | 15.8 |
+
+**Agent readiness 25.4** — agent-aware
+
+| Agent-readiness dimension | Result |
+|---|---|
+| Spec Presence | yes |
+| Agentic Access | derived (partial credit) |
+| Reversibility Documented | documented (partial credit) |
+| MCP Server | — |
+| Auth Clarity | bearer (partial credit) |
+| Idempotency | — |
+| Error Semantics | verified |
+| OpenAPI Examples | — |
+| Rate Limit Signal | derived (partial credit) |
+| Event Surface Described | — |
+| Agent Skills | — |
+| Well Known Catalog | — |
+| Consent Identity | — |
+| Agent Card | — |
+| Dry Run Mode | — |
+| Delegated Identity | — |
+| Protected Resource Metadata | — |
+| Dynamic Client Registration | — |
+| Agentic Commerce | — |
+
+**Regulatory alignment 20.5** — Payments
+
+The rubric is published at [github.com/api-evangelist/kin-score](https://github.com/api-evangelist/kin-score). The per-check breakdown behind these numbers — which checks were earned, partial or missed — along with score history and how this provider compares to its peers, is available at [apis.io/providers/dynamic-labs/](https://apis.io/providers/dynamic-labs/).
+
+## How this profile is made
+
+API Evangelist profiles a company's public API surface the way a developer would find it: the website, developer portal and documentation, the specifications it publishes, its public repositories, and its pricing, status and changelog pages. From that it derives the properties above — contracts split per API, workflows, schemas, collections, governance rules, plans and rate limits — and scores them against the published [Kin Score rubric](https://github.com/api-evangelist/kin-score).
+
+The artifacts are published on [APIs.io](https://apis.io), not in this repository. This repository is the public record for Dynamic: the place to say something is wrong, missing or out of date, and to ask for a re-score or a removal.
+
+## Open an issue
+
+- **Something about this listing** — a wrong description, a missing API, a stale artifact or a question about the rating: [open an issue on this repository](https://github.com/api-evangelist/dynamic-labs/issues/new).
+- **A new API, or one that is not in the catalog yet** — [submit it on APIs.io](https://apis.io/add/).
+- **Anything else** — [the APIs.io inbox](https://github.com/api-search/inbox/issues/new) or [info@apievangelist.com](mailto:info@apievangelist.com).
